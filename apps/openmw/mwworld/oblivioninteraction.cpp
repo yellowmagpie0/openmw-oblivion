@@ -1,4 +1,5 @@
 #include "oblivioninteraction.hpp"
+#include "obliviongate.hpp"
 #include "oblivionscriptmanager.hpp"
 #include "obliviontrespass.hpp"
 
@@ -1331,12 +1332,8 @@ namespace MWWorld
         if (kind == OblivionInteractionKind::Door && ptr.getType() == ESM::REC_DOOR4
             && (ptr.get<ESM4::Door>()->mBase->mDoorFlags & ESM4::Door::Flag_OblivionGate))
         {
-            if (const auto* saved = findOblivionSavedReference(ptr.getCellRef().getFormKey()))
-            {
-                const auto destroyed = saved->mCustomState.find("obscript.destroyed");
-                if (destroyed != saved->mCustomState.end() && destroyed->second == ESM4::RuntimeValue(true))
-                    return;
-            }
+            const auto* saved = findOblivionSavedReference(ptr.getCellRef().getFormKey());
+            if (saved && isDestroyedOblivionGate(*saved)) return;
         }
         if (dispatchOblivionActivation(ptr, actor))
             return;

@@ -5,6 +5,7 @@
 #include <components/esm4/loaddoor.hpp>
 #include <components/esm4/loadrefr.hpp>
 #include <components/esm4/loadwrld.hpp>
+#include <components/esm4/runtimestate.hpp>
 
 #include <map>
 #include <set>
@@ -24,6 +25,20 @@ namespace MWWorld
         {
             return cell.isExterior() ? cell.mParent : ESM::RefId(cell.mId);
         }
+    }
+
+    bool isDestroyedOblivionGate(const ESM4::RuntimeReferenceState& gate)
+    {
+        const auto destroyed = gate.mCustomState.find("obscript.destroyed");
+        return destroyed != gate.mCustomState.end() && destroyed->second == ESM4::RuntimeValue(true);
+    }
+
+    bool needsOblivionGateCollapse(const ESM4::RuntimeReferenceState& gate)
+    {
+        if (!isDestroyedOblivionGate(gate)) return false;
+        const auto group = gate.mCustomState.find("obscript.animation_group");
+        return group == gate.mCustomState.end()
+            || group->second != ESM4::RuntimeValue(std::string("unequip"));
     }
 
     const ESM4::Reference* findOblivionGateExit(const ESMStore& store, const ESM4::Cell& origin)

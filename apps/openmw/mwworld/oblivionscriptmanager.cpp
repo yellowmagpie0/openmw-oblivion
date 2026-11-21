@@ -1453,6 +1453,20 @@ namespace MWWorld
         {
             if (!ptr.getRefData().isEnabled() || ptr.mRef->isDeleted())
                 continue;
+            if (ptr.getType() == ESM::REC_DOOR4
+                && (ptr.get<ESM4::Door>()->mBase->mDoorFlags & ESM4::Door::Flag_OblivionGate))
+            {
+                const auto gate = keyFor(ptr);
+                const auto* state = std::as_const(*this).referenceState(gate);
+                if (state && needsOblivionGateCollapse(*state))
+                {
+                    // The gate's Unequip sequence owns the collapse and its sound key.
+                    const bool played = MWBase::Environment::get().getMechanicsManager()->playAnimationGroup(
+                        ptr, "unequip", 1, 1, true);
+                    persistAnimationState(gate, "unequip", 1, played, true);
+                    trace("gate-collapse ref=" + gate.serialize() + " played=" + (played ? "true" : "false"));
+                }
+            }
             dispatchObjectEvent(ptr, "onload");
             if (!ptr.getRefData().isEnabled() || ptr.mRef->isDeleted())
                 continue;

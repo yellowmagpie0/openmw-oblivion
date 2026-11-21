@@ -1986,6 +1986,21 @@ TEST(OblivionTutorialAction, DefaultPlayerActivationInsideOnActivateDoesNotReent
     }
 }
 
+TEST(OblivionGate, DestroyedGateReplacesOldIdleAndNeverRestartsTheRemovalGroup)
+{
+    ESM4::RuntimeReferenceState gate;
+    gate.mCustomState["obscript.animation_group"] = std::string("specialidle");
+    EXPECT_FALSE(MWWorld::needsOblivionGateCollapse(gate));
+    gate.mCustomState["obscript.destroyed"] = true;
+    EXPECT_TRUE(MWWorld::needsOblivionGateCollapse(gate));
+    gate.mCustomState["obscript.animation_group"] = std::string("unequip");
+    for (bool playing : {true, false})
+    {
+        gate.mCustomState["obscript.animation_playing"] = playing;
+        EXPECT_FALSE(MWWorld::needsOblivionGateCollapse(gate));
+    }
+}
+
 TEST(OblivionGate, FindsOnlyAnUnambiguousReciprocalExitFromTheConnectedPlane)
 {
     TestingOpenMW::NativeWorldFixture fixture;

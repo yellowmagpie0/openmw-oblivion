@@ -5,32 +5,42 @@ Dark Salvation → Reapers Sprawl → Sigil Keep/key → Sigil Stone/gate closur
 Full gate and main-quest acceptance remain open. Choose implementation from the
 next observed original-content failure; finish each bounded chunk first.
 
-**Current Windows checkpoint � outside Kvatch, MS48 stage 50.** From a copy
-of the stage-40 Blood Feast save, MoveTo and a short position/aim adjustment
-staged the player within reach of the original Sigil Stone. A Space press
-started the authored removal animation. The player received one level-one
-stone (042011) and made an F5 save before the gate timer expired. A fresh
-process resumed the timer, found the unique reciprocal gate through the tower
-and Oblivion worldspace, returned the player by its XTEL and marked gate
-01e8a3 destroyed. Its own script advanced MS48 to 50. Another cold load and
-F5 retained the exterior cell 00db46, stage 50 and exactly one stone.
-No quest stage or inventory edit was used. Tower traversal and the earlier
-stage-30 keeper loot contract remain separate open acceptance gaps.
+**Resume outside the closed gate, MS48 stage 50.** Speak to Savlian about
+retaking Kvatch. The Windows checkpoint uses only Oblivion.esm:
+`build-windows/sigil-course-cold01/user/saves/Bendu_Olo/Quicksave.omwsave`.
+The player has 6.71 health and one Sigil Stone (041ff9). The four local
+implementation commits are on `kvatch-sigil-course` in
+`build-windows/kvatch-sigil-checkpoints`. The verified incremental Git bundle
+is `build-windows/kvatch-sigil-course.bundle` (base c35ede26bf).
 
-- Resume from `build-windows/sigil-cold01/user/saves/Bendu_Olo/Quicksave.omwsave`
-  (SHA256 `50bbe36cac16855e398f4099a18356efd5ac86a1bd2957a568ac6a1a76fde427`).
-- Before/after leveled reward: `build-windows/sigil-base2`, `sigil-reward`.
-  Named and ungrouped animation polls: `build-windows/sigil-animation`.
-  The removal took about 3.8 seconds, versus a same-frame reward previously.
-- Ordinary activation and restart evidence: `build-windows/sigil-input04`,
-  `build-windows/sigil-close01`, `build-windows/sigil-cold01`.
-  Test logs: `sigil-tests.log`, `sigil-animation-tests.log`, `sigil-close-tests.log`
-  in `build-windows`. Full Windows engine run: 2,331/2,335 passed.
-  The four pre-existing OblivionEffectShader failures cannot decode the PPM
-  test texture (also in `quest-journal-engine-tests.log`). No sanitizer run.
-- Remaining: the destroyed gate retains its live portal animation; then speak
-  to Savlian and exercise the next quest objective. SetQuestObject on the old
-  key is still deferred. Random gates without a unique authored pair are open.
+From a copy of the earned stage-40 Blood Feast save, MoveTo, SetPos and
+SetAngle staged the player within reach of SigilStoneMS48. Space started its
+removal animation. The original script awarded a concrete leveled stone after
+about 3.9 seconds. The ring timer returned the player through the unique
+reciprocal gate pair (inside 01e8a5, outside 01e8a3). The gate script saw
+GetDestroyed and advanced MS48 to 50. The exterior gate played the original
+Unequip sequence, which contains the destruction sound key. Sound was disabled
+in this run. After F5 and a cold restart, live queries confirmed GetDestroyed=1,
+GetItemCount=1 and IsAnimPlaying unequip=0. Both saves decode to Tamriel cell
+00db46 with the gate at its end pose. No quest-stage, inventory or health edits.
+
+**Reusable evidence** (paths relative to `build-windows`):
+
+- Final Space-to-F5 run and cold continuation: `sigil-course01/openmw.log`,
+  `sigil-course-cold01/openmw.log` and the corresponding quicksaves. Both
+  exited normally. `sigil-input04` / `sigil-close01` additionally exercised
+  a cold restart after reward delivery but before gate closure.
+- Empty leveled reward reproduction: `sigil-base2`; isolated reward fix:
+  `sigil-reward`; named and ungrouped animation polling: `sigil-animation`.
+- Final focused engine selection: 27/27 (`sigil-collapse-tests.log`). Full
+  Windows engine run: 2,332/2,336 passed (`sigil-final-full-tests.log`). The
+  four OblivionEffectShader tests fail to decode textures/particle.ppm, also
+  reproduced in the earlier `quest-journal-engine-tests.log`. No sanitizer run.
+
+The post-stone section has normal-input and restart evidence. An uninterrupted
+tower ascent, the earlier stage-30 keeper loot course, the stage-25 Ilend
+follower branch, random gates without a unique authored pair and continued
+Kvatch combat remain open. Stage 50's SetQuestObject on the old key is deferred.
 
 The Runed Portal in The Blood Feast now completes its activation when the
 authored membrane effect is unsupported. Same-cell Oblivion player teleports
