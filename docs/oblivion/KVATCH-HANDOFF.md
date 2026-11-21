@@ -61,10 +61,16 @@ GetItemCount=1 and IsAnimPlaying unequip=0. Both saves decode to Tamriel cell
   a cold restart after reward delivery but before gate closure.
 - Empty leveled reward reproduction: `sigil-base2`; isolated reward fix:
   `sigil-reward`; named and ungrouped animation polling: `sigil-animation`.
-- Final focused engine selection: 27/27 (`sigil-collapse-tests.log`). Full
-  Windows engine run: 2,332/2,336 passed (`sigil-final-full-tests.log`). The
-  four OblivionEffectShader tests fail to decode textures/particle.ppm, also
-  reproduced in the earlier `quest-journal-engine-tests.log`. No sanitizer run.
+- Current Windows integration: all 2,336 engine tests and all 3,317 component
+  tests passed with matching inventories (`plaza-particle-full.log`,
+  `plaza-final-components.log`). The previously failing effect-shader tests
+  now decode a bundled DDS and exercise the real emitter. In a separate
+  diagnostic from the plaza save, PMS applied the original effectFireDamage
+  to the city gate. The renderer reported one emitter, 182 live particles
+  and 3,462 surface triangles (`sigil-plaza-fire01/shader-report.json` and
+  two F12 screenshots). No sanitizer run at this checkpoint.
+- Final executable repeated Space entry at the occupied door and the stage-65
+  save separation check (`sigil-plaza-final01`).
 
 The post-stone section has normal-input and restart evidence. An uninterrupted
 tower ascent, the earlier stage-30 keeper loot course, the stage-25 Ilend

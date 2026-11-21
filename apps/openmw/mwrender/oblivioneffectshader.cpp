@@ -158,10 +158,17 @@ namespace MWRender
                     + osg::Vec3(mData.mVelocity[0], mData.mVelocity[1], mData.mVelocity[2]));
                 if (auto* created = mSystem->createParticle(&particle))
                 {
-                    const auto index = created - mSystem->getParticle(0);
+                    // OSG can allocate particles separately or reuse a dead pool slot.
+                    // New slots are appended, so check the end first.
                     mAccelerations.resize(mSystem->numParticles());
-                    mAccelerations[index] = normal * mData.mNormalAcceleration
-                        + osg::Vec3(mData.mAcceleration[0], mData.mAcceleration[1], mData.mAcceleration[2]);
+                    for (int index = mSystem->numParticles() - 1; index >= 0; --index)
+                    {
+                        if (mSystem->getParticle(index) != created)
+                            continue;
+                        mAccelerations[index] = normal * mData.mNormalAcceleration
+                            + osg::Vec3(mData.mAcceleration[0], mData.mAcceleration[1], mData.mAcceleration[2]);
+                        break;
+                    }
                 }
             }
 

@@ -8,6 +8,7 @@
 #include <components/sceneutil/lightmanager.hpp>
 #include <components/sceneutil/shadow.hpp>
 #include <components/shader/shadermanager.hpp>
+#include <components/vfs/filesystemarchive.hpp>
 #include <components/vfs/manager.hpp>
 
 #include <gtest/gtest.h>
@@ -49,7 +50,7 @@ namespace
 
     struct Fixture
     {
-        TestingOpenMW::VFSTestFile mTexture{"P6\n1 1\n255\n\xff\xff\xff"};
+        VFS::FileSystemArchiveFile mTexture{OPENMW_PROJECT_SOURCE_DIR "/files/data/textures/omw_menu_icon_active.dds"};
         VFS::Manager mVfs;
         Resource::ResourceSystem mResources{&mVfs, 0., nullptr};
         osg::ref_ptr<osg::MatrixTransform> mRoot = new osg::MatrixTransform;
@@ -65,9 +66,9 @@ namespace
                 = new SceneUtil::LightManager(SceneUtil::LightSettings{}, &mResources);
             for (const auto& [name,value] : lights->getLightDefines()) defines[name] = value;
             mResources.getSceneManager()->getShaderManager().setGlobalDefines(defines);
-            mShader.mParticleTexture = "particle.ppm";
+            mShader.mParticleTexture = "particle.dds";
             mVfs.addArchive(std::make_unique<TestingOpenMW::VFSTestData>(VFS::FileMap{
-                {VFS::Path::Normalized("textures/particle.ppm"), &mTexture}}));
+                {VFS::Path::Normalized("textures/particle.dds"), &mTexture}}));
             mVfs.buildIndex();
             osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry;
             auto vertices = new osg::Vec3Array;
