@@ -525,7 +525,7 @@ end
 
     TEST(ObScriptVm, nullReferenceLocalsCompareEqualToNumericZero)
     {
-        const auto unit = makeUnit(7, "ref target\nbegin gamemode\nif target != 0\nfail\nendif\nend");
+        const auto unit = makeUnit(7, "ref target\nbegin gamemode\nif target != 0 || target > 0 || 0 < target\nfail\nendif\nend");
         const auto result = ObScript::CompilationCache{}.compile(unit);
         ASSERT_TRUE(result.mProgram);
         auto locals = ObScript::VirtualMachine::makeLocals(*result.mProgram);
@@ -538,6 +538,22 @@ end
         EXPECT_TRUE(report.mCompleted);
         EXPECT_TRUE(report.mDiagnostics.empty());
         EXPECT_TRUE(host.mCalls.empty());
+    }
+
+    TEST(ObScriptVm, boundReferenceOrdersAboveZeroInQuestSpeakerGuard)
+    {
+        const auto unit = makeUnit(7, "ref speaker\nbegin gamemode\nif speaker > 0 && 0 < speaker\nset observed to 1\nendif\nend");
+        const auto result = ObScript::CompilationCache{}.compile(unit);
+        ASSERT_TRUE(result.mProgram);
+        auto locals = ObScript::VirtualMachine::makeLocals(*result.mProgram);
+        locals.at(0) = ObScript::ReferenceValue{ ESM::FormKey::dynamic("speaker", 1), {} };
+        TestRuntimeHost host;
+        ObScript::RuntimeContext context;
+        const auto report = ObScript::VirtualMachine{}.execute(*result.mProgram,
+            result.mProgram->mEntryPoints.front(), locals, host, context);
+        EXPECT_TRUE(report.mCompleted);
+        EXPECT_TRUE(report.mDiagnostics.empty());
+        EXPECT_EQ(ObScript::asInteger(host.mExternal.at("observed")), 1);
     }
 
     TEST(ObScriptVm, nestedExecutionCompletesBeforeCallerResumes)

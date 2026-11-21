@@ -1,16 +1,22 @@
 # Kvatch main-quest course — current handoff
 
-**Resume with Brother Martin recruited in the Chapel of Akatosh.**
-Load `build-windows/sigil-martin-meet02/user/saves/Bendu_Olo/Quicksave.omwsave`.
+**Resume outside Kvatch with Martin following.** Load
+`build-windows/sigil-martin-exit01/user/saves/Bendu_Olo/Quicksave.omwsave`.
+Martin's package 01e8d8 followed the player out of the chapel through 02a297
+and out of the city through 07214f. Cold reload `sigil-martin-roadstart01`
+shows Martin beside the player in Tamriel. The Weynon quest's null speaker
+guard now runs without repeated OBSV003 diagnostics. Nine VM tests passed
+(`martin-quest-test.log`), including both bound and unbound guards.
+Next reach Weynon Priory and speak to Jauffre with Martin present.
+
+**Recruitment checkpoint.** Load `build-windows/sigil-martin-meet02/user/saves/Bendu_Olo/Quicksave.omwsave`.
 From the stage-90 plaza, ordinary activation of 07214e ran its authored race
 and creature checks and delivered the player to cell 02a24b. The intermediate
 save is under `sigil-martin-chapel03/user`. From that cold load, the player
 walked up to Martin and used his numbered replies (2, 1, 2, 1, 1, 1, 1).
 Reply 01e8d7 accepted the escort and the save shows MQ03 stage 60, MQ04 stage
 5 and MS48 stage 90. The playable race/creature regression passed for NPC,
-creature, and current player proxy. Next verify the escort through the city
-and to Weynon Priory. MQ04's GameMode currently diagnoses its reference
-comparison `speaker > 0`.
+creature, and current player proxy. The full post-door engine inventory passed 2336/2336.
 
 The player defeated the six original plaza actors using movement, weapon attacks
 and healing casts. The fight quicksave is under `build-windows/sigil-martin-fight02/user`

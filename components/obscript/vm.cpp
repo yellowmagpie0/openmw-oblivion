@@ -75,6 +75,14 @@ namespace ObScript
             return wrapped(std::uint64_t{} - static_cast<std::uint64_t>(value));
         }
 
+        double orderedOperand(const Value& value, const Value& other)
+        {
+            // Quest scripts use ref > 0 to check whether a speaker is bound.
+            if (std::holds_alternative<ReferenceValue>(value) && isNumeric(other) && asNumber(other) == 0)
+                return asBoolean(value) ? 1.0 : 0.0;
+            return asNumber(value);
+        }
+
         Value binary(std::string_view op, const Value& left, const Value& right, ValueType type)
         {
             if (op == "==")
@@ -86,13 +94,13 @@ namespace ObScript
             if (op == "||")
                 return std::int64_t(asBoolean(left) || asBoolean(right));
             if (op == "<")
-                return std::int64_t(asNumber(left) < asNumber(right));
+                return std::int64_t(orderedOperand(left, right) < orderedOperand(right, left));
             if (op == ">")
-                return std::int64_t(asNumber(left) > asNumber(right));
+                return std::int64_t(orderedOperand(left, right) > orderedOperand(right, left));
             if (op == "<=")
-                return std::int64_t(asNumber(left) <= asNumber(right));
+                return std::int64_t(orderedOperand(left, right) <= orderedOperand(right, left));
             if (op == ">=")
-                return std::int64_t(asNumber(left) >= asNumber(right));
+                return std::int64_t(orderedOperand(left, right) >= orderedOperand(right, left));
 
             if (type == ValueType::Float)
             {
