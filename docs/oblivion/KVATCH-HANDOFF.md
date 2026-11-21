@@ -1,5 +1,12 @@
 # Kvatch main-quest course — current handoff
 
+**Fast-travel save boundary verified.** A save immediately after arrival could
+write Martin's physical reference at Weynon while his AI still named the
+Kvatch exterior. The travelling party now publishes its resident package
+state before time advances. From `sigil-weynon01-outside`, repeat arrival
+`sigil-weynon-follow02` passed `scripts/verify_weynon_map_travel.py` on the
+first quicksave. The three original exterior StartCombat calls ran at stage 7.
+
 **Replayed recruitment with the priory encounter initialized.**
 `build-windows/sigil-weynon01-recruit/user/saves/Bendu_Olo/Quicksave.omwsave`
 has both Weynon secret-door defaults set open (02c6e6, 02c6e7) and all five

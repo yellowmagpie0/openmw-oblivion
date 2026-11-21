@@ -55,7 +55,8 @@ namespace MWWorld
         // Move nearby active native followers while their source cell is still resident.
         std::vector<MWWorld::Ptr> nearby;
         MWBase::Environment::get().getMechanicsManager()->getActorsInRange(pos, 800.f, nearby);
-        const auto* ai = world.getOblivionAiService();
+        auto* ai = world.getOblivionAiService();
+        std::vector<ESM::FormKey> followers;
         // Persistent map markers share their world's dummy cell, irrespective of their coordinates.
         const auto location = ESM::positionToExteriorCellLocation(marker.mPos.pos[0], marker.mPos.pos[1], cell->mParent);
         auto& arrival = world.getWorldModel().getExterior(location);
@@ -67,9 +68,20 @@ namespace MWWorld
                 && actor.getCell()->getCell()->getWorldSpace() == player.getCell()->getCell()->getWorldSpace() && state && state->mPackageType == ESM4::AIPackageType::Follow
                 && ESM4::runtimeReferenceKey(state->mTarget) == ESM::FormKey::dynamic("player", 1)
                 && !ai->isPackageWaiting(state->mPackage) && !actor.getClass().getCreatureStats(actor).isDead())
+            {
+                followers.push_back(state->mActor);
                 travel.execute(actor);
+            }
         }
         travel.execute(player);
+        // The NPC was moved while the destination scene was inactive. Publish its new
+        // resident identity before the fast-forward or an immediate save reads the AI snapshot.
+        for (const auto& follower : followers)
+        {
+            const auto actor = ai->resolveReference(follower);
+            if (!actor.isEmpty())
+                ai->evaluatePackage(actor);
+        }
         world.advanceTime(hours);
         Log(Debug::Info) << "Fast travelled to " << marker.mFullName << " (" << hours << " hours)";
         return {};
