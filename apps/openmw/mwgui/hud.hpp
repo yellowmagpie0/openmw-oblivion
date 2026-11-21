@@ -83,7 +83,8 @@ namespace MWGui
         MyGUI::TextBox* mCellNameBox = nullptr;
         MyGUI::TextBox* mWeaponSpellBox = nullptr;
         MyGUI::Widget* mQuestObjective = nullptr;
-        MyGUI::TextBox* mQuestObjectiveText = nullptr;
+        int mQuestViewWidth = 0;
+        MyGUI::EditBox* mQuestObjectiveText = nullptr;
         MyGUI::ImageBox* mQuestBearing = nullptr;
         MyGUI::TextBox* mQuestDistance = nullptr;
         std::optional<MWWorld::QuestMarker> mQuestBearingMarker;

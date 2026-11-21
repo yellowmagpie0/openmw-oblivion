@@ -9,7 +9,9 @@
                 <Property key="ImageTexture" value="textures\omw\quest_direction.png"/>
                 <Property key="NeedMouse" value="false"/>
             </Widget>
-            <Widget type="TextBox" skin="SandText" position="36 3 270 26" name="QuestObjectiveText">
+            <Widget type="EditBox" skin="SandText" position="36 3 270 26" name="QuestObjectiveText">
+                <Property key="MultiLine" value="true"/>
+                <Property key="Static" value="true"/>
                 <Property key="NeedMouse" value="false"/>
             </Widget>
             <Widget type="TextBox" skin="SandText" position="309 3 72 26" name="QuestDistance">

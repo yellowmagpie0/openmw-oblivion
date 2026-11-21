@@ -12,7 +12,12 @@ From the stage-50 save below, MoveTo and SetPos/SetAngle staged a conversation
 with Savlian. Space opened greeting 01e8a7, keyboard 1 selected the ready
 reply 01e8ac, both authored stage-60 result entries dispatched, then Escape
 and F5 saved. The next gameplay check is Savlian's approach to the city and
-the plaza encounter. Focused dialogue/topic suite passed 56/56.
+the plaza encounter. Focused dialogue/topic suite passed 56/56. A cold reload from the stage-60
+save showed Savlian moving from his barricade toward the city (march01).
+At 960x540 the HUD now displays the complete quest and destination together
+with the bearing and 1 m distance. Compare the F12 screenshots in
+`sigil-counterattack01` and `sigil-counterattack-hud01`: the rendered caption
+grew from 269 to 346 pixels. Both quest bearing/distance checks passed.
 Checkpoints are on `kvatch-sigil-course` in
 `build-windows/kvatch-sigil-checkpoints` with incremental bundle
 `build-windows/kvatch-course-current.bundle` (base c35ede26bf).

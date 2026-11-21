@@ -1,6 +1,7 @@
 #include "hud.hpp"
 
 #include <MyGUI_Button.h>
+#include <MyGUI_EditBox.h>
 #include <MyGUI_ImageBox.h>
 #include <MyGUI_InputManager.h>
 #include <MyGUI_ProgressBar.h>
@@ -400,7 +401,23 @@ namespace MWGui
                 if (!destination.mLabel.empty())
                     caption += " - " + destination.mLabel;
             }
-            mQuestObjectiveText->setCaption(caption);
+            const int viewWidth = mMainWidget->getWidth();
+            if (mQuestObjectiveText->getCaption() != caption || mQuestViewWidth != viewWidth)
+            {
+                mQuestViewWidth = viewWidth;
+                mQuestObjectiveText->setEditWordWrap(false);
+                mQuestObjectiveText->setCaption(caption);
+                const int left = mQuestObjectiveText->getLeft();
+                const int right = mQuestDistance->getWidth() + 12;
+                const int width = std::min(viewWidth, left + mQuestObjectiveText->getTextSize().width + 4 + right);
+                const int textWidth = std::max(1, width - left - right);
+                mQuestObjectiveText->setSize(textWidth, mQuestObjectiveText->getHeight());
+                mQuestObjectiveText->setEditWordWrap(true);
+                const int height = std::max(32, mQuestObjectiveText->getTextSize().height + 6);
+                mQuestObjective->setCoord((viewWidth - width) / 2, mQuestObjective->getTop(), width, height);
+                mQuestObjectiveText->setSize(textWidth, height - 6);
+                mQuestDistance->setPosition(width - right + 3, 3);
+            }
         }
         setLocalQuestMarker(mQuestBearingMarker);
     }
