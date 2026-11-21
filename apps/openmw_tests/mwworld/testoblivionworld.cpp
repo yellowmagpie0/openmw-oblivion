@@ -35526,6 +35526,15 @@ TEST(OblivionWorldTest, NativePlayableRaceUsesTheNpcRaceFlagAndCurrentPlayerProx
     const auto npc = addNativeNpc(fixture, 0xa00);
     const auto creature = addEquipmentCreature(fixture);
     auto& ai = *world.getOblivionAiService();
+    const auto query = [&](std::string_view name, const ESM::FormKey& ref) {
+        return ObScript::asInteger(world.getOblivionScriptManager()->call(name,
+            ObScript::ReferenceValue{ref, {}}, {}, {}, {}));
+    };
+    ASSERT_TRUE(world.activateOblivionActor(npc));
+    ASSERT_TRUE(world.activateOblivionActor(creature));
+    EXPECT_EQ(query("GetIsCreature", creature.getCellRef().getFormKey()), 1);
+    EXPECT_EQ(query("GetIsCreature", npc.getCellRef().getFormKey()), 0);
+    EXPECT_EQ(query("GetIsPlayableRace", creature.getCellRef().getFormKey()), 0);
     ESM4::PackageCondition condition{};
     condition.mFunction = 254;
     condition.mComparisonValue = 1;
@@ -35536,6 +35545,7 @@ TEST(OblivionWorldTest, NativePlayableRaceUsesTheNpcRaceFlagAndCurrentPlayerProx
     {
         race.mRaceFlags = flags;
         store.getWritable<ESM4::Race>().insertStatic(race, raceKey);
+        EXPECT_EQ(query("GetIsPlayableRace", npc.getCellRef().getFormKey()), flags & 1);
         EXPECT_EQ(ai.evaluateDialogueConditions(npc, {}, std::span(&condition, 1)),
             flags & 1 ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
         EXPECT_EQ(ai.evaluateDialogueConditions(creature, {}, std::span(&condition, 1)),
@@ -35551,6 +35561,8 @@ TEST(OblivionWorldTest, NativePlayableRaceUsesTheNpcRaceFlagAndCurrentPlayerProx
     }
     // No ESM4 Player base definition is available: the current proxy still owns race.
     EXPECT_EQ(ai.evaluateDialogueConditions(player, {}, std::span(&condition, 1)), ESM4::ConditionResult::True);
+    EXPECT_EQ(query("GetIsCreature", ESM::FormKey::dynamic("player", 1)), 0);
+    EXPECT_EQ(query("GetIsPlayableRace", ESM::FormKey::dynamic("player", 1)), 1);
     current.mRace = ESM::RefId(ESM::FormId{0xfffffe, 0});
     {
         auto prepared = store.preparePlayerRecord(current);

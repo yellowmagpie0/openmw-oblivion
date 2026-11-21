@@ -173,6 +173,7 @@ namespace MWMechanics
         // afterWorldClear omits outgoing physics handles and prepares overlays for reset graphs.
         PreparedRestore prepareRestore(const ESM4::RuntimeState& state, bool afterWorldClear = false);
         void restore(const ESM4::RuntimeState& state);
+        bool playableRace(const MWWorld::Ptr& actor, const ESM::FormKey& base) const;
 
     private:
         struct TargetRoute
@@ -316,7 +317,6 @@ namespace MWMechanics
         std::optional<ESM4::PackageCandidate> packageCandidate(const ESM::FormKey& key) const;
         ESM4::CalendarInstant now() const;
         ESM4::ConditionValue playerRealmCondition() const;
-        bool playableRace(const MWWorld::Ptr& actor, const ESM::FormKey& base) const;
         ESM4::ConditionEvaluationContext conditionContext(
             const MWWorld::Ptr& actor, const LiveActor& live, const DialogueConditionInputs* dialogue = nullptr,
             const MWWorld::Ptr* boundTarget = nullptr) const;

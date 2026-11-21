@@ -1,14 +1,23 @@
 # Kvatch main-quest course — current handoff
 
-**Resume at the chapel approach, Breaking the Siege of Kvatch (MS48), stage 90.**
+**Resume with Brother Martin recruited in the Chapel of Akatosh.**
+Load `build-windows/sigil-martin-meet02/user/saves/Bendu_Olo/Quicksave.omwsave`.
+From the stage-90 plaza, ordinary activation of 07214e ran its authored race
+and creature checks and delivered the player to cell 02a24b. The intermediate
+save is under `sigil-martin-chapel03/user`. From that cold load, the player
+walked up to Martin and used his numbered replies (2, 1, 2, 1, 1, 1, 1).
+Reply 01e8d7 accepted the escort and the save shows MQ03 stage 60, MQ04 stage
+5 and MS48 stage 90. The playable race/creature regression passed for NPC,
+creature, and current player proxy. Next verify the escort through the city
+and to Weynon Priory. MQ04's GameMode currently diagnoses its reference
+comparison `speaker > 0`.
+
 The player defeated the six original plaza actors using movement, weapon attacks
 and healing casts. The fight quicksave is under `build-windows/sigil-martin-fight02/user`
 (stage 80, 3 health). Walking to Savlian and activating his greeting earned
 stage 90. Resume from `build-windows/sigil-martin-savlian01/user/saves/Bendu_Olo/Quicksave.omwsave`.
 These saves include the local `sigil.omwscripts` player-input driver.
-The south plaza door 07214e is reachable and focused correctly, but its original
-0699fa script stopped on GetIsCreature. Next verify the door script, speak to
-Martin, and escort him to Jauffre. The full engine inventory passed 2336/2336
+The full engine inventory passed 2336/2336
 after the wave change (`build-windows/martin-full-tests.log`).
 
 **Plaza wave is present.** The original enabled parent 07214a now brings in

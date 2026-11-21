@@ -2811,6 +2811,17 @@ namespace MWWorld
             return std::int64_t(*value);
         }
 
+        if (name == "getiscreature" || name == "getisplayablerace")
+        {
+            const auto subject = objectKey();
+            const auto actor = ptrFor(subject);
+            const auto base = mWorld.getOblivionReferenceBaseKey(subject);
+            if (name == "getiscreature")
+                return std::int64_t(!actor.isEmpty() ? actor.getType() == ESM::REC_CREA4
+                    : base && mStore.search<ESM4::Creature>(*base));
+            const auto* ai = mWorld.getOblivionAiService();
+            return std::int64_t(ai && ai->playableRace(actor, base.value_or(ESM::FormKey{})));
+        }
         if (name == "getisid" || name == "getisreference")
         {
             const auto expected = keyFromValue(argument(0));
