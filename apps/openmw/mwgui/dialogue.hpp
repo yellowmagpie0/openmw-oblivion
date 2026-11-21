@@ -140,6 +140,8 @@ namespace MWGui
     public:
         DialogueWindow();
 
+        bool selectNumberedReply(size_t index, bool repeat);
+
         void onTradeComplete();
 
         bool exit() override;

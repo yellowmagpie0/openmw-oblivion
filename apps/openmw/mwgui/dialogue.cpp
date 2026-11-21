@@ -696,7 +696,8 @@ namespace MWGui
         mChoices = MWBase::Environment::get().getDialogueManager()->getChoices();
         mChoiceStyles.clear();
         mControllerChoice = -1; // -1 so you must make a choice (and can't accidentally pick the first answer)
-        for (std::pair<std::string, int>& choice : mChoices)
+        const bool numbered = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
+        for (const auto& choice : mChoices)
         {
             auto link = std::make_unique<Choice>(choice.second);
             link->eventChoiceActivated += MyGUI::newDelegate(this, &DialogueWindow::onChoiceActivated);
@@ -706,6 +707,8 @@ namespace MWGui
             typesetter->lineBreak();
             BookTypesetter::Style* questionStyle = typesetter->createHotStyle(
                 body, textColours.answer, textColours.answerOver, textColours.answerPressed, interactiveId);
+            if (numbered && mChoiceStyles.size() < 9)
+                typesetter->write(questionStyle, std::to_string(mChoiceStyles.size() + 1) + ". ");
             typesetter->write(questionStyle, choice.first);
             mChoiceStyles.push_back(questionStyle);
         }
@@ -772,6 +775,16 @@ namespace MWGui
 
         MWBase::Environment::get().getDialogueManager()->keywordSelected(topicId, mCallback.get());
         updateTopics();
+    }
+
+    bool DialogueWindow::selectNumberedReply(size_t index, bool repeat)
+    {
+        if (index >= mChoices.size() || mGoodbye || mPtr.isEmpty()
+            || MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion)
+            return false;
+        if (!repeat)
+            onChoiceActivated(mChoices[index].second);
+        return true;
     }
 
     void DialogueWindow::onChoiceActivated(int id)

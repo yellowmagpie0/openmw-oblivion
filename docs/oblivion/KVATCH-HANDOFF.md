@@ -5,13 +5,21 @@ Dark Salvation → Reapers Sprawl → Sigil Keep/key → Sigil Stone/gate closur
 Full gate and main-quest acceptance remain open. Choose implementation from the
 next observed original-content failure; finish each bounded chunk first.
 
-**Resume outside the closed gate, MS48 stage 50.** Speak to Savlian about
-retaking Kvatch. The Windows checkpoint uses only Oblivion.esm:
+**Resume after accepting Savlian's counterattack, MS48 stage 60.** The original
+master-only quicksave is in
+`build-windows/sigil-counterattack01/user/saves/Bendu_Olo/Quicksave.omwsave`.
+From the stage-50 save below, MoveTo and SetPos/SetAngle staged a conversation
+with Savlian. Space opened greeting 01e8a7, keyboard 1 selected the ready
+reply 01e8ac, both authored stage-60 result entries dispatched, then Escape
+and F5 saved. The next gameplay check is Savlian's approach to the city and
+the plaza encounter. Focused dialogue/topic suite passed 56/56.
+Checkpoints are on `kvatch-sigil-course` in
+`build-windows/kvatch-sigil-checkpoints` with incremental bundle
+`build-windows/kvatch-course-current.bundle` (base c35ede26bf).
+
+The preceding stage-50 save is in
 `build-windows/sigil-course-cold01/user/saves/Bendu_Olo/Quicksave.omwsave`.
-The player has 6.71 health and one Sigil Stone (041ff9). The four local
-implementation commits are on `kvatch-sigil-course` in
-`build-windows/kvatch-sigil-checkpoints`. The verified incremental Git bundle
-is `build-windows/kvatch-sigil-course.bundle` (base c35ede26bf).
+The player had 6.71 health and one Sigil Stone (041ff9).
 
 From a copy of the earned stage-40 Blood Feast save, MoveTo, SetPos and
 SetAngle staged the player within reach of SigilStoneMS48. Space started its

@@ -2789,6 +2789,10 @@ namespace MWGui
 
     bool WindowManager::injectKeyPress(MyGUI::KeyCode key, unsigned int text, bool repeat)
     {
+        if (key >= MyGUI::KeyCode::One && key <= MyGUI::KeyCode::Nine && getMode() == GM_Dialogue
+            && !isConsoleMode() && !MyGUI::InputManager::getInstance().isModalAny()
+            && mRuntime->mDialogueWindow->selectNumberedReply(key.getValue() - MyGUI::KeyCode::One, repeat))
+            return true;
         if (!mRuntime->mKeyboardNavigation->injectKeyPress(key, text, repeat))
         {
             MyGUI::Widget* focus = MyGUI::InputManager::getInstance().getKeyFocusWidget();
