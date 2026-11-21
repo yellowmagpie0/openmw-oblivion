@@ -2274,10 +2274,23 @@ namespace MWWorld
         if (name == "isanimplaying")
         {
             const Ptr ptr = objectPtr();
-            const std::size_t groupArg = 0;
-            return std::int64_t(!ptr.isEmpty()
-                && MWBase::Environment::get().getMechanicsManager()->checkAnimationPlaying(
-                    ptr, ObScript::valueString(argument(groupArg))));
+            if (ptr.isEmpty()) return std::int64_t(0);
+            std::string group;
+            if (arguments.empty())
+            {
+                // Activator scripts poll the group started by PlayGroup. The saved
+                // group identifies it, but only its live controller knows when it ends.
+                const auto* state = std::as_const(*this).referenceState(objectKey());
+                if (!state) return std::int64_t(0);
+                const auto entry = state->mCustomState.find("obscript.animation_group");
+                if (entry == state->mCustomState.end()) return std::int64_t(0);
+                const auto* current = std::get_if<std::string>(&entry->second);
+                if (!current) return std::int64_t(0);
+                group = *current;
+            }
+            else
+                group = ObScript::valueString(arguments.front());
+            return std::int64_t(MWBase::Environment::get().getMechanicsManager()->checkAnimationPlaying(ptr, group));
         }
         if (name == "message" || name == "messagebox")
         {

@@ -1983,6 +1983,34 @@ TEST(OblivionTutorialAction, DefaultPlayerActivationInsideOnActivateDoesNotReent
     }
 }
 
+TEST(OblivionTutorialAction, UngroupedAnimationPollTracksLivePlayGroupCompletion)
+{
+    struct Playback : MWMechanics::MechanicsManager
+    {
+        bool mPlaying = true;
+        bool playAnimationGroup(const MWWorld::Ptr&, std::string_view group, int, uint32_t, bool) override
+        {
+            return group == "unequip";
+        }
+        bool checkAnimationPlaying(const MWWorld::Ptr&, std::string_view group) override
+        {
+            return group == "unequip" && mPlaying;
+        }
+    } playback;
+    SwitchFixture fixture;
+    fixture.mFixture.mEnvironment.setMechanicsManager(playback);
+    auto& scripts = *fixture.mFixture.mWorld.getOblivionScriptManager();
+    ObScript::RuntimeContext context;
+    context.mSelf = fixture.mSwitch.getCellRef().getFormKey();
+    const auto poll = [&] { return ObScript::asInteger(scripts.call("IsAnimPlaying", {}, {}, context, {})); };
+    EXPECT_EQ(poll(), 0);
+    scripts.call("PlayGroup", {}, {std::string("unequip"), std::int64_t(0)}, context, {});
+    EXPECT_EQ(poll(), 1);
+    EXPECT_EQ(ObScript::asInteger(scripts.call("IsAnimPlaying", {}, {std::string("open")}, context, {})), 0);
+    playback.mPlaying = false;
+    EXPECT_EQ(poll(), 0);
+}
+
 TEST(OblivionTutorialAction, UnsupportedMembraneVisualsDoNotBlockDefaultActivation)
 {
     TestingOpenMW::InventoryWindowManager windows;

@@ -13,8 +13,12 @@ The same encounter now gives one stone (042023 in the recorded run), confirmed
 by a separate GetItemCount read across the level-one reward pool. Evidence:
 `build-windows/sigil-base2/openmw.log`, `build-windows/sigil-reward/openmw.log`,
 `build-windows/sigil-tests.log` (four inventory/leveled tests). Tower traversal,
-ordinary activation, cold restart and gate closure are still open. Next, the
-stone pays out immediately despite playing its removal animation.
+ordinary activation, cold restart and gate closure are still open. Ungrouped IsAnimPlaying now queries the live controller for the recorded
+PlayGroup. The original removal animation ran for about 3.8 seconds before
+reward delivery (previously 0.012 seconds). Named and ungrouped polls both
+observed active playback. See `build-windows/sigil-animation/openmw.log` and
+`build-windows/sigil-animation-tests.log` (24 engine tests). The next
+progression gate is the timed ring script's CloseCurrentOblivionGate command.
 
 The Runed Portal in The Blood Feast now completes its activation when the
 authored membrane effect is unsupported. Same-cell Oblivion player teleports
