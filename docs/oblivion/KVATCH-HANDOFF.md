@@ -5,6 +5,17 @@ Dark Salvation → Reapers Sprawl → Sigil Keep/key → Sigil Stone/gate closur
 Full gate and main-quest acceptance remain open. Choose implementation from the
 next observed original-content failure; finish each bounded chunk first.
 
+**Windows Sigillum Sanguis checkpoint.** Player AddItem now rolls a TES4
+leveled reward at the player's level and publishes the selected concrete items.
+From the stage-40 portal save, a diagnostic MoveTo and scripted activation of
+the original SigilStoneMS48 reproduced an empty reward on the parent revision.
+The same encounter now gives one stone (042023 in the recorded run), confirmed
+by a separate GetItemCount read across the level-one reward pool. Evidence:
+`build-windows/sigil-base2/openmw.log`, `build-windows/sigil-reward/openmw.log`,
+`build-windows/sigil-tests.log` (four inventory/leveled tests). Tower traversal,
+ordinary activation, cold restart and gate closure are still open. Next, the
+stone pays out immediately despite playing its removal animation.
+
 The Runed Portal in The Blood Feast now completes its activation when the
 authored membrane effect is unsupported. Same-cell Oblivion player teleports
 use the authored landing height. A Windows runtime probe staged a copy of an

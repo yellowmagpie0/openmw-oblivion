@@ -4,6 +4,8 @@
 #include <components/esm4/cellcondition.hpp>
 #include "oblivionactorstats.hpp"
 #include "oblivioninteraction.hpp"
+#include "oblivionlevelled.hpp"
+#include <components/esm4/loadlvli.hpp>
 #include "oblivioncharactergen.hpp"
 #include "obliviondooranimation.hpp"
 #include <components/esm4/observation.hpp>
@@ -2329,6 +2331,24 @@ namespace MWWorld
                     && mWorld.getGameProfile() == ESM::GameProfile::Oblivion)
                     throw std::invalid_argument("Native AddItem negative-count delta semantics are unsupported");
                 const std::int32_t count = std::max<std::int32_t>(1, requested);
+                if (name == "additem" && mWorld.getGameProfile() == ESM::GameProfile::Oblivion)
+                {
+                    if (const auto* list = mStore.get<ESM4::LevelledItem>().search(*item))
+                    {
+                        const Ptr player = mWorld.getPlayerPtr();
+                        const int level = player.getClass().getCreatureStats(player).getLevel();
+                        const auto rewards = expandOblivionLevelledItems(mStore, {{list->mId.toUint32(), count}},
+                            level, mWorld.mPrng);
+                        for (const auto& reward : rewards)
+                        {
+                            const auto base = mResolver.toFormKey(ESM::FormId::fromUint32(reward.item));
+                            const int added = mWorld.oblivionChangePlayerInventory(base, reward.count, {}, true);
+                            trace("additem owner=" + owner.serialize() + " list=" + item->serialize()
+                                + " item=" + base.serialize() + " count=" + std::to_string(added));
+                        }
+                        return std::int64_t(0);
+                    }
+                }
                 const int changed = mWorld.oblivionChangePlayerInventory(*item, name == "additem" ? count : -count);
                 trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
                     + " count=" + std::to_string(changed));

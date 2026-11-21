@@ -1512,6 +1512,29 @@ namespace
         }
     }
 
+    TEST(OblivionWorldTest, PlayerAddItemResolvesLevelledRewardToConcreteInventory)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto weapon = addEquipmentWeapon(fixture);
+        const auto player = world.getPlayerPtr();
+        player.getClass().getCreatureStats(player).setLevel(1);
+        ESM4::LevelledItem list{};
+        list.mId = {0x980, 0};
+        const auto listKey = ESM::FormKey::content("headless.esm", 0x980);
+        list.mLvlObject.push_back({1, 0, ESM::FormId{0x940, 0}.toUint32(), 2, 0});
+        world.getStore().getWritable<ESM4::LevelledItem>().insertStatic(list, listKey);
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context;
+        context.mSelf = ESM::FormKey::dynamic("player", 1);
+        const std::vector<ObScript::Value> args{ObScript::ReferenceValue{listKey, {}}, std::int64_t(3)};
+        host.call("AddItem", {}, args, context, {});
+        EXPECT_EQ(world.oblivionPlayerItemCount(weapon), 6);
+        EXPECT_EQ(world.oblivionPlayerItemCount(listKey), 0);
+    }
+
     TEST(OblivionWorldTest, NativeScriptAddItemZeroCountDoesNotConstructInventoryOrAuthority)
     {
         NativeWorldFixture fixture;
