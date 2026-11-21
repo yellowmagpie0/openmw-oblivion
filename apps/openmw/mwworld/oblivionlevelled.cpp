@@ -119,7 +119,7 @@ namespace MWWorld
         return result;
     }
 
-    bool supportsOblivionLevelledActor(const ESMStore& store, const ESM::FormKey& key, int level, bool allowRootTemplate)
+    bool supportsOblivionLevelledActor(const ESMStore& store, const ESM::FormKey& key, int level, bool allowRootTemplate, bool allowRootScript)
     {
         checkedLevel(level);
         const auto* root = store.get<ESM4::LevelledCreature>().search(key);
@@ -128,7 +128,7 @@ namespace MWWorld
         std::set<ESM::FormId> path;
         std::function<bool(const ESM4::LevelledCreature&)> supported = [&](const ESM4::LevelledCreature& list) {
             Recursion guard(path, list.mId);
-            if (!list.mScriptId.isZeroOrUnset()
+            if ((!list.mScriptId.isZeroOrUnset() && !(allowRootScript && &list == root))
                 || (!list.mTemplate.isZeroOrUnset() && !(allowRootTemplate && &list == root))) return false;
             if (list.chanceNone() == 100) return true;
             const auto pool = ESM4::levelledEntryPool(list.mLvlObject, checkedLevel(level),

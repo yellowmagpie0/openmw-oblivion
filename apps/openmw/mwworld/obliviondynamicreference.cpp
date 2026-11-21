@@ -24,8 +24,20 @@
 
 namespace MWWorld
 {
+    namespace
+    {
+        const ESM4::Creature* placedActorTemplate(const ESMStore& store, const ESM::FormKey& actor)
+        {
+            const auto* placement = actor.isContent() ? store.get<ESM4::Reference>().search(actor) : nullptr;
+            const auto* list = placement ? store.get<ESM4::LevelledCreature>().search(placement->mBaseObj) : nullptr;
+            return list && !list->mTemplate.isZeroOrUnset() ? store.get<ESM4::Creature>().search(list->mTemplate) : nullptr;
+        }
+    }
+
     std::optional<ESM::FormKey> World::getOblivionReferenceScriptOverride(const ESM::FormKey& actor) const
     {
+        if (const auto* actorTemplate = placedActorTemplate(mStore, actor))
+            return ESM::FormKeyResolver(mContentFiles).toFormKey(actorTemplate->mScriptId);
         if (!actor.isDynamic() || actor.mNamespace != "native-reference") return {};
         const auto* state = mPendingOblivionRuntimeState ? mPendingOblivionRuntimeState.get() : mOblivionRuntimeState.get();
         if (state)
@@ -37,6 +49,8 @@ namespace MWWorld
     std::vector<ESM4::ActorFaction> World::getOblivionReferenceFactions(const ESM::FormKey& actor) const
     {
         const auto* state = mPendingOblivionRuntimeState ? mPendingOblivionRuntimeState.get() : mOblivionRuntimeState.get();
+        if (const auto* actorTemplate = placedActorTemplate(mStore, actor))
+            return getOblivionActorFactions(actorTemplate->mFormKey);
         if (state && actor.isDynamic() && actor.mNamespace == "native-reference")
             for (const auto& reference : state->mReferences)
                 if (reference.mKey == actor)

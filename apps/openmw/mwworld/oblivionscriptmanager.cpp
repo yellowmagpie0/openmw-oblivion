@@ -48,6 +48,7 @@
 #include <components/esm4/loadclot.hpp>
 #include <components/esm4/loadcont.hpp>
 #include <components/esm4/loadcrea.hpp>
+#include <components/esm4/loadlvlc.hpp>
 #include <components/esm4/loaddial.hpp>
 #include <components/esm4/loaddoor.hpp>
 #include <components/esm4/loadfact.hpp>
@@ -1165,47 +1166,41 @@ namespace MWWorld
         const Ptr& self, std::string_view event, const Ptr& actionReference)
     {
         requireMutableRuntime();
-        const auto program = scriptFor(self);
-        if (!program)
-            return false;
-        const ESM::FormKey selfKey = keyFor(self);
-        if (Misc::StringUtils::ciEqual(event, "onload"))
-        {
-            const bool hasOnLoad = std::any_of(program->mEntryPoints.begin(), program->mEntryPoints.end(),
-                [](const ObScript::EntryPoint& entry) {
-                    return Misc::StringUtils::ciEqual(entry.mEvent, "onload");
-                });
-            if (!hasOnLoad)
-                return false;
-            Instance& instance = instanceFor(*program, selfKey);
-            if (instance.mOnLoadFired)
-                return false;
-            instance.mOnLoadFired = true;
-        }
-        return execute(program, selfKey, selfKey, event, keyFor(actionReference));
+        return dispatchObjectEvent(keyFor(self), event, keyFor(actionReference));
     }
 
     bool OblivionScriptManager::dispatchObjectEvent(
         const ESM::FormKey& self, std::string_view event, const ESM::FormKey& actionReference)
     {
         requireMutableRuntime();
-        const auto program = scriptFor(self);
-        if (!program)
-            return false;
-        if (Misc::StringUtils::ciEqual(event, "onload"))
+        const auto dispatch = [&](const std::shared_ptr<const ObScript::Program>& program) {
+            if (!program)
+                return false;
+            if (Misc::StringUtils::ciEqual(event, "onload"))
+            {
+                if (std::none_of(program->mEntryPoints.begin(), program->mEntryPoints.end(),
+                        [](const auto& entry) { return Misc::StringUtils::ciEqual(entry.mEvent, "onload"); }))
+                    return false;
+                Instance& instance = instanceFor(*program, self);
+                if (instance.mOnLoadFired)
+                    return false;
+                instance.mOnLoadFired = true;
+            }
+            return execute(program, self, self, event, actionReference);
+        };
+        bool listHandled = false;
+        if (self.isContent())
         {
-            const bool hasOnLoad = std::any_of(program->mEntryPoints.begin(), program->mEntryPoints.end(),
-                [](const ObScript::EntryPoint& entry) {
-                    return Misc::StringUtils::ciEqual(entry.mEvent, "onload");
-                });
-            if (!hasOnLoad)
-                return false;
-            Instance& instance = instanceFor(*program, self);
-            if (instance.mOnLoadFired)
-                return false;
-            instance.mOnLoadFired = true;
+            const auto* placement = mStore.get<ESM4::Reference>().search(self);
+            const auto* list = placement ? mStore.get<ESM4::LevelledCreature>().search(placement->mBaseObj) : nullptr;
+            if (list && !list->mScriptId.isZeroOrUnset())
+            {
+                const auto it = mScripts.find(mResolver.toFormKey(list->mScriptId));
+                if (it != mScripts.end())
+                    listHandled = dispatch(it->second);
+            }
         }
-        return execute(program, self, self, event, actionReference);
+        return dispatch(scriptFor(self)) || listHandled;
     }
 
     bool OblivionScriptManager::dispatchBaseEvent(

@@ -9786,11 +9786,8 @@ namespace MWWorld
             for (const auto* original : mStore.get<ESM4::Reference>().getByCell(*cellId))
             {
                 const auto* list = mStore.get<ESM4::LevelledCreature>().search(original->mBaseObj);
-                if (!list || (original->mFlags & (ESM4::Rec_Deleted | ESM4::Rec_Disabled))) continue;
-                // Scripted lists and enable-parent activation require their own
-                // lifecycle integration. The original Vilverin placements have neither.
-                if (!list->mScriptId.isZeroOrUnset() || !list->mTemplate.isZeroOrUnset()
-                    || !original->mEsp.parent.isZeroOrUnset()) continue;
+                if (!list || (original->mFlags & ESM4::Rec_Deleted))
+                    continue;
                 const auto finishInventory = [&](ESM4::RuntimeReferenceState& saved, const Ptr& actor) {
                     // A fresh choice is already durable in the cache, but its
                     // inventory is not a saved empty store. Retry construction
@@ -9815,7 +9812,13 @@ namespace MWWorld
                         continue;
                     }
                 }
-                if (!supportsOblivionLevelledActor(mStore, original->mBaseKey, level)) continue;
+                if (original->mEsp.parent.isZeroOrUnset() ? (original->mFlags & ESM4::Rec_Disabled) != 0
+                    : !getOblivionReferenceEnabled(original->mFormKey).value_or(false))
+                    continue;
+                if (!list->mTemplate.isZeroOrUnset() && !mStore.get<ESM4::Creature>().search(list->mTemplate))
+                    continue;
+                if (!supportsOblivionLevelledActor(mStore, original->mBaseKey, level, true, true))
+                    continue;
                 auto random = getPrng();
                 const auto selected = selectOblivionLevelledActor(mStore, original->mBaseKey, level, random);
                 ESM4::RuntimeReferenceState saved;
@@ -9835,6 +9838,8 @@ namespace MWWorld
                     saved.mBase = placed.mBaseKey;
                     saved.mCustomState["native.levelled_actor.inventory_pending"] = true;
                     prepared = prepareSavedNativeReference(mStore, *cell, placed);
+                    // The parent can have changed since the original cell was authored.
+                    prepared->get().getRefData().enable();
                 }
                 if (!mOblivionRuntimeState) mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>();
                 mOblivionRuntimeState->mReferences.reserve(mOblivionRuntimeState->mReferences.size() + 1);

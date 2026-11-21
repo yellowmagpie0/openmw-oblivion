@@ -13,7 +13,7 @@ namespace MWWorld
     class ESMStore;
     std::vector<ESM4::InventoryItem> expandOblivionLevelledItems(const ESMStore& store,
         const std::vector<ESM4::InventoryItem>& items, int level, Misc::Rng::Generator& random);
-    bool supportsOblivionLevelledActor(const ESMStore& store, const ESM::FormKey& list, int level, bool allowRootTemplate = false);
+    bool supportsOblivionLevelledActor(const ESMStore& store, const ESM::FormKey& list, int level, bool allowRootTemplate = false, bool allowRootScript = false);
     std::optional<ESM::FormId> selectOblivionLevelledActor(const ESMStore& store,
         const ESM::FormKey& list, int level, Misc::Rng::Generator& random);
     bool oblivionLevelledActorListContains(const ESMStore& store, const ESM::FormKey& list,

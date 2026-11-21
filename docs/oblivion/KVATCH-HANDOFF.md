@@ -5,14 +5,15 @@ Load `build-windows/sigil-plaza05/user/saves/Bendu_Olo/Quicksave.omwsave`
 with Oblivion.esm only. The current gameplay target is the six-enemy fight
 followed by entry into the chapel. The full main-quest course remains open.
 
-**Next implementation:** the wave's enable parent 07214a is enabled, but all
-six placed references (07200c through 072010, and 072012) are absent from
-the plaza save. The native placed-actor updater skips enable parents, scripted
-leveled lists and actor templates. The three original lists use list script
-00c73c and template 090ab7. Preserve the list's own OnLoad and the spawned
-actor's separate template script, including its one-time death count across
-reload. Six kills should earn stage 80. Savlian and two guards also share
-an arrival position despite having distinct AI destinations.
+**Plaza wave is present.** The original enabled parent 07214a now brings in
+all six authored placements. At level 1 the draw produced five stunted scamps
+and one Dremora. Each has an independent list OnLoad and template script.
+F5 and a cold replay preserved the selections and twelve instances, checked
+by `scripts/verify_kvatch_plaza_wave.py` against `sigil-martin-wave02` and
+`sigil-martin-wave-cold02` under the Windows build directory. The focused
+engine run passed 66 checks. The player begins at 6.71 health; her quest log
+has MQ02 stage 100 and MQ03 stage 40. Next earn stage 80, speak to Savlian,
+find Martin, and escort him to Jauffre at Weynon Priory.
 
 Savlian's original package 17c462 took him through the city door. Its
 OnPackageDone advanced MS48 to 65. The pre-entry quicksave is under
