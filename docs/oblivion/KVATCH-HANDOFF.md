@@ -1,9 +1,15 @@
 # Kvatch main-quest course — current handoff
 
-**Resume inside the south plaza, Breaking the Siege of Kvatch (MS48), stage 65.**
-Load `build-windows/sigil-plaza05/user/saves/Bendu_Olo/Quicksave.omwsave`
-with Oblivion.esm only. The current gameplay target is the six-enemy fight
-followed by entry into the chapel. The full main-quest course remains open.
+**Resume at the chapel approach, Breaking the Siege of Kvatch (MS48), stage 90.**
+The player defeated the six original plaza actors using movement, weapon attacks
+and healing casts. The fight quicksave is under `build-windows/sigil-martin-fight02/user`
+(stage 80, 3 health). Walking to Savlian and activating his greeting earned
+stage 90. Resume from `build-windows/sigil-martin-savlian01/user/saves/Bendu_Olo/Quicksave.omwsave`.
+These saves include the local `sigil.omwscripts` player-input driver.
+The south plaza door 07214e is reachable and focused correctly, but its original
+0699fa script stopped on GetIsCreature. Next verify the door script, speak to
+Martin, and escort him to Jauffre. The full engine inventory passed 2336/2336
+after the wave change (`build-windows/martin-full-tests.log`).
 
 **Plaza wave is present.** The original enabled parent 07214a now brings in
 all six authored placements. At level 1 the draw produced five stunted scamps
@@ -11,9 +17,9 @@ and one Dremora. Each has an independent list OnLoad and template script.
 F5 and a cold replay preserved the selections and twelve instances, checked
 by `scripts/verify_kvatch_plaza_wave.py` against `sigil-martin-wave02` and
 `sigil-martin-wave-cold02` under the Windows build directory. The focused
-engine run passed 66 checks. The player begins at 6.71 health; her quest log
-has MQ02 stage 100 and MQ03 stage 40. Next earn stage 80, speak to Savlian,
-find Martin, and escort him to Jauffre at Weynon Priory.
+engine run passed 66 checks. The pre-fight save at stage 65 is
+`build-windows/sigil-plaza05/user/saves/Bendu_Olo/Quicksave.omwsave`
+(Oblivion.esm only, health 6.71, MQ02 stage 100 and MQ03 stage 40).
 
 Savlian's original package 17c462 took him through the city door. Its
 OnPackageDone advanced MS48 to 65. The pre-entry quicksave is under
