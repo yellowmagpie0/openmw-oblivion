@@ -24,6 +24,7 @@
 #include <components/esm4/loadclot.hpp>
 #include <components/esm4/loadcont.hpp>
 #include <components/esm4/loadcrea.hpp>
+#include <components/esm4/loaddoor.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadflor.hpp>
 #include <components/esm4/loadingr.hpp>
@@ -1327,6 +1328,16 @@ namespace MWWorld
         if (kind == OblivionInteractionKind::Take && ptr.getCellRef().getCount() <= 0)
             return;
 
+        if (kind == OblivionInteractionKind::Door && ptr.getType() == ESM::REC_DOOR4
+            && (ptr.get<ESM4::Door>()->mBase->mDoorFlags & ESM4::Door::Flag_OblivionGate))
+        {
+            if (const auto* saved = findOblivionSavedReference(ptr.getCellRef().getFormKey()))
+            {
+                const auto destroyed = saved->mCustomState.find("obscript.destroyed");
+                if (destroyed != saved->mCustomState.end() && destroyed->second == ESM4::RuntimeValue(true))
+                    return;
+            }
+        }
         if (dispatchOblivionActivation(ptr, actor))
             return;
 

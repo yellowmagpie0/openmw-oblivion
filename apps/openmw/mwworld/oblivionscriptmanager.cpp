@@ -5,6 +5,8 @@
 #include "oblivionactorstats.hpp"
 #include "oblivioninteraction.hpp"
 #include "oblivionlevelled.hpp"
+#include "obliviongate.hpp"
+#include "actionteleport.hpp"
 #include <components/esm4/loadlvli.hpp>
 #include "oblivioncharactergen.hpp"
 #include "obliviondooranimation.hpp"
@@ -3281,6 +3283,23 @@ namespace MWWorld
                 throw ObScript::RuntimeError("OBSV117", "SetFactionRank requires a resolved actor and faction", name);
             trace("setfactionrank ref=" + objectKey().serialize() + " faction=" + faction->serialize()
                 + " rank=" + std::to_string(mWorld.getOblivionFactionRank(objectKey(), *faction)));
+            return std::int64_t(0);
+        }
+        if (name == "closecurrentobliviongate")
+        {
+            const Ptr player = mWorld.getPlayerPtr();
+            if (!player.isInCell()) return std::int64_t(0);
+            const auto* cell = mStore.get<ESM4::Cell>().search(player.getCell()->getCell()->getId());
+            const auto* exit = cell ? findOblivionGateExit(mStore, *cell) : nullptr;
+            if (!exit) return std::int64_t(0);
+            const auto gate = mResolver.toFormKey(exit->mDoor.destDoor);
+            const Ptr door = ptrFor(exit->mFormKey);
+            if (door.isEmpty() || !door.getCellRef().getTeleport()) return std::int64_t(0);
+
+            ActionTeleport(door.getCellRef().getDestCell(), door.getCellRef().getDoorDest(), true).execute(player);
+            if (auto* state = referenceState(gate))
+                state->mCustomState["obscript.destroyed"] = true;
+            trace("closed-oblivion-gate ref=" + gate.serialize() + " exit=" + exit->mFormKey.serialize());
             return std::int64_t(0);
         }
         if (name == "getdestroyed")

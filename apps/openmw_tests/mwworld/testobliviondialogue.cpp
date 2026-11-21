@@ -53,6 +53,9 @@
 #include <components/esm3/loadclas.hpp>
 #include "apps/openmw/mwworld/oblivioncharactergen.hpp"
 #include "apps/openmw/mwworld/obliviondooranimation.hpp"
+#include "apps/openmw/mwworld/obliviongate.hpp"
+#include <components/esm4/loadwrld.hpp>
+#include <components/esm4/loaddoor.hpp>
 #include "apps/openmw/mwworld/oblivionenablestate.hpp"
 #include "apps/openmw/mwworld/oblivionbounditems.hpp"
 #include "apps/openmw/mwworld/oblivionprofileservices.hpp"
@@ -1981,6 +1984,60 @@ TEST(OblivionTutorialAction, DefaultPlayerActivationInsideOnActivateDoesNotReent
         EXPECT_EQ(f.calls(), 1);
         EXPECT_EQ(defaultActions, 2);
     }
+}
+
+TEST(OblivionGate, FindsOnlyAnUnambiguousReciprocalExitFromTheConnectedPlane)
+{
+    TestingOpenMW::NativeWorldFixture fixture;
+    auto& store = fixture.mWorld.getStore();
+    const auto id = [](uint32_t n) { return ESM::FormId{n, 0}; };
+    ESM4::World plane{};
+    plane.mId = id(0xe00);
+    plane.mWorldFlags = ESM4::World::WLD_Oblivion;
+    store.getWritable<ESM4::World>().insertStatic(plane, key(0xe00));
+    const auto cell = [&](uint32_t n, uint32_t parent) {
+        ESM4::Cell c{};
+        c.mId = ESM::RefId(id(n));
+        c.mFormKey = key(n);
+        if (!parent)
+            c.mCellFlags = ESM4::CELL_Interior;
+        else
+        {
+            c.mParent = ESM::RefId(id(parent));
+            c.mParentKey = key(parent);
+        }
+        store.getWritable<ESM4::Cell>().insertStatic(c, key(n));
+        return c;
+    };
+    const auto tower = cell(0xe10, 0);
+    cell(0xe11, 0xe00);
+    cell(0xe12, 0xe00);
+    const auto outside = cell(0xe13, 0xe01);
+    ESM4::Door gate{};
+    gate.mId = id(0xe20);
+    gate.mDoorFlags = ESM4::Door::Flag_OblivionGate;
+    store.getWritable<ESM4::Door>().insertStatic(gate, key(0xe20));
+    const auto door = [&](uint32_t n, uint32_t owner, uint32_t dest) {
+        ESM4::Reference ref{};
+        ref.mId = id(n);
+        ref.mFormKey = key(n);
+        ref.mBaseKey = key(0xe20);
+        ref.mParentKey = key(owner);
+        ref.mDoor.destDoor = id(dest);
+        store.getWritable<ESM4::Reference>().insertStatic(ref, key(n));
+    };
+    door(0xe30, 0xe10, 0xe31);
+    door(0xe31, 0xe11, 0xe30);
+    door(0xe32, 0xe12, 0xe33);
+    EXPECT_EQ(MWWorld::findOblivionGateExit(store, tower), nullptr);
+    door(0xe33, 0xe13, 0xe32);
+    const auto* exit = MWWorld::findOblivionGateExit(store, tower);
+    ASSERT_NE(exit, nullptr);
+    EXPECT_EQ(exit->mFormKey, key(0xe32));
+    EXPECT_EQ(MWWorld::findOblivionGateExit(store, outside), nullptr);
+    door(0xe34, 0xe11, 0xe35);
+    door(0xe35, 0xe13, 0xe34);
+    EXPECT_EQ(MWWorld::findOblivionGateExit(store, tower), nullptr);
 }
 
 TEST(OblivionTutorialAction, UngroupedAnimationPollTracksLivePlayGroupCompletion)

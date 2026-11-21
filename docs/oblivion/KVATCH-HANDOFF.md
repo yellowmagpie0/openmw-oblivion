@@ -5,20 +5,32 @@ Dark Salvation → Reapers Sprawl → Sigil Keep/key → Sigil Stone/gate closur
 Full gate and main-quest acceptance remain open. Choose implementation from the
 next observed original-content failure; finish each bounded chunk first.
 
-**Windows Sigillum Sanguis checkpoint.** Player AddItem now rolls a TES4
-leveled reward at the player's level and publishes the selected concrete items.
-From the stage-40 portal save, a diagnostic MoveTo and scripted activation of
-the original SigilStoneMS48 reproduced an empty reward on the parent revision.
-The same encounter now gives one stone (042023 in the recorded run), confirmed
-by a separate GetItemCount read across the level-one reward pool. Evidence:
-`build-windows/sigil-base2/openmw.log`, `build-windows/sigil-reward/openmw.log`,
-`build-windows/sigil-tests.log` (four inventory/leveled tests). Tower traversal,
-ordinary activation, cold restart and gate closure are still open. Ungrouped IsAnimPlaying now queries the live controller for the recorded
-PlayGroup. The original removal animation ran for about 3.8 seconds before
-reward delivery (previously 0.012 seconds). Named and ungrouped polls both
-observed active playback. See `build-windows/sigil-animation/openmw.log` and
-`build-windows/sigil-animation-tests.log` (24 engine tests). The next
-progression gate is the timed ring script's CloseCurrentOblivionGate command.
+**Current Windows checkpoint � outside Kvatch, MS48 stage 50.** From a copy
+of the stage-40 Blood Feast save, MoveTo and a short position/aim adjustment
+staged the player within reach of the original Sigil Stone. A Space press
+started the authored removal animation. The player received one level-one
+stone (042011) and made an F5 save before the gate timer expired. A fresh
+process resumed the timer, found the unique reciprocal gate through the tower
+and Oblivion worldspace, returned the player by its XTEL and marked gate
+01e8a3 destroyed. Its own script advanced MS48 to 50. Another cold load and
+F5 retained the exterior cell 00db46, stage 50 and exactly one stone.
+No quest stage or inventory edit was used. Tower traversal and the earlier
+stage-30 keeper loot contract remain separate open acceptance gaps.
+
+- Resume from `build-windows/sigil-cold01/user/saves/Bendu_Olo/Quicksave.omwsave`
+  (SHA256 `50bbe36cac16855e398f4099a18356efd5ac86a1bd2957a568ac6a1a76fde427`).
+- Before/after leveled reward: `build-windows/sigil-base2`, `sigil-reward`.
+  Named and ungrouped animation polls: `build-windows/sigil-animation`.
+  The removal took about 3.8 seconds, versus a same-frame reward previously.
+- Ordinary activation and restart evidence: `build-windows/sigil-input04`,
+  `build-windows/sigil-close01`, `build-windows/sigil-cold01`.
+  Test logs: `sigil-tests.log`, `sigil-animation-tests.log`, `sigil-close-tests.log`
+  in `build-windows`. Full Windows engine run: 2,331/2,335 passed.
+  The four pre-existing OblivionEffectShader failures cannot decode the PPM
+  test texture (also in `quest-journal-engine-tests.log`). No sanitizer run.
+- Remaining: the destroyed gate retains its live portal animation; then speak
+  to Savlian and exercise the next quest objective. SetQuestObject on the old
+  key is still deferred. Random gates without a unique authored pair are open.
 
 The Runed Portal in The Blood Feast now completes its activation when the
 authored membrane effect is unsupported. Same-cell Oblivion player teleports
@@ -40,7 +52,7 @@ Windows branch freshly fetched after that chunk: remote remainsc8fdfc22a8,
 already merged; GitHub remote heads independently listed, no source/build delta.
 `build/oblivion-compat/kvatch-bridge-yield/windows-refresh-after-chunk-01.json`.
 
-**Current bounded chunk: native inventory OnAdd after container-to-Player transfer.**
+**Earlier stage-30 course: native inventory OnAdd after container-to-Player transfer.**
 Normal original bridge remainder/door, keeper forced greeting/combat and Menien
 Activate pass. Ilend earns keeper kill; Player90.0578, Ilend5.8551 remain alive.
 Menien INFO089938 earns MS48stage30. [Preparation](KVATCH-REAPERS-SPRAWL-PREPARATION.json).
