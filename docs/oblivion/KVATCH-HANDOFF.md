@@ -52,7 +52,9 @@ and, after reloading the Anvil quicksave, to Bruma East Gate. Screenshots and
 ordinary saves are in `sigil-map-anvil2` and `sigil-map-bruma3`. Map selection
 was independent of the active quest. Travel advanced the clock by 5.07 and
 29.69 game hours respectively. `sigil-map-pointer4` reopened the Bruma save
-and exercised province overview, mouse-wheel zoom and drag. The input harness
+and exercised province overview, mouse-wheel zoom and drag. In `sigil-map-focus5`
+the player picked Anvil Dock Gate with the mouse and pressed T. Its confirmation
+matched the one opened by clicking Travel in `sigil-map-pointer4`. The input harness
 opened the map through the UI and sent controls to the game window.
 `map-nav-final-test.log` records all 2,339 engine and 3,318 component tests passing.
 

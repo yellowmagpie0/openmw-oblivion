@@ -1361,6 +1361,9 @@ namespace MWGui
             y = coord.top + coord.height / 2;
         }
         mGlobalMap->setViewOffset({view.width / 2 - x, view.height / 2 - y});
+        // MyGUI's dropdown is an EditBox. Release text input once a place has been chosen
+        // so the map shortcuts work after a mouse selection too.
+        MWBase::Environment::get().getWindowManager()->setKeyFocusWidget(nullptr);
     }
 
     bool MapWindow::browseMapPlace(int direction)
