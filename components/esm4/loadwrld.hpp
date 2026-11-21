@@ -107,7 +107,7 @@ namespace ESM4
         float mLandLevel;
         float mWaterLevel;
 
-        Map mMap;
+        Map mMap{};
 
         std::int32_t mMinX;
         std::int32_t mMinY;

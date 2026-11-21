@@ -113,3 +113,7 @@ Feet: "feet"
 Speed: "Speed"
 Weight: "Weight"
 Value: "Value"
+
+FindMapPlace: "Find a place"
+ProvinceOverview: "Province overview"
+BrowseMapPlaces: "Choose a place, or browse with Page Up and Page Down."

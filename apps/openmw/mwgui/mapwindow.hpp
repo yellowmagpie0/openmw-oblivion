@@ -10,12 +10,15 @@
 #include <osg/Vec2d>
 
 #include <MyGUI_ITexture.h>
+#include <MyGUI_ComboBox.h>
 
 #include "windowpinnablebase.hpp"
 #include "../mwworld/oblivionquestguidance.hpp"
 
 #include <components/esm3/custommarkerstate.hpp>
 #include <components/misc/constants.hpp>
+
+namespace ESM4 { struct World; }
 
 namespace MWRender
 {
@@ -255,7 +258,8 @@ namespace MWGui
         void setVisible(bool visible) override;
 
         void renderGlobalMap();
-        bool travelNearObjective(bool repeat);
+        bool travelToMapSelection(bool repeat);
+        bool browseMapPlace(int direction);
 
         /// adds the marker to the global map
         /// @param name The ESM::Cell::mName
@@ -311,6 +315,8 @@ namespace MWGui
         void setGlobalMapMarkerTooltip(MyGUI::Widget* widget, int x, int y);
         float getMarkerSize(size_t agregatedWeight) const;
         void resizeGlobalMap();
+        MyGUI::IntSize globalMapSize() const;
+        void selectMapPlace(MyGUI::ComboBox*, size_t index);
         void shiftMap(int dx, int dy);
         void worldPosToGlobalMapImageSpace(float x, float z, float& imageX, float& imageY) const;
         MyGUI::IntCoord createMarkerCoords(float x, float y, float agregatedWeight) const;
@@ -319,6 +325,11 @@ namespace MWGui
         void createNativeMapMarkers();
 
         MyGUI::ScrollView* mGlobalMap;
+        const ESM4::World* mNativeAtlas = nullptr;
+        MyGUI::Widget* mAtlasToolbar;
+        MyGUI::Widget* mAtlasFooter;
+        MyGUI::ComboBox* mPlaces;
+        MyGUI::Widget* mSelectedPlace = nullptr;
         std::unique_ptr<MyGUI::ITexture> mGlobalMapTexture;
         std::unique_ptr<MyGUI::ITexture> mGlobalMapOverlayTexture;
         MyGUI::ImageBox* mGlobalMapImage;

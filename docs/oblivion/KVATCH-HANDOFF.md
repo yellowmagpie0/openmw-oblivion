@@ -41,9 +41,22 @@ in the chapel and both defeated attackers. Final full inventories passed
 `build-windows/kvatch-sigil-checkpoints`. The incremental bundle is
 `build-windows/kvatch-course-current.bundle`, based on c35ede26bf.
 
-The world-map background appeared white in this Windows run and the travel
-confirmation showed untranslated Yes/No labels. The verified route used the
-world map's Travel (T) button and Enter. Earlier diagnostic saves from before
+The world map now reads Cyrodiil's artwork and bounds from the original WRLD.
+Choose **Find a place** to locate a named map marker. **Province overview**
+fits the map in the maximized window. Drag to pan, scroll to zoom, or use
+Page Up / Page Down to browse places. **Travel (T)** asks for confirmation.
+With no place selected, it still offers the eligible marker near the active objective.
+
+The rendered Windows course travelled from the Kvatch gate to Anvil Main Gate
+and, after reloading the Anvil quicksave, to Bruma East Gate. Screenshots and
+ordinary saves are in `sigil-map-anvil2` and `sigil-map-bruma3`. Map selection
+was independent of the active quest. Travel advanced the clock by 5.07 and
+29.69 game hours respectively. `sigil-map-pointer4` reopened the Bruma save
+and exercised province overview, mouse-wheel zoom and drag. The input harness
+opened the map through the UI and sent controls to the game window.
+`map-nav-final-test.log` records all 2,339 engine and 3,318 component tests passing.
+
+Earlier diagnostic saves from before
 the encounter fix are documented at commit 3344ee2e60. Later quest stages
 and an uninterrupted playthrough from character creation remain unverified.
 

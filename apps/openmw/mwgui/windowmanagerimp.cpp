@@ -2789,9 +2789,13 @@ namespace MWGui
 
     bool WindowManager::injectKeyPress(MyGUI::KeyCode key, unsigned int text, bool repeat)
     {
+        if ((key == MyGUI::KeyCode::PageDown || key == MyGUI::KeyCode::PageUp) && getMode() == GM_Inventory && !isConsoleMode()
+            && SDL_IsTextInputActive() != SDL_TRUE && !MyGUI::InputManager::getInstance().isModalAny()
+            && mRuntime->mMap->browseMapPlace(key == MyGUI::KeyCode::PageDown ? 1 : -1))
+            return true;
         if (key == MyGUI::KeyCode::T && getMode() == GM_Inventory && !isConsoleMode()
             && SDL_IsTextInputActive() != SDL_TRUE
-            && !MyGUI::InputManager::getInstance().isModalAny() && mRuntime->mMap->travelNearObjective(repeat))
+            && !MyGUI::InputManager::getInstance().isModalAny() && mRuntime->mMap->travelToMapSelection(repeat))
             return true;
         if (key >= MyGUI::KeyCode::One && key <= MyGUI::KeyCode::Nine && getMode() == GM_Dialogue
             && !isConsoleMode() && !MyGUI::InputManager::getInstance().isModalAny()

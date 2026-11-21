@@ -855,7 +855,9 @@ void OMW::Engine::prepareEngine()
     mViewer->addEventHandler(mScreenCaptureHandler);
 
     mL10nManager = std::make_unique<L10n::Manager>(mVFS.get());
-    mL10nManager->setPreferredLocales(Settings::general().mPreferredLocales, Settings::general().mGmstOverridesL10n);
+    // The gmst locale contains TES3 interface string IDs. Oblivion uses the translated interface bundle.
+    mL10nManager->setPreferredLocales(Settings::general().mPreferredLocales,
+        resourceProfile != ESM::GameProfile::Oblivion && Settings::general().mGmstOverridesL10n);
     mEnvironment.setL10nManager(*mL10nManager);
 
     mLuaManager = std::make_unique<MWLua::LuaManager>(mVFS.get(), mResDir / "lua_libs");

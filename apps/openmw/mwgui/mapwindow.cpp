@@ -1,5 +1,10 @@
 #include "mapwindow.hpp"
 #include "localmapview.hpp"
+#include "worldmapprojection.hpp"
+
+#include <components/misc/resourcehelpers.hpp>
+#include <components/resource/resourcesystem.hpp>
+#include <components/vfs/manager.hpp>
 
 #include <osg/Texture2D>
 
@@ -14,6 +19,7 @@
 #include <MyGUI_ScrollView.h>
 #include <MyGUI_TextBox.h>
 #include <MyGUI_TextIterator.h>
+#include <MyGUI_TextureUtility.h>
 #include <MyGUI_Window.h>
 
 #include <components/esm3/esmwriter.hpp>
@@ -921,6 +927,10 @@ namespace MWGui
 
         mGlobalMap->setVisible(false);
 
+        getWidget(mAtlasToolbar, "AtlasToolbar");
+        getWidget(mAtlasFooter, "AtlasFooter");
+        getWidget(mPlaces, "Places");
+        mPlaces->eventComboAccept += MyGUI::newDelegate(this, &MapWindow::selectMapPlace);
         getWidget(mButton, "WorldButton");
         mButton->eventMouseButtonClick += MyGUI::newDelegate(this, &MapWindow::onWorldButtonClicked);
         getWidget(mQuestTravelButton, "QuestTravelButton");
@@ -930,7 +940,7 @@ namespace MWGui
 
         const bool global = Settings::map().mGlobal;
 
-        mButton->setCaptionWithReplacing(global ? "#{sLocal}" : "#{sWorld}");
+        mButton->setCaptionWithReplacing(global ? "#{Interface:Local}" : "#{Interface:World}");
 
         getWidget(mEventBoxGlobal, "EventBoxGlobal");
         mEventBoxGlobal->eventMouseDrag += MyGUI::newDelegate(this, &MapWindow::onMouseDrag);
@@ -938,8 +948,7 @@ namespace MWGui
 
         const bool allowZooming = Settings::map().mAllowZooming;
 
-        if (allowZooming)
-            mEventBoxGlobal->eventMouseWheel += MyGUI::newDelegate(this, &MapWindow::onMapZoomed);
+        mEventBoxGlobal->eventMouseWheel += MyGUI::newDelegate(this, &MapWindow::onMapZoomed);
         mEventBoxGlobal->setDepth(Global_ExploreOverlayLayer);
 
         getWidget(mEventBoxLocal, "EventBoxLocal");
@@ -1037,6 +1046,8 @@ namespace MWGui
     void MapWindow::onMapZoomed(MyGUI::Widget* /*sender*/, int rel)
     {
         const int localWidgetSize = Settings::map().mLocalMapWidgetSize;
+        if (!Settings::map().mAllowZooming && !(Settings::map().mGlobal && mNativeAtlas))
+            return;
         const bool zoomOut = rel < 0;
         const bool zoomIn = !zoomOut;
         const float speedDiff = zoomOut ? 1.f / speed : speed;
@@ -1051,8 +1062,8 @@ namespace MWGui
         {
             const float currentGlobalZoom = mGlobalMapZoom;
             const float currentMinGlobalMapZoom
-                = std::min(float(mGlobalMap->getWidth()) / float(mGlobalMapRender->getWidth()),
-                    float(mGlobalMap->getHeight()) / float(mGlobalMapRender->getHeight()));
+                = std::min(float(mGlobalMap->getWidth()) / float(globalMapSize().width),
+                    float(mGlobalMap->getHeight()) / float(globalMapSize().height));
 
             mGlobalMapZoom *= speedDiff;
 
@@ -1130,14 +1141,10 @@ namespace MWGui
     {
         resizeGlobalMap();
 
-        float x = mCurPos.x(), y = mCurPos.y();
-        if (!mActiveCell->isExterior())
-        {
-            auto pos = MWBase::Environment::get().getWorld()->getPlayer().getLastKnownExteriorPosition();
-            x = pos.x();
-            y = pos.y();
-        }
-        setGlobalMapPlayerPosition(x, y);
+        const auto world = MWBase::Environment::get().getWorld();
+        const auto pos = mActiveCell->isExterior() ? world->getPlayerPtr().getRefData().getPosition().asVec3()
+                                                   : world->getPlayer().getLastKnownExteriorPosition();
+        setGlobalMapPlayerPosition(pos.x(), pos.y());
 
         for (auto& [marker, col] : mGlobalMapMarkers)
         {
@@ -1188,6 +1195,29 @@ namespace MWGui
     void MapWindow::renderGlobalMap()
     {
         mGlobalMapRender->render();
+        const auto& env = MWBase::Environment::get();
+        if (ESM::isEsm4Ext(mGlobalMapRender->getWorldspace()))
+        {
+            const auto* atlas = MWWorld::getWorldspaceFeature(env.getESMStore()->get<ESM4::World>(),
+                mGlobalMapRender->getWorldspace(), ESM4::World::UseFlag_Map);
+            if (atlas && !atlas->mMapFile.empty() && hasWorldMapBounds(atlas->mMap))
+            {
+                const auto& vfs = *env.getResourceSystem()->getVFS();
+                const auto path = Misc::ResourceHelpers::correctTexturePath(VFS::Path::toNormalized(atlas->mMapFile), vfs);
+                if (vfs.exists(path))
+                {
+                    mNativeAtlas = atlas;
+                    mGlobalMapImage->setImageTexture(path);
+                    const auto texture = MyGUI::texture_utility::getTextureSize(path.value());
+                    // The DDS can contain power-of-two padding below the usable WRLD map.
+                    const float bottom = worldMapTextureBottom(atlas->mMap, texture.width, texture.height);
+                    mGlobalMapImage->getSubWidgetMain()->_setUVSet({ 0.f, 0.f, 1.f, bottom });
+                    mGlobalMapOverlay->setVisible(false);
+                    mPlayerArrowGlobal->setImageTexture("textures/menus/map/world_map_arrow_icon.dds");
+                    mGlobalMapZoom = 0.5f;
+                }
+            }
+        }
         resizeGlobalMap();
         createNativeMapMarkers();
     }
@@ -1237,7 +1267,7 @@ namespace MWGui
     {
         worldPosToGlobalMapImageSpace(worldX, worldY, worldX, worldY);
         constexpr float baseSize = 12.f;
-        const float markerSize = baseSize * mGlobalMapZoom;
+        const float markerSize = std::clamp(baseSize * mGlobalMapZoom, 12.f, 24.f);
         const float halfMarkerSize = markerSize / 2.f;
         return MyGUI::IntCoord(static_cast<int>(worldX - halfMarkerSize), static_cast<int>(worldY - halfMarkerSize),
             static_cast<int>(markerSize), static_cast<int>(markerSize));
@@ -1248,6 +1278,8 @@ namespace MWGui
         for (const MapMarkerType& marker : mNativeGlobalMapMarkers)
             MyGUI::Gui::getInstance().destroyWidget(marker.widget);
         mNativeGlobalMapMarkers.clear();
+        mSelectedPlace = nullptr;
+        mPlaces->removeAllItems();
 
         const MWWorld::ESMStore& store = *MWBase::Environment::get().getESMStore();
         const ESM::RefId mapWorldspace = mGlobalMapRender->getWorldspace();
@@ -1272,17 +1304,20 @@ namespace MWGui
                 continue;
 
             const osg::Vec2f position(ref.mPos.pos[0], ref.mPos.pos[1]);
-            MyGUI::Widget* widget = mGlobalMap->createWidget<MyGUI::Widget>(
-                "MarkerButton", createNativeMarkerCoords(position.x(), position.y()), MyGUI::Align::Default);
+            auto* widget = mGlobalMap->createWidget<MyGUI::ImageBox>(
+                "ImageBox", createNativeMarkerCoords(position.x(), position.y()), MyGUI::Align::Default);
+            constexpr std::string_view icons[] = { "door", "camp", "cave", "city", "elven_ruin", "fort_ruin",
+                "mine", "mountain_peak", "tavern", "settlement", "daedric_shrine", "door" };
+            const auto icon = ref.mMapMarker < std::size(icons) ? icons[ref.mMapMarker] : icons[0];
+            widget->setImageTexture("textures/menus/map/world/world_map_icon_" + std::string(icon)
+                + (ref.mMapMarkerFlags & 2 ? ".dds" : "_inactive.dds"));
             widget->setUserString("Caption_TextOneLine", ref.mFullName);
             widget->setUserString("ToolTipLayout", "TextToolTipOneLine");
             widget->setUserString("ToolTipType", "Layout");
             widget->setNeedMouseFocus(true);
-            widget->setColour(
-                MyGUI::Colour::parse(MyGUI::LanguageManager::getInstance().replaceTags("#{fontcolour=normal}")));
             widget->setDepth(Global_MarkerLayer);
             widget->eventMouseDrag += MyGUI::newDelegate(this, &MapWindow::onMouseDrag);
-            if (Settings::map().mAllowZooming)
+            if (Settings::map().mAllowZooming || mNativeAtlas)
                 widget->eventMouseWheel += MyGUI::newDelegate(this, &MapWindow::onMapZoomed);
             widget->eventMouseButtonPressed += MyGUI::newDelegate(this, &MapWindow::onDragStart);
             widget->setUserString("TravelEnabled", ref.mMapMarkerFlags & 2 ? "true" : "false");
@@ -1291,13 +1326,63 @@ namespace MWGui
             mNativeGlobalMapMarkers.push_back({ position, widget });
         }
 
+        std::stable_sort(mNativeGlobalMapMarkers.begin(), mNativeGlobalMapMarkers.end(), [](const auto& a, const auto& b) {
+            return a.widget->getUserString("Caption_TextOneLine") < b.widget->getUserString("Caption_TextOneLine");
+        });
+        mPlaces->addItem(MyGUI::LanguageManager::getInstance().replaceTags("#{Interface:ProvinceOverview}"));
+        for (const auto& marker : mNativeGlobalMapMarkers)
+            mPlaces->addItem(std::string(marker.widget->getUserString("Caption_TextOneLine")));
+        mPlaces->setCaptionWithReplacing("#{Interface:FindMapPlace}");
         Log(Debug::Info) << "M9 native global map created " << mNativeGlobalMapMarkers.size()
                          << " initially visible map markers";
     }
 
+    void MapWindow::selectMapPlace(MyGUI::ComboBox*, size_t index)
+    {
+        if (!mNativeAtlas || index > mNativeGlobalMapMarkers.size() || !mActiveCell)
+            return;
+        if (index == 0 && !Settings::windows().mMapMaximized)
+            MWBase::Environment::get().getWindowManager()->toggleMaximized(this);
+        const auto view = mGlobalMap->getSize();
+        const auto size = globalMapSize();
+        mSelectedPlace = index ? mNativeGlobalMapMarkers[index - 1].widget : nullptr;
+        if (!index)
+            mGlobalMapZoom = std::min(float(view.width) / size.width, float(view.height) / size.height);
+        else
+            mGlobalMapZoom = std::max(mGlobalMapZoom, 0.75f);
+        updateGlobalMap();
+        const auto canvas = mGlobalMapImage->getSize();
+        auto x = canvas.width / 2;
+        auto y = canvas.height / 2;
+        if (mSelectedPlace)
+        {
+            const auto coord = mSelectedPlace->getCoord();
+            x = coord.left + coord.width / 2;
+            y = coord.top + coord.height / 2;
+        }
+        mGlobalMap->setViewOffset({view.width / 2 - x, view.height / 2 - y});
+    }
+
+    bool MapWindow::browseMapPlace(int direction)
+    {
+        if (!isVisible() || !mPlaces->getVisible() || !mPlaces->getItemCount())
+            return false;
+        const auto count = mPlaces->getItemCount();
+        const auto current = mPlaces->getIndexSelected();
+        const size_t next = current == MyGUI::ITEM_NONE ? (direction > 0 ? 1 : count - 1) % count
+            : (current + (direction > 0 ? 1 : count - 1)) % count;
+        mPlaces->setIndexSelected(next);
+        selectMapPlace(mPlaces, next);
+        return true;
+    }
+
     MyGUI::Widget* MapWindow::objectiveTravelMarker() const
     {
-        if (!mGlobalQuestMarker || !Settings::map().mGlobal || mGlobalQuestMarker->mSpace != mGlobalMapRender->getWorldspace())
+        if (!mGlobalQuestMarker || !Settings::map().mGlobal)
+            return nullptr;
+        const auto& worlds = MWBase::Environment::get().getESMStore()->get<ESM4::World>();
+        if (MWWorld::resolveWorldspaceInheritance(worlds, mGlobalQuestMarker->mSpace, ESM4::World::UseFlag_Map)
+            != mGlobalMapRender->getWorldspace())
             return nullptr;
         // Only offer a discovered destination within one exterior cell of the objective.
         float closest = 4096.f * 4096.f;
@@ -1317,14 +1402,14 @@ namespace MWGui
 
     void MapWindow::onQuestTravel(MyGUI::Widget*)
     {
-        travelNearObjective(false);
+        travelToMapSelection(false);
     }
 
-    bool MapWindow::travelNearObjective(bool repeat)
+    bool MapWindow::travelToMapSelection(bool repeat)
     {
         if (!isVisible() || !mQuestTravelButton->getVisible())
             return false;
-        auto* marker = objectiveTravelMarker();
+        auto* marker = mSelectedPlace ? mSelectedPlace : objectiveTravelMarker();
         if (!marker)
             return false;
         if (!repeat)
@@ -1419,7 +1504,23 @@ namespace MWGui
         LocalMapBase::onFrame(dt);
         NoDrop::onFrame(dt);
         updateGlobalQuestMarker();
-        auto* destination = isVisible() && mQuestObjectiveButton->getVisible() ? objectiveTravelMarker() : nullptr;
+        const bool showTools = mNativeAtlas && Settings::map().mGlobal && isVisible()
+            && MWBase::Environment::get().getWindowManager()->getMode() != GM_None;
+        if (mAtlasToolbar->getVisible() != showTools)
+        {
+            auto area = mLocalMap->getCoord();
+            if (showTools)
+            {
+                area.top += mAtlasToolbar->getHeight();
+                area.height = std::max(1, area.height - mAtlasToolbar->getHeight() - mAtlasFooter->getHeight());
+            }
+            mGlobalMap->setCoord(area);
+        }
+        mAtlasToolbar->setVisible(showTools);
+        mAtlasFooter->setVisible(showTools);
+        mPlaces->setVisible(showTools);
+        auto* destination = Settings::map().mGlobal && mSelectedPlace ? mSelectedPlace
+            : (isVisible() && mQuestObjectiveButton->getVisible() ? objectiveTravelMarker() : nullptr);
         mQuestTravelButton->setVisible(destination != nullptr);
         if (destination)
             mQuestTravelButton->setUserString("Caption_TextOneLine",
@@ -1473,7 +1574,7 @@ namespace MWGui
         if (!mGlobalQuestPin)
             return;
         mGlobalQuestPin->setVisible(false);
-        if (!mGlobalQuestMarker || !mGlobalMapTexture)
+        if (!mGlobalQuestMarker || (!mNativeAtlas && !mGlobalMapTexture))
             return;
         const auto& worlds = MWBase::Environment::get().getESMStore()->get<ESM4::World>();
         const auto mapSpace = MWWorld::resolveWorldspaceInheritance(
@@ -1492,6 +1593,9 @@ namespace MWGui
 
     void MapWindow::onShowQuestObjective(MyGUI::Widget*)
     {
+        mSelectedPlace = nullptr;
+        mPlaces->setIndexSelected(MyGUI::ITEM_NONE);
+        mPlaces->setCaptionWithReplacing("#{Interface:FindMapPlace}");
         ensureGlobalMapLoaded();
         updateGlobalQuestMarker();
         updateLocalQuestMarker();
@@ -1540,17 +1644,32 @@ namespace MWGui
         return agregatedWeight ? 0 : markerSize; // we want to see only original markers (i.e. non agregated)
     }
 
+    MyGUI::IntSize MapWindow::globalMapSize() const
+    {
+        if (mNativeAtlas)
+            return { static_cast<int>(mNativeAtlas->mMap.width), static_cast<int>(mNativeAtlas->mMap.height) };
+        return { static_cast<int>(mGlobalMapRender->getWidth()), static_cast<int>(mGlobalMapRender->getHeight()) };
+    }
+
     void MapWindow::resizeGlobalMap()
     {
-        int width = static_cast<int>(mGlobalMapRender->getWidth() * mGlobalMapZoom);
-        int height = static_cast<int>(mGlobalMapRender->getHeight() * mGlobalMapZoom);
+        const auto size = globalMapSize();
+        int width = static_cast<int>(size.width * mGlobalMapZoom);
+        int height = static_cast<int>(size.height * mGlobalMapZoom);
         mGlobalMap->setCanvasSize(width, height);
         mGlobalMapImage->setSize(width, height);
     }
 
     void MapWindow::worldPosToGlobalMapImageSpace(float x, float y, float& imageX, float& imageY) const
     {
-        mGlobalMapRender->worldPosToImageSpace(x, y, imageX, imageY);
+        if (mNativeAtlas)
+        {
+            const auto pos = projectWorldMap(mNativeAtlas->mMap, x, y);
+            imageX = pos.x();
+            imageY = pos.y();
+        }
+        else
+            mGlobalMapRender->worldPosToImageSpace(x, y, imageX, imageY);
         imageX *= mGlobalMapZoom;
         imageY *= mGlobalMapZoom;
     }
@@ -1600,7 +1719,7 @@ namespace MWGui
         mGlobalMap->setVisible(global);
         mLocalMap->setVisible(!global);
 
-        mButton->setCaptionWithReplacing(global ? "#{sLocal}" : "#{sWorld}");
+        mButton->setCaptionWithReplacing(global ? "#{Interface:Local}" : "#{Interface:World}");
         mControllerButtons.mX = global ? "#{Interface:Local}" : "#{Interface:World}";
         MWBase::Environment::get().getWindowManager()->updateControllerButtonsOverlay();
     }
@@ -1676,7 +1795,7 @@ namespace MWGui
 
     void MapWindow::ensureGlobalMapLoaded()
     {
-        if (!mGlobalMapTexture.get())
+        if (!mNativeAtlas && !mGlobalMapTexture.get())
         {
             // The generated unexplored map and explored map RTT images are Y-up so the UVs are inverted
             // The unexplored map isn't saved so we *could* consider generating it the "right" way

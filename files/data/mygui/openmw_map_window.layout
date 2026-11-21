@@ -28,11 +28,28 @@
             <Widget type="Button" skin="" position_real="0 0 1 1" name="EventBoxGlobal" align="Stretch"/>
         </Widget>
 
+        <Widget type="Widget" skin="BlackBG" position="0 0 284 30" align="HStretch Top" name="AtlasToolbar">
+            <Property key="Visible" value="false"/>
+            <Property key="NeedMouse" value="false"/>
+        </Widget>
+        <Widget type="Widget" skin="BlackBG" position="0 229 284 35" align="HStretch Bottom" name="AtlasFooter">
+            <Property key="Visible" value="false"/>
+            <Property key="NeedMouse" value="false"/>
+        </Widget>
+
         <Widget type="Button" skin="MW_Button" position="194 4 84 22" align="Top Right" name="QuestTravelButton">
             <Property key="Caption" value="Travel (T)"/>
             <Property key="Visible" value="false"/>
             <UserString key="ToolTipType" value="Layout"/>
             <UserString key="ToolTipLayout" value="TextToolTipOneLine"/>
+        </Widget>
+
+        <Widget type="ComboBox" skin="MW_ComboBox" position="6 4 180 22" align="HStretch Top" name="Places">
+            <Property key="ModeDrop" value="true"/>
+            <UserString key="ToolTipType" value="Layout"/>
+            <UserString key="ToolTipLayout" value="TextToolTipOneLine"/>
+            <UserString key="Caption_TextOneLine" value="#{Interface:BrowseMapPlaces}"/>
+            <Property key="Visible" value="false"/>
         </Widget>
 
         <!-- World button -->
