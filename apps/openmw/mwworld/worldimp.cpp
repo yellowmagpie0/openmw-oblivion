@@ -29,6 +29,7 @@
 #include <components/esm4/loadclas.hpp>
 #include "oblivioncombatdata.hpp"
 #include "savedreference.hpp"
+#include "../mwphysics/movementsolver.hpp"
 #include "../mwphysics/oblivionragdoll.hpp"
 
 #include <array>
@@ -8982,6 +8983,85 @@ namespace MWWorld
         removeContainerScripts(getPlayerPtr());
         mWorldScene->changeToInteriorCell(cellName, position, adjustPlayerPos, changeEvent);
         addContainerScripts(getPlayerPtr(), getPlayerPtr().getCell());
+    }
+
+    namespace
+    {
+        osg::Vec3f doorArrivalBounds(MWWorld::World& world, MWPhysics::PhysicsSystem& physics,
+            const MWWorld::Ptr& actor)
+        {
+            const auto resident = physics.getHalfExtents(actor);
+            if (resident.length2() > 0) return resident;
+            // Native multipart NPC movement uses these profile bounds, not
+            // the skeleton's animation envelope. Match Actor::updateScale.
+            auto bounds = world.getPathfindingAgentBounds(actor).mHalfExtents;
+            bounds.x() = bounds.y() = std::max(bounds.x(), bounds.y());
+            const float scale = actor.getCellRef().getScale();
+            osg::Vec3f scaled(scale, scale, scale);
+            actor.getClass().adjustScale(actor, scaled, false);
+            return osg::componentMultiply(bounds, scaled);
+        }
+
+        float doorArrivalBound(const osg::Vec3f& bounds)
+        {
+            return 4.f * std::max({bounds.x(), bounds.y(), bounds.z()}) + 128.f;
+        }
+    }
+
+    float World::getDoorArrivalSearchRadius(const Ptr& actor)
+    {
+        return doorArrivalBound(doorArrivalBounds(*this, *mPhysics, actor));
+    }
+
+    std::optional<osg::Vec3f> World::findClearDoorArrival(const Ptr& actor, const osg::Vec3f& authored)
+    {
+        const auto bounds = doorArrivalBounds(*this, *mPhysics, actor);
+        auto& physics = *mPhysics;
+        // A cell transition can register actors before Bullet publishes their
+        // new transforms. Include the resident positions in player landing checks.
+        std::vector<Ptr> residents;
+        if (actor == getPlayerPtr())
+            MWBase::Environment::get().getMechanicsManager()->getActorsInRange(
+                authored, doorArrivalBound(bounds), residents);
+        const auto overlapsResident = [&](const osg::Vec3f& feet) {
+            for (const Ptr& other : residents)
+            {
+                if (other == actor || !other.getRefData().isEnabled() || other.getClass().getCreatureStats(other).isDead())
+                    continue;
+                const auto offset = other.getRefData().getPosition().asVec3() - feet;
+                const auto otherBounds = doorArrivalBounds(*this, physics, other);
+                const float separation = std::max(bounds.x(), bounds.y()) + std::max(otherBounds.x(), otherBounds.y());
+                if (offset.z() < 2.f * bounds.z() && offset.z() > -2.f * otherBounds.z()
+                    && offset.x() * offset.x() + offset.y() * offset.y() < separation * separation)
+                    return true;
+            }
+            return false;
+        };
+        if (!overlapsResident(authored) && physics.isActorPlacementClear(actor, authored, authored, bounds, true))
+            return authored;
+        const float radius = 2.f * std::max({bounds.x(), bounds.y(), bounds.z()}) + 2.f;
+        constexpr float diagonal = .70710678f;
+        const std::array<osg::Vec3f, 8> directions{{
+            {-1, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, -1, 0},
+            {-diagonal, diagonal, 0}, {diagonal, diagonal, 0},
+            {-diagonal, -diagonal, 0}, {diagonal, -diagonal, 0}}};
+        const int staticMask = MWPhysics::CollisionType_World | MWPhysics::CollisionType_Door
+            | MWPhysics::CollisionType_HeightMap;
+        const float bound = doorArrivalBound(bounds);
+        for (float ring : {1.f, 1.5f, 2.f})
+            for (const auto& direction : directions)
+            {
+                auto candidate = authored + direction * (radius * ring);
+                const auto ground = physics.castRay(candidate + osg::Vec3f(0, 0, 64),
+                    candidate - osg::Vec3f(0, 0, 128), staticMask);
+                if (!ground.mHit || !MWPhysics::isWalkableSlope(ground.mHitNormal)) continue;
+                // The normal movement solver owns final floor settling.
+                candidate.z() = ground.mHitPos.z() + 20.f;
+                if ((candidate - authored).length2() > bound * bound) continue;
+                if (!overlapsResident(candidate) && physics.isActorPlacementClear(actor, authored, candidate, bounds))
+                    return candidate;
+            }
+        return std::nullopt;
     }
 
     void World::changeToCell(

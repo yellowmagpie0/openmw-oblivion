@@ -115,56 +115,6 @@ namespace MWMechanics
         constexpr float sPhysicalDoorReleaseDistance = 2.f * sDoorLookAheadDistance;
         constexpr float sMaximumFrameCatchup = 8.f * sFixedStep;
 
-        osg::Vec3f doorArrivalBounds(MWWorld::World& world, MWPhysics::PhysicsSystem& physics,
-            const MWWorld::Ptr& actor)
-        {
-            const auto resident = physics.getHalfExtents(actor);
-            if (resident.length2() > 0) return resident;
-            // Native multipart NPC movement uses these profile bounds, not
-            // the skeleton's animation envelope. Match Actor::updateScale.
-            auto bounds = world.getPathfindingAgentBounds(actor).mHalfExtents;
-            bounds.x() = bounds.y() = std::max(bounds.x(), bounds.y());
-            const float scale = actor.getCellRef().getScale();
-            osg::Vec3f scaled(scale, scale, scale);
-            actor.getClass().adjustScale(actor, scaled, false);
-            return osg::componentMultiply(bounds, scaled);
-        }
-
-        float doorArrivalBound(const osg::Vec3f& bounds)
-        {
-            return 4.f * std::max({bounds.x(), bounds.y(), bounds.z()}) + 128.f;
-        }
-
-        std::optional<osg::Vec3f> clearDoorArrival(MWPhysics::PhysicsSystem& physics,
-            const MWWorld::Ptr& actor, const osg::Vec3f& authored, const osg::Vec3f& bounds)
-        {
-            // Preserve an unoccupied authored marker exactly. This is not a
-            // general correction of old markers embedded in scene geometry.
-            if (physics.isActorPlacementClear(actor, authored, authored, bounds, true)) return authored;
-            const float radius = 2.f * std::max({bounds.x(), bounds.y(), bounds.z()}) + 2.f;
-            constexpr float diagonal = .70710678f;
-            const std::array<osg::Vec3f, 8> directions{{
-                {-1, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, -1, 0},
-                {-diagonal, diagonal, 0}, {diagonal, diagonal, 0},
-                {-diagonal, -diagonal, 0}, {diagonal, -diagonal, 0}}};
-            const int staticMask = MWPhysics::CollisionType_World | MWPhysics::CollisionType_Door
-                | MWPhysics::CollisionType_HeightMap;
-            const float bound = doorArrivalBound(bounds);
-            for (float ring : {1.f, 1.5f, 2.f})
-                for (const auto& direction : directions)
-                {
-                    auto candidate = authored + direction * (radius * ring);
-                    const auto ground = physics.castRay(candidate + osg::Vec3f(0, 0, 64),
-                        candidate - osg::Vec3f(0, 0, 128), staticMask);
-                    if (!ground.mHit || !MWPhysics::isWalkableSlope(ground.mHitNormal)) continue;
-                    // The normal movement solver owns final floor settling.
-                    candidate.z() = ground.mHitPos.z() + 20.f;
-                    if ((candidate - authored).length2() > bound * bound) continue;
-                    if (physics.isActorPlacementClear(actor, authored, candidate, bounds)) return candidate;
-                }
-            return std::nullopt;
-        }
-
         bool placedActivator(const MWWorld::Ptr& target)
         {
             return !target.isEmpty() && target.isInCell() && target.getType() == ESM::REC_ACTI4;
@@ -5681,7 +5631,7 @@ namespace MWMechanics
                 // A saved, already realized clearance position is owned by
                 // the resident reference. Do not mistake it for a new warp.
                 const float bound = actor.getClass().isNpc() && mWorld.mPhysics
-                    ? doorArrivalBound(doorArrivalBounds(mWorld, *mWorld.mPhysics, actor)) : 128.f;
+                    ? mWorld.getDoorArrivalSearchRadius(actor) : 128.f;
                 const bool resident = currentCell == live.mState.mCell
                     && distanceSquared(abstractPosition, actor.getRefData().getPosition().asVec3()) <= 1.f
                     && distanceSquared(abstractPosition, door.mTeleportPosition) <= bound * bound;
@@ -5781,8 +5731,7 @@ namespace MWMechanics
             if (doorLanding && actor.getClass().isNpc() && mWorld.mPhysics
                 && mWorld.mWorldScene->isCellActive(destinationCell))
             {
-                const auto clear = clearDoorArrival(*mWorld.mPhysics, actor, abstractPosition,
-                    doorArrivalBounds(mWorld, *mWorld.mPhysics, actor));
+                const auto clear = mWorld.findClearDoorArrival(actor, abstractPosition);
                 if (!clear)
                 {
                     // The logical door use has already committed. Preserve

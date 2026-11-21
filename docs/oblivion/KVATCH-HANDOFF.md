@@ -1,18 +1,34 @@
 # Kvatch main-quest course — current handoff
 
-Target: outside Kvatch → Savlian → first gate → Blood Feast/Rending Halls →
-Dark Salvation → Reapers Sprawl → Sigil Keep/key → Sigil Stone/gate closure.
-Full gate and main-quest acceptance remain open. Choose implementation from the
-next observed original-content failure; finish each bounded chunk first.
+**Resume inside the south plaza, Breaking the Siege of Kvatch (MS48), stage 65.**
+Load `build-windows/sigil-plaza05/user/saves/Bendu_Olo/Quicksave.omwsave`
+with Oblivion.esm only. The current gameplay target is the six-enemy fight
+followed by entry into the chapel. The full main-quest course remains open.
 
-**Resume after accepting Savlian's counterattack, MS48 stage 60.** The original
-master-only quicksave is in
-`build-windows/sigil-counterattack01/user/saves/Bendu_Olo/Quicksave.omwsave`.
+**Next implementation:** the wave's enable parent 07214a is enabled, but all
+six placed references (07200c through 072010, and 072012) are absent from
+the plaza save. The native placed-actor updater skips enable parents, scripted
+leveled lists and actor templates. The three original lists use list script
+00c73c and template 090ab7. Preserve the list's own OnLoad and the spawned
+actor's separate template script, including its one-time death count across
+reload. Six kills should earn stage 80. Savlian and two guards also share
+an arrival position despite having distinct AI destinations.
+
+Savlian's original package 17c462 took him through the city door. Its
+OnPackageDone advanced MS48 to 65. The pre-entry quicksave is under
+`sigil-march-save01/user` in the build directory. Position/angle commands
+staged the player at door 0147db, then Space entered the plaza. Before the
+fix the saved player overlapped three guards exactly and the camera was
+inside Merandil. After the fix the player settled 135 units from all three,
+facing the chapel. A cold reload and second save reproduced the same separation
+(`sigil-plaza-cold01`). Compare `sigil-plaza01` and `sigil-plaza05` screenshots
+and saves. The reference stage-60 save is under `sigil-counterattack01/user`.
+No quest, health, enemy or AI state edits were used.
+
 From the stage-50 save below, MoveTo and SetPos/SetAngle staged a conversation
 with Savlian. Space opened greeting 01e8a7, keyboard 1 selected the ready
 reply 01e8ac, both authored stage-60 result entries dispatched, then Escape
-and F5 saved. The next gameplay check is Savlian's approach to the city and
-the plaza encounter. Focused dialogue/topic suite passed 56/56. A cold reload from the stage-60
+and F5 saved. Focused dialogue/topic suite passed 56/56. A cold reload from the stage-60
 save showed Savlian moving from his barricade toward the city (march01).
 At 960x540 the HUD now displays the complete quest and destination together
 with the bearing and 1 m distance. Compare the F12 screenshots in

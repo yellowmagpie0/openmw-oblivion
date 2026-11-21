@@ -1,5 +1,6 @@
 #include "actionteleport.hpp"
 
+#include <components/debug/debuglog.hpp>
 #include <components/esm3/loadcell.hpp>
 #include <components/esm3/loadmgef.hpp>
 
@@ -16,6 +17,7 @@
 #include "../mwworld/worldmodel.hpp"
 
 #include "player.hpp"
+#include "worldimp.hpp"
 
 namespace MWWorld
 {
@@ -63,6 +65,17 @@ namespace MWWorld
                 && actor.isInCell() && !actor.getCell()->isExterior() && actor.getCell()->getCell()->getId() == mCellId;
             world->changeToCell(mCellId, mPosition, !sameOblivionInterior);
             teleported = world->getPlayerPtr();
+            if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+            {
+                auto& nativeWorld = static_cast<World&>(*world);
+                const auto feet = teleported.getRefData().getPosition().asVec3();
+                const auto clear = nativeWorld.findClearDoorArrival(teleported, feet);
+                if (clear && *clear != feet)
+                {
+                    teleported = world->moveObject(teleported, *clear);
+                    Log(Debug::Verbose) << "Placed player beside occupied door arrival in " << mCellId;
+                }
+            }
         }
         else
         {

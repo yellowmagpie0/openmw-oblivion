@@ -850,6 +850,9 @@ namespace MWWorld
         ///< Move to interior cell.
         ///< @param changeEvent If false, do not trigger cell change flag or detect worldspace changes
 
+        float getDoorArrivalSearchRadius(const Ptr& actor);
+        std::optional<osg::Vec3f> findClearDoorArrival(const Ptr& actor, const osg::Vec3f& authored);
+
         void changeToCell(const ESM::RefId& cellId, const ESM::Position& position, bool adjustPlayerPos,
             bool changeEvent = true) override;
         ///< @param changeEvent If false, do not trigger cell change flag or detect worldspace changes
