@@ -1,66 +1,53 @@
-# Kvatch main-quest course â€” current handoff
+# Kvatch to Weynon Priory — current handoff
 
-**Fast-travel save boundary verified.** A save immediately after arrival could
-write Martin's physical reference at Weynon while his AI still named the
-Kvatch exterior. The travelling party now publishes its resident package
-state before time advances. From `sigil-weynon01-outside`, repeat arrival
-`sigil-weynon-follow02` passed `scripts/verify_weynon_map_travel.py` on the
-first quicksave. The three original exterior StartCombat calls ran at stage 7.
+**The player found Martin and reunited him with Jauffre in Weynon Priory Chapel.**
+Find the Heir (MQ03) is complete at stage 100. Martin recruited through reply 01e8d7. At the reunion, Jauffre's
+greeting 01ee25 and reply 01ee2b advanced Weynon Priory (MQ04) to stage 20.
+The next journal objective is to check the Amulet of Kings in Weynon House.
 
-**Replayed recruitment with the priory encounter initialized.**
-`build-windows/sigil-weynon01-recruit/user/saves/Bendu_Olo/Quicksave.omwsave`
-has both Weynon secret-door defaults set open (02c6e6, 02c6e7) and all five
-authored Mythic Dawn attackers enabled. MQ04 stage 5 ran both result entries
-when the player recruited Martin again. The door and map gate run passed
-14/14 (`weynon-door-tests.log`). Use the `weynon01` saves for the attack.
-The earlier travel investigation below explains the difference.
+## Resume the playthrough
 
-**Weynon travel checkpoint.** On the world map the player chose Travel (T)
-and confirmed Weynon Priory with Enter. After 14.26 game hours the player
-and Martin landed 135 units apart in Tamriel cell 00f32b. Martin retained his
-follow package and player target. Compare the departure below with
-`build-windows/sigil-martin-map05/user/saves/Bendu_Olo/Quicksave.omwsave`
-using `scripts/verify_weynon_map_travel.py`. The arrival ran MQ04 stage 7.
-Do not accept the encounter from this save: recruiting Martin had stopped
-one of the two stage-5 results on SetDoorDefaultOpen before enabling the
-attackers. Replay from the pre-recruitment chapel checkpoint after fixing it.
-Eronor's ordinary shepherd greeting was observed in `sigil-martin-eronor01`.
+Run `build-windows/Play-Weynon-Reunion.cmd`. The launcher was cold-tested with
+`build-windows/sigil-weynon-player/user/saves/Bendu_Olo/Martin-at-Weynon.omwsave`.
+The named checkpoint is separate from the ordinary quicksave. Its local profile
+loads Oblivion.esm and the input harness's original script manifest. The player
+script now just returns an empty table and leaves the controls to the player.
+Keep the manifest with this save. Native save admission requires its identity.
 
-**Departure outside Kvatch with Martin following.** Load
-`build-windows/sigil-martin-exit01/user/saves/Bendu_Olo/Quicksave.omwsave`.
-Martin's package 01e8d8 followed the player out of the chapel through 02a297
-and out of the city through 07214f. Cold reload `sigil-martin-roadstart01`
-shows Martin beside the player in Tamriel. The Weynon quest's null speaker
-guard now runs without repeated OBSV003 diagnostics. Nine VM tests passed
-(`martin-quest-test.log`), including both bound and unbound guards.
-Next reach Weynon Priory and speak to Jauffre with Martin present.
+## Course evidence
 
-**Recruitment checkpoint.** Load `build-windows/sigil-martin-meet02/user/saves/Bendu_Olo/Quicksave.omwsave`.
-From the stage-90 plaza, ordinary activation of 07214e ran its authored race
-and creature checks and delivered the player to cell 02a24b. The intermediate
-save is under `sigil-martin-chapel03/user`. From that cold load, the player
-walked up to Martin and used his numbered replies (2, 1, 2, 1, 1, 1, 1).
-Reply 01e8d7 accepted the escort and the save shows MQ03 stage 60, MQ04 stage
-5 and MS48 stage 90. The playable race/creature regression passed for NPC,
-creature, and current player proxy. The full post-door engine inventory passed 2336/2336.
+All case directories below are under `build-windows`. Each save is under
+`user/saves/Bendu_Olo`. The route from the inherited stage-65 plaza save used
+player movement, attacks, spells, wait, doors, conversations and world-map
+travel. The input harness steered those actions. Earlier gate checkpoints
+below describe their console positioning.
 
-The player defeated the six original plaza actors using movement, weapon attacks
-and healing casts. The fight quicksave is under `build-windows/sigil-martin-fight02/user`
-(stage 80, 3 health). Walking to Savlian and activating his greeting earned
-stage 90. Resume from `build-windows/sigil-martin-savlian01/user/saves/Bendu_Olo/Quicksave.omwsave`.
-These saves include the local `sigil.omwscripts` player-input driver.
-The full engine inventory passed 2336/2336
-after the wave change (`build-windows/martin-full-tests.log`).
+| Milestone | Saved evidence |
+| --- | --- |
+| Six original plaza attackers spawned, fought and defeated | `sigil-martin-wave02`, `sigil-martin-wave-cold02`, `sigil-martin-fight02` (MS48 80) |
+| Savlian authorized chapel entry and the player entered through door 07214e | `sigil-martin-savlian01` (MS48 90), `sigil-martin-chapel03` |
+| Martin accepted the invitation. Both secret doors received their open defaults and all five priory attackers were enabled | `sigil-weynon01-recruit` (MQ03 60, MQ04 5) |
+| Martin followed through the chapel and city doors. The player recovered by waiting | `sigil-weynon01-plaza`, `sigil-weynon01-outside` |
+| World-map confirmation brought both characters to Weynon and the exterior attackers engaged | `sigil-weynon01-arrival` (MQ04 7). Repeat `sigil-weynon-follow02` verifies an immediate save of both positions and the follow package |
+| The player went straight to the priory chapel. The two Mythic Dawn agents died there and both companions survived | `sigil-weynon01-chapel`, `sigil-weynon01-defense` (MQ03 100, MQ04 10) |
+| The player spoke to Jauffre. Martin and Jauffre remained alive beside the player after a cold restart and resave | `sigil-weynon01-jauffre`, `sigil-weynon-player` (MQ04 20) |
 
-**Plaza wave is present.** The original enabled parent 07214a now brings in
-all six authored placements. At level 1 the draw produced five stunted scamps
-and one Dremora. Each has an independent list OnLoad and template script.
-F5 and a cold replay preserved the selections and twelve instances, checked
-by `scripts/verify_kvatch_plaza_wave.py` against `sigil-martin-wave02` and
-`sigil-martin-wave-cold02` under the Windows build directory. The focused
-engine run passed 66 checks. The pre-fight save at stage 65 is
-`build-windows/sigil-plaza05/user/saves/Bendu_Olo/Quicksave.omwsave`
-(Oblivion.esm only, health 6.71, MQ02 stage 100 and MQ03 stage 40).
+`scripts/verify_kvatch_plaza_wave.py` checks the wave and script owners.
+`scripts/verify_weynon_map_travel.py` checks departure and immediate arrival.
+`scripts/verify_weynon_reunion.py` checks both journal stages, the living party
+in the chapel and both defeated attackers. Final full inventories passed
+2,338 engine and 3,318 component tests, with zero skipped
+(`weynon-final-full.log`). Local commits are on `kvatch-sigil-course` in
+`build-windows/kvatch-sigil-checkpoints`. The incremental bundle is
+`build-windows/kvatch-course-current.bundle`, based on c35ede26bf.
+
+The world-map background appeared white in this Windows run and the travel
+confirmation showed untranslated Yes/No labels. The verified route used the
+world map's Travel (T) button and Enter. Earlier diagnostic saves from before
+the encounter fix are documented at commit 3344ee2e60. Later quest stages
+and an uninterrupted playthrough from character creation remain unverified.
+
+## Earlier gate and plaza evidence
 
 Savlian's original package 17c462 took him through the city door. Its
 OnPackageDone advanced MS48 to 65. The pre-entry quicksave is under
