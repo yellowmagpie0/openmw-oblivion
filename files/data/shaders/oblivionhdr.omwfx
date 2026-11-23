@@ -63,18 +63,25 @@ shared {
         float knee = max(0.001, 0.5 * threshold);
         float ramp = clamp(peak - threshold + knee, 0.0, 2.0 * knee);
         float excess = max(peak - threshold, ramp * ramp / (4.0 * knee));
+        // Roll off the light scattered into the halo. Very bright lamps and moving specular
+        // highlights still retain their full intensity in the sharp scene.
+        excess = excess / (1.0 + excess);
         return light * (omw.oblivionBloom.y * excess / max(peak, 0.001));
     }
 
     vec3 blur(sampler2D source, vec2 uv, vec2 axis)
     {
-        // Repeated Gaussian passes add their variances.
-        vec2 stepUV = axis * omw.rcpResolution * (omw.resolution.y / 600.0) * omw.oblivionBloom.z * sqrt(max(0.0, omw.oblivionBloom.w));
+        // The weather radius describes the whole filter, including its outermost tap.
+        // Limit tap spacing to one quarter-resolution texel so a narrow highlight
+        // cannot land in separated lobes as it moves across the downsampled buffer.
+        const float outerTap = 3.230769;
+        float radius = (omw.resolution.y / 600.0) * omw.oblivionBloom.z * sqrt(max(0.0, omw.oblivionBloom.w));
+        vec2 stepUV = axis * omw.rcpResolution * clamp(radius / outerTap, 0.0, 4.0);
         vec3 color = omw_Texture2D(source, uv).rgb * 0.227027;
         color += (omw_Texture2D(source, uv + 1.384615 * stepUV).rgb
                 + omw_Texture2D(source, uv - 1.384615 * stepUV).rgb) * 0.316216;
-        color += (omw_Texture2D(source, uv + 3.230769 * stepUV).rgb
-                + omw_Texture2D(source, uv - 3.230769 * stepUV).rgb) * 0.070270;
+        color += (omw_Texture2D(source, uv + outerTap * stepUV).rgb
+                + omw_Texture2D(source, uv - outerTap * stepUV).rgb) * 0.070270;
         return color;
     }
 }
