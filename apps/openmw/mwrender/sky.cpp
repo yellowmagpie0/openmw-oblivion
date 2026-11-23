@@ -10,6 +10,7 @@
 #include <osgParticle/ParticleSystemUpdater>
 
 #include <components/settings/values.hpp>
+#include <components/esm/gameprofile.hpp>
 
 #include <components/sceneutil/controller.hpp>
 #include <components/sceneutil/depth.hpp>
@@ -40,6 +41,35 @@
 
 namespace
 {
+    // The two shells of Oblivion's Clouds.nif have their own UVs. Wrap the instance's drawables
+    // so each shell can inherit its weather texture without editing shared mesh data.
+    class CloudLayerVisitor : public osg::NodeVisitor
+    {
+    public:
+        CloudLayerVisitor(MWRender::CloudUpdater* lower, MWRender::CloudUpdater* upper)
+            : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN)
+            , mLower(lower)
+            , mUpper(upper)
+        {
+        }
+
+        void apply(osg::Geometry& geometry) override
+        {
+            const auto& path = getNodePath();
+            if (path.size() < 2)
+                return;
+            auto* parent = path[path.size() - 2]->asGroup();
+            osg::ref_ptr<osg::Group> shell = new osg::Group;
+            shell->addUpdateCallback(geometry.getName() == "CloudDome:0" ? mUpper : mLower);
+            shell->addChild(&geometry);
+            parent->replaceChild(&geometry, shell);
+        }
+
+    private:
+        MWRender::CloudUpdater* mLower;
+        MWRender::CloudUpdater* mUpper;
+    };
+
     class WrapAroundOperator : public osgParticle::Operator
     {
     public:
@@ -296,8 +326,12 @@ namespace MWRender
         assert(!mCreated);
 
         mAtmosphereDay = mSceneManager->getInstance(Settings::models().mSkyatmosphere.get(), mEarlyRenderBinRoot);
-        ModVertexAlphaVisitor modAtmosphere(ModVertexAlphaVisitor::Atmosphere);
-        mAtmosphereDay->accept(modAtmosphere);
+        const bool oblivionSky = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
+        if (!oblivionSky)
+        {
+            ModVertexAlphaVisitor modAtmosphere(ModVertexAlphaVisitor::Atmosphere);
+            mAtmosphereDay->accept(modAtmosphere);
+        }
 
         mAtmosphereUpdater = new AtmosphereUpdater;
         mAtmosphereDay->addUpdateCallback(mAtmosphereUpdater);
@@ -323,31 +357,31 @@ namespace MWRender
         mCloudNode = new osg::Group;
         mEarlyRenderBinRoot->addChild(mCloudNode);
 
-        mCloudMesh = new osg::PositionAttitudeTransform;
-        osg::ref_ptr<osg::Node> cloudMeshChild
-            = mSceneManager->getInstance(Settings::models().mSkyclouds.get(), mCloudMesh);
-        mCloudUpdater = new CloudUpdater();
+        auto createCloudMesh = [&](osg::ref_ptr<CloudUpdater>& lower, osg::ref_ptr<CloudUpdater>& upper) {
+            osg::ref_ptr<osg::PositionAttitudeTransform> mesh = new osg::PositionAttitudeTransform;
+            auto model = mSceneManager->getInstance(Settings::models().mSkyclouds.get(), mesh);
+            lower = new CloudUpdater;
+            if (oblivionSky)
+            {
+                upper = new CloudUpdater;
+                CloudLayerVisitor layers(lower, upper);
+                model->accept(layers);
+            }
+            else
+            {
+                model->addUpdateCallback(lower);
+                ModVertexAlphaVisitor modClouds(ModVertexAlphaVisitor::Clouds);
+                mesh->accept(modClouds);
+            }
+            mCloudNode->addChild(mesh);
+            return mesh;
+        };
+        mCloudMesh = createCloudMesh(mCloudUpdater, mUpperCloudUpdater);
+        mNextCloudMesh = createCloudMesh(mNextCloudUpdater, mNextUpperCloudUpdater);
         mCloudUpdater->setOpacity(1.f);
-        cloudMeshChild->addUpdateCallback(mCloudUpdater);
-        mCloudMesh->addChild(cloudMeshChild);
-
-        mNextCloudMesh = new osg::PositionAttitudeTransform;
-        osg::ref_ptr<osg::Node> nextCloudMeshChild
-            = mSceneManager->getInstance(Settings::models().mSkyclouds.get(), mNextCloudMesh);
-        mNextCloudUpdater = new CloudUpdater();
-        mNextCloudUpdater->setOpacity(0.f);
-        nextCloudMeshChild->addUpdateCallback(mNextCloudUpdater);
         mNextCloudMesh->setNodeMask(0);
-        mNextCloudMesh->addChild(nextCloudMeshChild);
 
-        mCloudNode->addChild(mCloudMesh);
-        mCloudNode->addChild(mNextCloudMesh);
-
-        ModVertexAlphaVisitor modClouds(ModVertexAlphaVisitor::Clouds);
-        mCloudMesh->accept(modClouds);
-        mNextCloudMesh->accept(modClouds);
-
-        Shader::ShaderManager::DefineMap defines = {};
+        Shader::ShaderManager::DefineMap defines = { { "oblivionSky", oblivionSky ? "1" : "0" } };
         Stereo::shaderStereoDefines(defines);
         auto program = mSceneManager->getShaderManager().getProgram("sky", defines);
         mEarlyRenderBinRoot->getOrCreateStateSet()->addUniform(new osg::Uniform("pass", -1));
@@ -570,6 +604,15 @@ namespace MWRender
         if (mCloudAnimationTimer >= 4.f)
             mCloudAnimationTimer -= 4.f;
 
+        if (mUpperCloudUpdater)
+        {
+            float upperDelta = duration * mUpperCloudSpeed / 400.f;
+            if (mTimescaleClouds)
+                upperDelta *= timeScale / 60.f;
+            mUpperCloudAnimationTimer = std::fmod(mUpperCloudAnimationTimer + upperDelta, 4.f);
+            mUpperCloudUpdater->setTextureCoord(mUpperCloudAnimationTimer);
+            mNextUpperCloudUpdater->setTextureCoord(mUpperCloudAnimationTimer);
+        }
         mNextCloudUpdater->setTextureCoord(mCloudAnimationTimer);
         mCloudUpdater->setTextureCoord(mCloudAnimationTimer);
 
@@ -763,63 +806,46 @@ namespace MWRender
             }
         }
 
-        if (mClouds != weather.mCloudTexture)
-        {
-            mClouds = weather.mCloudTexture;
-
-            const VFS::Path::Normalized texture
-                = Misc::ResourceHelpers::correctTexturePath(VFS::Path::toNormalized(mClouds), *mSceneManager->getVFS());
-
+        auto updateCloud = [&](std::string& cached, const std::string& path, CloudUpdater& updater) {
+            if (cached == path)
+                return;
+            cached = path;
+            if (path.empty())
+                return;
+            const auto texture
+                = Misc::ResourceHelpers::correctTexturePath(VFS::Path::toNormalized(path), *mSceneManager->getVFS());
             osg::ref_ptr<osg::Texture2D> cloudTex
                 = new osg::Texture2D(mSceneManager->getImageManager()->getImage(texture));
             cloudTex->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
             cloudTex->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
-
-            mCloudUpdater->setTexture(std::move(cloudTex));
-        }
-
-        if (mStormDirection != weather.mStormDirection)
-            mStormDirection = weather.mStormDirection;
-
-        if (mNextStormDirection != weather.mNextStormDirection)
-            mNextStormDirection = weather.mNextStormDirection;
-
-        if (mNextClouds != weather.mNextCloudTexture)
+            updater.setTexture(std::move(cloudTex));
+        };
+        updateCloud(mClouds, weather.mCloudTexture, *mCloudUpdater);
+        updateCloud(mNextClouds, weather.mNextCloudTexture, *mNextCloudUpdater);
+        mStormDirection = weather.mStormDirection;
+        mNextStormDirection = weather.mNextStormDirection;
+        mCloudBlendFactor = std::clamp(weather.mCloudBlendFactor, 0.f, 1.f);
+        mCloudUpdater->setOpacity(mClouds.empty() ? 0.f : 1.f - mCloudBlendFactor);
+        mNextCloudUpdater->setOpacity(mNextClouds.empty() ? 0.f : mCloudBlendFactor);
+        mNextCloudMesh->setNodeMask(mCloudBlendFactor > 0.f ? ~0u : 0);
+        if (mUpperCloudUpdater)
         {
-            mNextClouds = weather.mNextCloudTexture;
-
-            if (!mNextClouds.empty())
-            {
-                const VFS::Path::Normalized texture = Misc::ResourceHelpers::correctTexturePath(
-                    VFS::Path::toNormalized(mNextClouds), *mSceneManager->getVFS());
-
-                osg::ref_ptr<osg::Texture2D> cloudTex
-                    = new osg::Texture2D(mSceneManager->getImageManager()->getImage(texture));
-                cloudTex->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
-                cloudTex->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
-
-                mNextCloudUpdater->setTexture(std::move(cloudTex));
-                mNextStormDirection = weather.mStormDirection;
-            }
+            updateCloud(mUpperClouds, weather.mUpperCloudTexture, *mUpperCloudUpdater);
+            updateCloud(mNextUpperClouds, weather.mNextUpperCloudTexture, *mNextUpperCloudUpdater);
+            mUpperCloudUpdater->setOpacity(mUpperClouds.empty() ? 0.f : 1.f - mCloudBlendFactor);
+            mNextUpperCloudUpdater->setOpacity(mNextUpperClouds.empty() ? 0.f : mCloudBlendFactor);
+            mUpperCloudUpdater->setEmissionColor(weather.mUpperCloudColor);
+            mNextUpperCloudUpdater->setEmissionColor(weather.mUpperCloudColor);
+            mCloudUpdater->setEmissionColor(weather.mCloudColor);
+            mNextCloudUpdater->setEmissionColor(weather.mCloudColor);
+            mAtmosphereUpdater->setSkyGradient(weather.mLowerSkyColor, weather.mHorizonColor);
+            mUpperCloudSpeed = weather.mUpperCloudSpeed;
         }
-
-        if (mCloudBlendFactor != weather.mCloudBlendFactor)
+        else if (mCloudColour != weather.mFogColor)
         {
-            mCloudBlendFactor = std::clamp(weather.mCloudBlendFactor, 0.f, 1.f);
-
-            mCloudUpdater->setOpacity(1.f - mCloudBlendFactor);
-            mNextCloudUpdater->setOpacity(mCloudBlendFactor);
-            mNextCloudMesh->setNodeMask(mCloudBlendFactor > 0.f ? ~0u : 0);
-        }
-
-        if (mCloudColour != weather.mFogColor)
-        {
-            osg::Vec4f clr(weather.mFogColor);
-            clr += osg::Vec4f(0.13f, 0.13f, 0.13f, 0.f);
-
+            const osg::Vec4f clr = weather.mFogColor + osg::Vec4f(0.13f, 0.13f, 0.13f, 0.f);
             mCloudUpdater->setEmissionColor(clr);
             mNextCloudUpdater->setEmissionColor(clr);
-
             mCloudColour = weather.mFogColor;
         }
 

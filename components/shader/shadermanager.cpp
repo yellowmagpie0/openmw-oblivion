@@ -769,6 +769,7 @@ namespace Shader
         return {
             { "forcePPL", "0" },
             { "clamp", "1" },
+            { "oblivionLighting", "0" },
             { "preLightEnv", "0" },
             { "radialFog", "0" },
             { "exponentialFog", "0" },

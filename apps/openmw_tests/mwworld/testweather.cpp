@@ -293,6 +293,33 @@ namespace MWWorld
             EXPECT_FALSE(snow.mParticleEffect.empty());
         }
 
+        TEST(MWWorldWeatherTest, oblivionCloudShellsKeepTheirAuthoredTexturesTintsAndSpeeds)
+        {
+            ESM4::Weather record{};
+            record.mLowerCloudTexture = "sky/lower.dds";
+            record.mUpperCloudTexture = "textures/sky/upper.dds";
+            record.mData.mLowerCloudSpeed = 51;
+            record.mData.mUpperCloudSpeed = 153;
+            record.mColors[ESM4::Weather::Color_CloudsLower][1] = 0x000000ff;
+            record.mColors[ESM4::Weather::Color_CloudsUpper][1] = 0x00ff0000;
+            record.mColors[ESM4::Weather::Color_Horizon][1] = 0x0000ff00;
+            const Weather both(record, 0);
+            EXPECT_EQ(both.mCloudTexture, "textures/sky/lower.dds");
+            EXPECT_EQ(both.mUpperCloudTexture, "textures/sky/upper.dds");
+            EXPECT_EQ(both.mCloudColor.getDayValue(), osg::Vec4f(1, 0, 0, 0));
+            EXPECT_EQ(both.mUpperCloudColor.getDayValue(), osg::Vec4f(0, 0, 1, 0));
+            EXPECT_EQ(both.mHorizonColor.getDayValue(), osg::Vec4f(0, 1, 0, 0));
+            EXPECT_FLOAT_EQ(both.mCloudSpeed, 0.2f);
+            EXPECT_FLOAT_EQ(both.mUpperCloudSpeed, 0.6f);
+
+            record.mLowerCloudTexture.clear();
+            const Weather single(record, 0);
+            EXPECT_EQ(single.mCloudTexture, both.mUpperCloudTexture);
+            EXPECT_TRUE(single.mUpperCloudTexture.empty());
+            EXPECT_EQ(single.mCloudColor.getDayValue(), both.mUpperCloudColor.getDayValue());
+            EXPECT_FLOAT_EQ(single.mCloudSpeed, both.mUpperCloudSpeed);
+        }
+
         TEST(MWWorldWeatherTest, oblivionLightingLoadsWeatherHdrAndFallsBackForEmptyRecords)
         {
             ESM4::Weather native{};

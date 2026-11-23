@@ -60,9 +60,18 @@ int getClusterTileIndex(vec2 screenRes, vec3 gridSize, float near, vec2 screenCo
     return tileIndex;
 }
 
+#if @oblivionLighting
+uniform mat4 osg_ViewMatrix;
+uniform vec3 groundBounce;
+#endif
+
 void calcDirectionalLighting(DirectionalLight light, vec3 viewDir, vec3 viewNormal, float shininess, inout vec3 diffuseLight, inout vec3 ambientLight, inout vec3 specularLight) {
     vec3 dir = normalize(light.position.xyz);
     ambientLight += light.ambient.xyz;
+#if @oblivionLighting
+    // Upward-facing surfaces see the sky. Upright and downward-facing surfaces also see the ground.
+    ambientLight += groundBounce * (1.0 - max(0.0, dot(viewNormal, osg_ViewMatrix[2].xyz)));
+#endif
     diffuseLight += light.diffuse.xyz * lambert(viewNormal, dir, viewDir);
     specularLight += light.specular.xyz * specularIntensity(viewNormal, viewDir, shininess, dir);
 }

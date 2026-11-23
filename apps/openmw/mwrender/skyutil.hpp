@@ -39,6 +39,10 @@ namespace MWRender
     {
         std::string mCloudTexture;
         std::string mNextCloudTexture;
+        std::string mUpperCloudTexture;
+        std::string mNextUpperCloudTexture;
+        float mUpperCloudSpeed = 0.f;
+        osg::Vec4f mCloudColor, mUpperCloudColor, mLowerSkyColor, mHorizonColor;
         float mCloudBlendFactor;
 
         osg::Vec4f mFogColor;
@@ -162,6 +166,11 @@ namespace MWRender
     class AtmosphereUpdater : public SceneUtil::StateSetUpdater
     {
     public:
+        void setSkyGradient(const osg::Vec4f& lower, const osg::Vec4f& horizon)
+        {
+            mLowerSky = lower;
+            mHorizon = horizon;
+        }
         void setEmissionColor(const osg::Vec4f& emissionColor);
 
     protected:
@@ -169,7 +178,7 @@ namespace MWRender
         void apply(osg::StateSet* stateset, osg::NodeVisitor* /*nv*/) override;
 
     private:
-        osg::Vec4f mEmissionColor;
+        osg::Vec4f mEmissionColor, mLowerSky, mHorizon;
     };
 
     class AtmosphereNightUpdater : public SceneUtil::StateSetUpdater

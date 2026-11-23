@@ -420,10 +420,14 @@ namespace MWRender
         stateset->setAttributeAndModes(
             createAlphaTrackingUnlitMaterial(), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
         stateset->addUniform(new osg::Uniform("pass", static_cast<int>(Pass::Atmosphere)));
+        stateset->addUniform(new osg::Uniform("lowerSkyColor", osg::Vec4f()));
+        stateset->addUniform(new osg::Uniform("horizonColor", osg::Vec4f()));
     }
 
     void AtmosphereUpdater::apply(osg::StateSet* stateset, osg::NodeVisitor* /*nv*/)
     {
+        stateset->getUniform("lowerSkyColor")->set(mLowerSky);
+        stateset->getUniform("horizonColor")->set(mHorizon);
         osg::Material* mat = static_cast<osg::Material*>(stateset->getAttribute(osg::StateAttribute::MATERIAL));
         mat->setEmission(osg::Material::FRONT_AND_BACK, mEmissionColor);
     }

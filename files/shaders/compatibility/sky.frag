@@ -3,6 +3,11 @@
 #include "lib/sky/passes.glsl"
 
 uniform int pass;
+#if @oblivionSky
+uniform vec4 lowerSkyColor;
+uniform vec4 horizonColor;
+varying float skyElevation;
+#endif
 uniform sampler2D diffuseMap;
 uniform sampler2D maskMap;      // PASS_MOON
 uniform float opacity;          // PASS_CLOUDS, PASS_ATMOSPHERE_NIGHT
@@ -14,8 +19,13 @@ varying vec4 passColor;
 
 void paintAtmosphere(inout vec4 color)
 {
+#if @oblivionSky
+    vec3 lower = mix(horizonColor.rgb, lowerSkyColor.rgb, smoothstep(0.0, 0.20, skyElevation));
+    color = vec4(mix(lower, gl_FrontMaterial.emission.rgb, smoothstep(0.15, 0.85, skyElevation)), 1.0);
+#else
     color = gl_FrontMaterial.emission;
     color.a *= passColor.a;
+#endif
 }
 
 void paintAtmosphereNight(inout vec4 color)
@@ -27,11 +37,17 @@ void paintAtmosphereNight(inout vec4 color)
 void paintClouds(inout vec4 color)
 {
     color = texture2D(diffuseMap, diffuseMapUV);
+#if @oblivionSky
+    color.a *= opacity * smoothstep(0.0, 0.12, skyElevation);
+#else
     color.a *= passColor.a * opacity;
+#endif
     color.xyz = clamp(color.xyz * gl_FrontMaterial.emission.xyz, 0.0, 1.0);
 
     // ease transition between clear color and atmosphere/clouds
+#if !@oblivionSky
     color = mix(vec4(gl_Fog.color.xyz, color.a), color, passColor.a);
+#endif
 }
 
 void paintMoon(inout vec4 color)

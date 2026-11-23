@@ -1,5 +1,7 @@
 #include "shadow.hpp"
 
+#include <algorithm>
+
 #include <osgShadow/ShadowSettings>
 #include <osgShadow/ShadowedScene>
 
@@ -160,6 +162,8 @@ namespace SceneUtil
         Shader::ShaderManager::DefineMap definesWithShadows;
 
         definesWithShadows["shadows_enabled"] = "1";
+        definesWithShadows["shadowMapTexelSize"]
+            = std::to_string(1.f / std::max(1, settings.mShadowMapResolution.get()));
 
         for (unsigned int i = 0; i < mShadowSettings->getNumShadowMapsPerLight(); ++i)
             definesWithShadows["shadow_texture_unit_list"] += std::to_string(i) + ",";
@@ -187,6 +191,7 @@ namespace SceneUtil
         Shader::ShaderManager::DefineMap definesWithoutShadows;
 
         definesWithoutShadows["shadows_enabled"] = "0";
+        definesWithoutShadows["shadowMapTexelSize"] = "0.0";
 
         definesWithoutShadows["shadow_texture_unit_list"] = "";
 

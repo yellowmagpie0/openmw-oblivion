@@ -228,27 +228,41 @@ namespace MWWorld
             mAmbientLoopSoundID = ESM::RefId();
     }
 
+    namespace
+    {
+        TimeOfDayInterpolator<osg::Vec4f> skyColors(const ESM4::Weather& weather, ESM4::Weather::ColorType type)
+        {
+            const auto& colors = weather.mColors[type];
+            return { SceneUtil::colourFromRGBA(colors[0]), SceneUtil::colourFromRGBA(colors[1]),
+                SceneUtil::colourFromRGBA(colors[2]), SceneUtil::colourFromRGBA(colors[3]) };
+        }
+
+        std::string cloudTexturePath(const std::string& texture)
+        {
+            if (texture.empty() || VFS::Path::toNormalized(texture).view().starts_with("textures/"))
+                return texture;
+            return "textures/" + texture;
+        }
+    }
+
     Weather::Weather(const ESM4::Weather& weather, int scriptId)
         : mId(weather.mId)
         , mScriptId(scriptId)
         , mName(weather.mEditorId.empty() ? weather.mId.toString() : weather.mEditorId)
-        , mCloudTexture(weather.mLowerCloudTexture)
-        , mSkyColor(SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_SkyUpper][0]),
-              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_SkyUpper][1]),
-              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_SkyUpper][2]),
-              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_SkyUpper][3]))
-        , mFogColor(SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Fog][0]),
-              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Fog][1]),
-              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Fog][2]),
-              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Fog][3]))
-        , mAmbientColor(SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Ambient][0]),
-              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Ambient][1]),
-              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Ambient][2]),
-              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Ambient][3]))
-        , mSunColor(SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Sunlight][0]),
-              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Sunlight][1]),
-              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Sunlight][2]),
-              SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Sunlight][3]))
+        , mCloudTexture(cloudTexturePath(
+              weather.mLowerCloudTexture.empty() ? weather.mUpperCloudTexture : weather.mLowerCloudTexture))
+        , mUpperCloudTexture(
+              weather.mLowerCloudTexture.empty() ? std::string{} : cloudTexturePath(weather.mUpperCloudTexture))
+        , mUpperCloudSpeed(static_cast<float>(weather.mData.mUpperCloudSpeed) / 255.f)
+        , mCloudColor(skyColors(weather,
+              weather.mLowerCloudTexture.empty() ? ESM4::Weather::Color_CloudsUpper : ESM4::Weather::Color_CloudsLower))
+        , mUpperCloudColor(skyColors(weather, ESM4::Weather::Color_CloudsUpper))
+        , mLowerSkyColor(skyColors(weather, ESM4::Weather::Color_SkyLower))
+        , mHorizonColor(skyColors(weather, ESM4::Weather::Color_Horizon))
+        , mSkyColor(skyColors(weather, ESM4::Weather::Color_SkyUpper))
+        , mFogColor(skyColors(weather, ESM4::Weather::Color_Fog))
+        , mAmbientColor(skyColors(weather, ESM4::Weather::Color_Ambient))
+        , mSunColor(skyColors(weather, ESM4::Weather::Color_Sunlight))
         , mLandFogDepth(weather.mFog.mDayFar > 0.f
                   ? std::clamp(1.f - weather.mFog.mDayNear / weather.mFog.mDayFar, 0.f, 1.f)
                   : 0.f,
@@ -266,7 +280,9 @@ namespace MWWorld
         , mUseExactFog(true)
         , mSunDiscSunsetColor(SceneUtil::colourFromRGBA(weather.mColors[ESM4::Weather::Color_Sun][2]))
         , mWindSpeed(static_cast<float>(weather.mData.mWindSpeed) / 255.f)
-        , mCloudSpeed(static_cast<float>(weather.mData.mLowerCloudSpeed) / 255.f)
+        , mCloudSpeed(static_cast<float>(weather.mLowerCloudTexture.empty() ? weather.mData.mUpperCloudSpeed
+                                                                           : weather.mData.mLowerCloudSpeed)
+              / 255.f)
         , mGlareView(static_cast<float>(weather.mData.mSunGlare) / 255.f)
         , mIsStorm(weather.mData.mWindSpeed >= 128)
         , mRainSpeed(1000.f)
@@ -298,11 +314,6 @@ namespace MWWorld
             mOblivionLighting.mExposure.set(hdr[4], hdr[5], hdr[0], hdr[11]);
         }
         mNativeClassification = weather.mData.mClassification;
-        if (mCloudTexture.empty())
-            mCloudTexture = weather.mUpperCloudTexture;
-        if (!mCloudTexture.empty() && !VFS::Path::toNormalized(mCloudTexture).view().starts_with("textures/"))
-            mCloudTexture = "textures/" + mCloudTexture;
-
         const float defaultEnd = std::max(1.f, Settings::fog().mDistantLandFogEnd.get());
         const float defaultStart = Settings::fog().mDistantLandFogStart.get();
         const float start = weather.mFog.mDayNear;
@@ -1176,9 +1187,19 @@ namespace MWWorld
         if (mNativeWeather)
         {
             const auto& hdr = mResult.mOblivionLighting;
-            rendering.setOblivionLighting(hdr.mBloom, hdr.mExposure);
+            const float cloudCover = lerp(mResult.mCloudTexture.empty() ? 0.f : 1.f,
+                mResult.mNextCloudTexture.empty() ? 0.f : 1.f, std::clamp(mResult.mCloudBlendFactor, 0.f, 1.f));
+            const auto windowSky = lerp(mResult.mLowerSkyColor, mResult.mCloudColor, 0.5f * cloudCover);
             sunlight *= hdr.mExposure.w();
             sunlight.a() = mResult.mSunColor.a();
+
+            // Approximate daylight reflected into shade. The weather supplies both the sky fill
+            // and the illuminant, so overcast days and moonlit nights retain their own palettes.
+            const osg::Vec4f luminance(0.2126f, 0.7152f, 0.0722f, 0.f);
+            const float skyLevel = mResult.mAmbientColor * luminance;
+            const float sunLevel = sunlight * luminance;
+            const auto bounce = lerp(sunlight, osg::Vec4f(sunLevel, sunLevel, sunLevel, 0.f), 0.35f) * (1.4f * skyLevel);
+            rendering.setOblivionLighting(hdr.mBloom, hdr.mExposure, windowSky, { bounce.r(), bounce.g(), bounce.b() });
         }
         rendering.setSunColour(sunlight, sunlight, mResult.mGlareView * glareFade);
 
@@ -1784,6 +1805,9 @@ namespace MWWorld
         const Weather& current = mWeatherSettings[weatherID];
 
         mResult.mCloudTexture = current.mCloudTexture;
+        mResult.mUpperCloudTexture = current.mUpperCloudTexture;
+        mResult.mNextUpperCloudTexture.clear();
+        mResult.mUpperCloudSpeed = current.mUpperCloudSpeed;
         mResult.mCloudBlendFactor = 0;
         mResult.mNextWindSpeed = 0;
         mResult.mWindSpeed = mResult.mCurrentWindSpeed = calculateWindSpeed(weatherID, mWindSpeed);
@@ -1820,6 +1844,13 @@ namespace MWWorld
         mResult.mFogColor = current.mFogColor.getValue(gameHour, mTimeSettings, "Fog");
         mResult.mAmbientColor = current.mAmbientColor.getValue(gameHour, mTimeSettings, "Ambient");
         mResult.mSunColor = current.mSunColor.getValue(gameHour, mTimeSettings, "Sun");
+        if (mNativeWeather)
+        {
+            mResult.mCloudColor = current.mCloudColor.getValue(gameHour, mTimeSettings, "Sky");
+            mResult.mUpperCloudColor = current.mUpperCloudColor.getValue(gameHour, mTimeSettings, "Sky");
+            mResult.mLowerSkyColor = current.mLowerSkyColor.getValue(gameHour, mTimeSettings, "Sky");
+            mResult.mHorizonColor = current.mHorizonColor.getValue(gameHour, mTimeSettings, "Sky");
+        }
         mResult.mSkyColor = current.mSkyColor.getValue(gameHour, mTimeSettings, "Sky");
         mResult.mNightFade = mNightFade.getValue(gameHour, mTimeSettings, "Stars");
         mResult.mDLFogFactor = current.mDL.FogFactor;
@@ -1879,6 +1910,13 @@ namespace MWWorld
 
         mResult.mCloudTexture = current.mCloudTexture;
         mResult.mNextCloudTexture = other.mCloudTexture;
+        mResult.mUpperCloudTexture = current.mUpperCloudTexture;
+        mResult.mNextUpperCloudTexture = other.mUpperCloudTexture;
+        mResult.mUpperCloudSpeed = lerp(current.mUpperCloudSpeed, other.mUpperCloudSpeed, factor);
+        mResult.mCloudColor = lerp(current.mCloudColor, other.mCloudColor, factor);
+        mResult.mUpperCloudColor = lerp(current.mUpperCloudColor, other.mUpperCloudColor, factor);
+        mResult.mLowerSkyColor = lerp(current.mLowerSkyColor, other.mLowerSkyColor, factor);
+        mResult.mHorizonColor = lerp(current.mHorizonColor, other.mHorizonColor, factor);
         mResult.mCloudBlendFactor = mWeatherSettings[mNextWeather].cloudBlendFactor(factor);
 
         mResult.mFogColor = lerp(current.mFogColor, other.mFogColor, factor);

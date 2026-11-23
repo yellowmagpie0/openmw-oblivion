@@ -157,6 +157,12 @@ namespace MWWorld
         int mScriptId;
         std::string mName;
         std::string mCloudTexture;
+        std::string mUpperCloudTexture;
+        float mUpperCloudSpeed = 0.f;
+        TimeOfDayInterpolator<osg::Vec4f> mCloudColor{ {}, {}, {}, {} };
+        TimeOfDayInterpolator<osg::Vec4f> mUpperCloudColor{ {}, {}, {}, {} };
+        TimeOfDayInterpolator<osg::Vec4f> mLowerSkyColor{ {}, {}, {}, {} };
+        TimeOfDayInterpolator<osg::Vec4f> mHorizonColor{ {}, {}, {}, {} };
 
         // Sky (atmosphere) color
         TimeOfDayInterpolator<osg::Vec4f> mSkyColor;

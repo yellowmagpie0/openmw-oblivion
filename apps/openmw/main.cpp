@@ -142,8 +142,12 @@ bool parseOptions(int argc, char** argv, OMW::Engine& engine, Files::Configurati
     {
         profileDefaults = { { { "Post Processing", "enabled" }, "true" },
             { { "Post Processing", "chain" }, "oblivionhdr" },
+            { { "Shaders", "clamp lighting" }, "false" },
             { { "Shaders", "match sunlight to sun" }, "true" }, { { "Shaders", "auto use terrain normal maps" }, "true" },
-            { { "Shaders", "minimum interior brightness" }, "0" } };
+            { { "Shaders", "minimum interior brightness" }, "0" }, { { "Shadows", "enable shadows" }, "true" },
+            { { "Shadows", "object shadows" }, "true" }, { { "Shadows", "actor shadows" }, "true" },
+            { { "Shadows", "enable indoor shadows" }, "false" }, { { "Shadows", "number of shadow maps" }, "1" },
+            { { "Shadows", "maximum shadow map distance" }, "4096" }, { { "Shadows", "shadow fade start" }, "0.65" } };
     }
     Settings::Manager::load(cfgMgr, false, profileDefaults);
     MWGui::DebugWindow::startLogRecording();

@@ -14,6 +14,7 @@
 #include <osg/LOD>
 #include <osg/Material>
 #include <osg/Texture2D>
+#include <osg/Uniform>
 
 #include <components/misc/endianness.hpp>
 #include <components/misc/rng.hpp>
@@ -403,6 +404,8 @@ osg::ref_ptr<osg::Node> Resource::loadTree(const TreeModel& model, const VFS::Ma
     const float nearRange = std::clamp(std::max(w, h) * 1.9f, 450.f, 3800.f);
     const float midRange = nearRange * 2.6f;
     osg::ref_ptr<osg::LOD> lod = new osg::LOD;
+    static const osg::ref_ptr<osg::Uniform> noEmission = new osg::Uniform("emissiveMult", 0.f);
+    lod->getOrCreateStateSet()->addUniform(noEmission);
     lod->setCenter(osg::Vec3f(0, 0, shape.mTop * h / 2));
     lod->addChild(branches(shape, w, h, barkState, leafState, materials.mLeafRects, rng, false), 0, nearRange);
     if (sprite)

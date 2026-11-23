@@ -2930,17 +2930,19 @@ namespace NifOsg
             stateset->setAttributeAndModes(depth, osg::StateAttribute::ON);
         }
 
+        bool usesOblivionMaterials() const
+        {
+            // Stock TES4 head parts also retain the older NetImmerse versions.
+            return mVersion == 0x0a000100 || mVersion == Nif::NIFFile::VER_OB_OLD || mVersion == 0x14000004
+                || mVersion == Nif::NIFFile::VER_OB;
+        }
+
         void handleTextureProperty(const Nif::NiTexturingProperty* texprop, const std::string& nodeName,
             osg::StateSet* stateset, SceneUtil::CompositeStateSetUpdater* composite,
             std::vector<unsigned int>& boundTextures, int animflags) const
         {
             // overriding a parent NiTexturingProperty, so remove what was previously bound
             clearBoundTextures(stateset, boundTextures);
-
-            // Stock TES4 head parts also retain the older NetImmerse versions
-            // (for example EarsDarkElf10.0.1.0). They use the same _n alpha mask.
-            const bool oblivion = mVersion == 0x0a000100 || mVersion == Nif::NIFFile::VER_OB_OLD
-                || mVersion == 0x14000004 || mVersion == Nif::NIFFile::VER_OB;
 
             // If this loop is changed such that the base texture isn't guaranteed to end up in texture unit 0, the
             // shadow casting shader will need to be updated accordingly.
@@ -2999,7 +3001,7 @@ namespace NifOsg
                             // TES4 stores tangent-space normals and specular intensity
                             // together in the companion _n texture, outside the NIF's
                             // texture slots. Its alpha is not a parallax height map.
-                            if (oblivion && i == Nif::NiTexturingProperty::BaseTexture && mImageManager
+                            if (usesOblivionMaterials() && i == Nif::NiTexturingProperty::BaseTexture && mImageManager
                                 && tex.mSourceTexture->mExternal)
                             {
                                 const auto* vfs = mImageManager->getVFS();
@@ -3557,6 +3559,7 @@ namespace NifOsg
             mat->setAmbient(osg::Material::FRONT_AND_BACK, osg::Vec4f(1, 1, 1, 1));
 
             bool hasMatCtrl = false;
+            bool hasNifMaterial = false;
             bool hasSortAlpha = false;
 
             auto setBinBackToFront = [](osg::StateSet* ss) { ss->setRenderBinDetails(0, "SORT_BACK_TO_FRONT"); };
@@ -3581,6 +3584,7 @@ namespace NifOsg
                     case Nif::RC_NiMaterialProperty:
                     {
                         const Nif::NiMaterialProperty* matprop = static_cast<const Nif::NiMaterialProperty*>(property);
+                        hasNifMaterial = true;
 
                         mat->setDiffuse(osg::Material::FRONT_AND_BACK, osg::Vec4f(matprop->mDiffuse, matprop->mAlpha));
                         mat->setAmbient(osg::Material::FRONT_AND_BACK, osg::Vec4f(matprop->mAmbient, 1.f));
@@ -3757,7 +3761,15 @@ namespace NifOsg
                 node->getOrCreateStateSet()->setAttributeAndModes(mat, osg::StateAttribute::ON);
             }
 
-            if (emissiveMult != 1.f)
+            // Bind zero explicitly for unlit emission channels. A compatibility GL material can
+            // otherwise supply white emission even when the imported TES4 material specifies black.
+            if (hasNifMaterial && usesOblivionMaterials() && !hasMatCtrl && mat->getColorMode() != osg::Material::EMISSION
+                && mat->getEmission(osg::Material::FRONT) == osg::Vec4f(0.f, 0.f, 0.f, 1.f))
+            {
+                static const osg::ref_ptr<osg::Uniform> noEmission = new osg::Uniform("emissiveMult", 0.f);
+                node->getOrCreateStateSet()->addUniform(noEmission);
+            }
+            else if (emissiveMult != 1.f)
                 node->getOrCreateStateSet()->addUniform(new osg::Uniform("emissiveMult", emissiveMult));
 
             if (specStrength != 1.f)

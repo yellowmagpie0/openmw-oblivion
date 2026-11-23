@@ -126,6 +126,8 @@ namespace SceneUtil
 
     void StateUpdater::setDefaults(osg::StateSet* stateset)
     {
+        stateset->addUniform(new osg::Uniform("windowSkyColor", osg::Vec3f()));
+        stateset->addUniform(new osg::Uniform("groundBounce", osg::Vec3f()));
         osg::Fog* fog = new osg::Fog;
         fog->setMode(osg::Fog::LINEAR);
         stateset->setAttributeAndModes(fog, osg::StateAttribute::ON);
@@ -141,6 +143,8 @@ namespace SceneUtil
 
     void StateUpdater::apply(osg::StateSet* stateset, osg::NodeVisitor*)
     {
+        stateset->getUniform("windowSkyColor")->set(mWindowSkyColor);
+        stateset->getUniform("groundBounce")->set(mGroundBounce);
         configureSunAmbientOverride(mAmbientColor, stateset);
         osg::Fog* fog = static_cast<osg::Fog*>(stateset->getAttribute(osg::StateAttribute::FOG));
         fog->setColor(mFogColor);

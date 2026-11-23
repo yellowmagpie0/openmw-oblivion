@@ -11,6 +11,19 @@
         varying vec4 shadowRegionCoords@shadow_texture_unit_index;
 #endif
     @endforeach
+
+#if @oblivionLighting
+    float filteredSunVisibility(sampler2DShadow depthMap, vec3 coord)
+    {
+        // Four bilinear depth comparisons soften small gaps between leaves at a fixed cost.
+        const vec2 a = vec2(0.65, 1.35) * @shadowMapTexelSize;
+        const vec2 b = vec2(-a.y, a.x);
+        return 0.25 * (shadow2D(depthMap, vec3(coord.xy + a, coord.z)).r
+                     + shadow2D(depthMap, vec3(coord.xy - a, coord.z)).r
+                     + shadow2D(depthMap, vec3(coord.xy + b, coord.z)).r
+                     + shadow2D(depthMap, vec3(coord.xy - b, coord.z)).r);
+    }
+#endif
 #endif // SHADOWS
 
 float unshadowedLightRatio(float distance)
@@ -32,7 +45,11 @@ float unshadowedLightRatio(float distance)
 #endif
             if (all(lessThan(shadowXYZ.xy, vec2(1.0, 1.0))) && all(greaterThan(shadowXYZ.xy, vec2(0.0, 0.0))))
             {
+#if @oblivionLighting
+                shadowing = min(filteredSunVisibility(shadowTexture@shadow_texture_unit_index, shadowXYZ), shadowing);
+#else
                 shadowing = min(shadow2DProj(shadowTexture@shadow_texture_unit_index, shadowSpaceCoords@shadow_texture_unit_index).r, shadowing);
+#endif
 
                 doneShadows = all(lessThan(shadowXYZ, vec3(0.95, 0.95, 1.0))) && all(greaterThan(shadowXYZ, vec3(0.05, 0.05, 0.0)));
 #if @perspectiveShadowMaps
@@ -43,6 +60,10 @@ float unshadowedLightRatio(float distance)
     @endforeach
 #if @limitShadowMapDistance
     shadowing = mix(shadowing, 1.0, fade);
+#endif
+#if @oblivionLighting
+    // TES4's surface shader remaps its canopy mask to half-to-full light.
+    shadowing = 0.5 + 0.5 * shadowing;
 #endif
 #endif // SHADOWS
     return shadowing;

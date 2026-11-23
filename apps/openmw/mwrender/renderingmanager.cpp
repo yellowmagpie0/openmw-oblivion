@@ -270,6 +270,8 @@ namespace MWRender
 
         globalDefines["forcePPL"] = Settings::shaders().mForcePerPixelLighting ? "1" : "0";
         globalDefines["clamp"] = Settings::shaders().mClampLighting ? "1" : "0";
+        globalDefines["oblivionLighting"]
+            = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion ? "1" : "0";
         globalDefines["preLightEnv"] = Settings::shaders().mApplyLightingToEnvironmentMaps ? "1" : "0";
         globalDefines["classicFalloff"] = Settings::shaders().mClassicFalloff ? "1" : "0";
         const bool exponentialFog = Settings::fog().mExponentialFog;
@@ -549,8 +551,11 @@ namespace MWRender
         mSky->setMoonColour(red);
     }
 
-    void RenderingManager::setOblivionLighting(const osg::Vec4f& bloom, const osg::Vec4f& exposure)
+    void RenderingManager::setOblivionLighting(
+        const osg::Vec4f& bloom, const osg::Vec4f& exposure, const osg::Vec4f& windowSky, const osg::Vec3f& groundBounce)
     {
+        mStateUpdater->setWindowSkyColor({ windowSky.r(), windowSky.g(), windowSky.b() });
+        mStateUpdater->setGroundBounce(groundBounce);
         mPostProcessor->getStateUpdater()->setOblivionLighting(bloom, exposure);
     }
 

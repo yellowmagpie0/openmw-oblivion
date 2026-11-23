@@ -1,3 +1,22 @@
+uniform_float uContactShadows {
+    default = 0.75;
+    min = 0.0;
+    max = 1.0;
+    step = 0.05;
+    display_name = "#{OMWShaders:ContactShadowStrengthName}";
+    description = "#{OMWShaders:ContactShadowStrengthDescription}";
+}
+
+render_target RT_Contact {
+    width_ratio = 0.5;
+    height_ratio = 0.5;
+    internal_format = rg16f;
+    source_type = half_float;
+    source_format = rg;
+    min_filter = linear;
+    mag_filter = linear;
+}
+
 render_target RT_Bright {
     width_ratio = 0.25;
     height_ratio = 0.25;
@@ -35,10 +54,22 @@ shared {
         return pow(max(color, vec3(0.0)), vec3(2.2));
     }
 
+    vec3 brightPass(vec2 uv)
+    {
+        vec3 light = radiance(omw_GetLastShader(uv).rgb);
+        float peak = max(light.r, max(light.g, light.b));
+        float threshold = omw.oblivionBloom.x;
+        // Ease into the bright pass around the weather threshold. Keep a colored lamp's hue in its halo.
+        float knee = max(0.001, 0.5 * threshold);
+        float ramp = clamp(peak - threshold + knee, 0.0, 2.0 * knee);
+        float excess = max(peak - threshold, ramp * ramp / (4.0 * knee));
+        return light * (omw.oblivionBloom.y * excess / max(peak, 0.001));
+    }
+
     vec3 blur(sampler2D source, vec2 uv, vec2 axis)
     {
         // Repeated Gaussian passes add their variances.
-        vec2 stepUV = axis * omw.rcpResolution * omw.oblivionBloom.z * sqrt(max(0.0, omw.oblivionBloom.w));
+        vec2 stepUV = axis * omw.rcpResolution * (omw.resolution.y / 600.0) * omw.oblivionBloom.z * sqrt(max(0.0, omw.oblivionBloom.w));
         vec3 color = omw_Texture2D(source, uv).rgb * 0.227027;
         color += (omw_Texture2D(source, uv + 1.384615 * stepUV).rgb
                 + omw_Texture2D(source, uv - 1.384615 * stepUV).rgb) * 0.316216;
@@ -52,8 +83,11 @@ fragment extract(target=RT_Bright) {
     omw_In vec2 omw_TexCoord;
     void main()
     {
-        vec3 scene = radiance(omw_GetLastShader(omw_TexCoord).rgb);
-        omw_FragColor = vec4(max(vec3(0.0), scene - omw.oblivionBloom.x) * omw.oblivionBloom.y, 1.0);
+        // Cover the 4x4 source footprint so thin sunlit leaves and torch flames contribute between texel centers.
+        vec2 d = omw.rcpResolution;
+        vec3 bloom = brightPass(omw_TexCoord + d) + brightPass(omw_TexCoord - d)
+                   + brightPass(omw_TexCoord + vec2(d.x, -d.y)) + brightPass(omw_TexCoord + vec2(-d.x, d.y));
+        omw_FragColor = vec4(0.25 * bloom, 1.0);
     }
 }
 
@@ -73,16 +107,70 @@ fragment vertical(target=RT_Vertical, rt1=RT_Horizontal) {
     }
 }
 
-fragment compose(rt1=RT_Vertical) {
+fragment contact(target=RT_Contact) {
+    omw_In vec2 omw_TexCoord;
+
+    // Opposite horizon slopes cancel on a plane. A pair that crosses a silhouette
+    // or leaves the screen has no reliable second horizon.
+    float horizonPair(vec2 uv, float depth, vec3 ray, vec2 offset, vec2 viewStep)
+    {
+        if (any(lessThan(min(uv, 1.0 - uv), abs(offset))))
+            return 0.0;
+        float a = omw_GetLinearDepth(uv + offset);
+        float b = omw_GetLinearDepth(uv - offset);
+        vec3 va = ray * (a - depth) + vec3(viewStep * a, 0.0);
+        vec3 vb = ray * (b - depth) - vec3(viewStep * b, 0.0);
+        float la = max(length(va), 0.001);
+        float lb = max(length(vb), 0.001);
+        float weight = 1.0 - smoothstep(65.0, 120.0, max(la, lb));
+        return weight * max(0.0, dot(va / la + vb / lb, -normalize(ray)) - 0.06);
+    }
+
+    void main()
+    {
+        vec2 uv = omw_TexCoord;
+        float depth = omw_GetLinearDepth(uv);
+        float ao = 0.0;
+        if (uContactShadows > 0.0 && depth < min(4000.0, 0.999 * omw.far))
+        {
+            mat4 projection = omw_ProjectionMatrix();
+            vec2 focal = vec2(projection[0][0], projection[1][1]);
+            vec3 ray = vec3((2.0 * uv - 1.0 + projection[2].xy) / focal, -1.0);
+            // Fixed world-space footprint, capped at 3% of screen height near the eye.
+            float stepSize = min(48.0 / depth, 0.06 / focal.y);
+            vec2 stepUV = 0.5 * focal * stepSize;
+            ao += horizonPair(uv, depth, ray, vec2(stepUV.x, 0.0), vec2(stepSize, 0.0));
+            ao += horizonPair(uv, depth, ray, vec2(0.0, stepUV.y), vec2(0.0, stepSize));
+            ao += horizonPair(uv, depth, ray, stepUV, vec2(stepSize));
+            ao += horizonPair(uv, depth, ray, vec2(stepUV.x, -stepUV.y), vec2(stepSize, -stepSize));
+            ao *= 0.25 * (1.0 - smoothstep(2400.0, 4000.0, depth));
+        }
+        omw_FragColor = vec4(ao, min(depth, 4000.0), 0.0, 1.0);
+    }
+}
+
+fragment compose(rt1=RT_Vertical, rt2=RT_Contact) {
     omw_In vec2 omw_TexCoord;
     void main()
     {
         vec3 scene = radiance(omw_GetLastShader(omw_TexCoord).rgb);
+        if (uContactShadows > 0.0)
+        {
+            vec2 contactSample = omw_Texture2D(RT_Contact, omw_TexCoord).rg;
+            float depth = omw_GetLinearDepth(omw_TexCoord);
+            // Reject interpolated samples from the other side of a depth discontinuity.
+            float coverage = 1.0 - smoothstep(4.0, 28.0, abs(contactSample.g - depth));
+            float peakLight = max(scene.r, max(scene.g, scene.b));
+            float ambientWeight = 1.0 - smoothstep(0.40, 1.0, peakLight);
+            scene *= 1.0 - min(0.65, uContactShadows * contactSample.r * coverage * ambientWeight);
+        }
         vec3 bloom = omw_Texture2D(RT_Vertical, omw_TexCoord).rgb;
         float target = max(0.001, omw.oblivionExposure.x);
         vec3 adapted = omw_Texture2D(omw_EyeAdaptation, vec2(0.5)).gba;
         float divisor = max(target, dot(adapted, vec3(1.0)));
-        vec3 color = (scene * target + 0.5 * bloom) / divisor;
+        // Let the eye recover a little of the low midtones in dim interiors, with black still anchored.
+        float sceneGain = omw.isInterior ? 1.0 + 0.25 * (1.0 - smoothstep(0.05, 0.35, length(adapted))) : 1.0;
+        vec3 color = (scene * target * sceneGain + 0.65 * bloom) / divisor;
         // Roll bright values into the display range while preserving the color of the highlight.
         float peak = max(color.r, max(color.g, color.b));
         if (peak > 0.75)
@@ -92,7 +180,7 @@ fragment compose(rt1=RT_Vertical) {
 }
 
 technique {
-    passes = extract, horizontal, vertical, compose;
+    passes = extract, horizontal, vertical, contact, compose;
     hdr = true;
     description = "Oblivion weather and interior HDR lighting";
     author = "OpenMW";

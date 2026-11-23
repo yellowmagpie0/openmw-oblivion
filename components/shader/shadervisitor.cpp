@@ -262,6 +262,20 @@ namespace Shader
             return name == "normalHeightMap" || name == "normalSpecularMap";
     }
 
+    // Shipped TES4 exterior glass uses numbered architecture window textures. Only use
+    // a reflection when the normal texture supplies a mask for the panes and leadwork.
+    static bool isExteriorWindowMask(const osg::Image* image)
+    {
+        if (!image || osg::Image::computeNumComponents(image->getPixelFormat()) != 4)
+            return false;
+        std::string_view path = image->getFileName();
+        if (!path.starts_with("textures/architecture/") || path.find("/interior/") != path.npos
+            || !path.ends_with("_n.dds"))
+            return false;
+        path.remove_suffix(6);
+        return path.substr(0, path.find_last_not_of("0123456789") + 1).ends_with("window");
+    }
+
     void ShaderVisitor::applyStateSet(osg::ref_ptr<osg::StateSet> stateset, osg::Node& node)
     {
         osg::StateSet* writableStateSet = nullptr;
@@ -306,6 +320,8 @@ namespace Shader
                             {
                                 mRequirements.back().mTexStageRequiringTangents = unit;
                                 mRequirements.back().mNormalSpecular = normalSpecular;
+                                mRequirements.back().mWindowGlass
+                                    = normalSpecular && isExteriorWindowMask(texture->getImage(0));
                                 mRequirements.back().mNormalHeight = normalHeight;
                                 normalMap = texture;
                             }
@@ -584,6 +600,7 @@ namespace Shader
         defineMap["diffuseParallax"] = reqs.mDiffuseHeight ? "1" : "0";
         defineMap["parallax"] = reqs.mNormalHeight ? "1" : "0";
         defineMap["normalMapSpecular"] = reqs.mNormalSpecular ? "1" : "0";
+        defineMap["windowGlass"] = reqs.mWindowGlass ? "1" : "0";
         defineMap["reconstructNormalZ"] = reqs.mReconstructNormalZ ? "1" : "0";
 
         writableStateSet->addUniform(new osg::Uniform("colorMode", reqs.mColorMode));

@@ -2,6 +2,12 @@
 
 #pragma import_defines(FORCE_OPAQUE, DISTORTION)
 
+#if @windowGlass && @oblivionLighting && @normalMap && @normalMapSpecular && !@envMap
+    #define REFLECT_WINDOW_SKY
+    uniform vec3 windowSkyColor;
+    uniform mat4 osg_ViewMatrixInverse;
+#endif
+
 #if @useGPUShader4
     #extension GL_EXT_gpu_shader4: require
 #endif
@@ -234,6 +240,12 @@ vec2 screenCoords = gl_FragCoord.xy / screenRes;
 
     lighting = diffuseColor.xyz * diffuseLight + getAmbientColor().xyz * ambientLight + getEmissionColor().xyz * emissiveMult;
     specular = specularColor * specularLight * specStrength;
+#ifdef REFLECT_WINDOW_SKY
+    // A broad sky reflection in the glass. The authored normal alpha masks out the lead strips.
+    vec3 reflected = mat3(osg_ViewMatrixInverse) * reflect(viewVec, viewNormal);
+    float skyFraction = mix(0.4, 1.0, smoothstep(-0.3, 0.4, reflected.z));
+    specular += windowSkyColor * normalTex.a * (2.6 * skyFraction);
+#endif
     clampLighting(lighting);
 #endif
 

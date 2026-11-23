@@ -86,6 +86,8 @@ namespace SceneUtil
         void apply(osg::StateSet* stateset, osg::NodeVisitor*) override;
 
         void setAmbientColor(const osg::Vec4f& col);
+        void setWindowSkyColor(const osg::Vec3f& color) { mWindowSkyColor = color; }
+        void setGroundBounce(const osg::Vec3f& color) { mGroundBounce = color; }
 
         void setFogColor(const osg::Vec4f& col);
 
@@ -98,6 +100,8 @@ namespace SceneUtil
 
     private:
         osg::Vec4f mAmbientColor;
+        osg::Vec3f mWindowSkyColor;
+        osg::Vec3f mGroundBounce;
         osg::Vec4f mFogColor;
         float mFogStart = 0.f;
         float mFogEnd = 0.f;

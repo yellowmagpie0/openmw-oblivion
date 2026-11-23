@@ -134,6 +134,10 @@ namespace MWRender
 
         osg::ref_ptr<CloudUpdater> mCloudUpdater;
         osg::ref_ptr<CloudUpdater> mNextCloudUpdater;
+        osg::ref_ptr<CloudUpdater> mUpperCloudUpdater, mNextUpperCloudUpdater;
+        std::string mUpperClouds, mNextUpperClouds;
+        float mUpperCloudAnimationTimer = 0.f;
+        float mUpperCloudSpeed = 0.f;
         osg::ref_ptr<osg::PositionAttitudeTransform> mCloudMesh;
         osg::ref_ptr<osg::PositionAttitudeTransform> mNextCloudMesh;
 
