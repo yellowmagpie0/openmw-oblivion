@@ -37,6 +37,7 @@
 #include "../mwbase/world.hpp"
 
 #include "../mwworld/oblivionmaptravel.hpp"
+#include "../mwworld/oblivionscriptmanager.hpp"
 #include "../mwworld/worldimp.hpp"
 #include "../mwworld/cellstore.hpp"
 #include "../mwworld/esmstore.hpp"
@@ -1287,10 +1288,15 @@ namespace MWGui
             return;
 
         auto& world = static_cast<MWWorld::World&>(*MWBase::Environment::get().getWorld());
+        const auto* scripts = world.getOblivionScriptManager();
+        const auto reveals = scripts ? scripts->revealedMapMarkers() : MWWorld::MapMarkerReveals{};
         for (const ESM4::Reference& ref : store.get<ESM4::Reference>())
         {
+            if (!ref.mIsMapMarker)
+                continue;
+            const auto flags = MWWorld::oblivionMapMarkerFlags(ref, reveals);
             constexpr std::uint8_t visibleOnMap = 0x01;
-            if (!ref.mIsMapMarker || !(ref.mMapMarkerFlags & visibleOnMap)
+            if (!(flags & visibleOnMap)
                 || (ref.mFlags & ESM4::Rec_Deleted) || ref.mFullName.empty()
                 || !world.getOblivionReferenceEnabled(ref.mFormKey).value_or(!(ref.mFlags & ESM4::Rec_Disabled)))
                 continue;
@@ -1310,7 +1316,7 @@ namespace MWGui
                 "mine", "mountain_peak", "tavern", "settlement", "daedric_shrine", "door" };
             const auto icon = ref.mMapMarker < std::size(icons) ? icons[ref.mMapMarker] : icons[0];
             widget->setImageTexture("textures/menus/map/world/world_map_icon_" + std::string(icon)
-                + (ref.mMapMarkerFlags & 2 ? ".dds" : "_inactive.dds"));
+                + (flags & 2 ? ".dds" : "_inactive.dds"));
             widget->setUserString("Caption_TextOneLine", ref.mFullName);
             widget->setUserString("ToolTipLayout", "TextToolTipOneLine");
             widget->setUserString("ToolTipType", "Layout");
@@ -1320,7 +1326,7 @@ namespace MWGui
             if (Settings::map().mAllowZooming || mNativeAtlas)
                 widget->eventMouseWheel += MyGUI::newDelegate(this, &MapWindow::onMapZoomed);
             widget->eventMouseButtonPressed += MyGUI::newDelegate(this, &MapWindow::onDragStart);
-            widget->setUserString("TravelEnabled", ref.mMapMarkerFlags & 2 ? "true" : "false");
+            widget->setUserString("TravelEnabled", flags & 2 ? "true" : "false");
             widget->setUserData(ref.mId);
             widget->eventMouseButtonClick += MyGUI::newDelegate(this, &MapWindow::onNativeMarkerClicked);
             mNativeGlobalMapMarkers.push_back({ position, widget });
@@ -1430,7 +1436,7 @@ namespace MWGui
         mTravelMarker = *sender->getUserData<ESM::FormId>();
         const auto& marker = *MWBase::Environment::get().getESMStore()->get<ESM4::Reference>().find(mTravelMarker);
         auto windows = MWBase::Environment::get().getWindowManager();
-        if (!(marker.mMapMarkerFlags & 2))
+        if (sender->getUserString("TravelEnabled") != "true")
         {
             windows->messageBox("You have not discovered this location yet.");
             return;

@@ -390,7 +390,7 @@ namespace MWGui
     void HUD::setQuestObjective(const std::optional<MWWorld::QuestObjective>& objective)
     {
         mQuestBearingMarker.reset();
-        mQuestObjective->setVisible(objective.has_value());
+        mQuestObjective->setVisible(objective.has_value() && !MWBase::Environment::get().getWindowManager()->isGuiMode());
         if (objective)
         {
             std::string caption = objective->mTitle;
@@ -420,6 +420,11 @@ namespace MWGui
             }
         }
         setLocalQuestMarker(mQuestBearingMarker);
+    }
+
+    int HUD::getQuestObjectiveBottom() const
+    {
+        return mQuestObjective->getInheritedVisible() ? mQuestObjective->getAbsoluteCoord().bottom() : 0;
     }
 
     void HUD::setSelectedSpell(const ESM::RefId& spellId, int successChancePercent)

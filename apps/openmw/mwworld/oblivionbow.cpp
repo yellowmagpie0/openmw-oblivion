@@ -167,7 +167,7 @@ namespace MWWorld
         // expiry delete that owner; neither path can regenerate the old flight.
         std::vector<ESM::FormKey> settled;
         for (const auto& reference : mOblivionRuntimeState->mReferences)
-            if (readRecoveredArrow(reference)) settled.push_back(reference.mKey);
+            if (reference.mKey.isDynamic() && readRecoveredArrow(reference)) settled.push_back(reference.mKey);
         if (!settled.empty() && duration > 0)
         {
             std::vector<const ESM4::GameSetting*> settings;

@@ -43,7 +43,13 @@ float specularIntensity(vec3 viewNormal, vec3 viewDir, float shininess, vec3 lig
 }
 
 float calcAttenuation(PointLight light, float dist) {
-    float attenuation = 1.0 / (light.constant + light.linear * dist + light.quadratic * dist * dist);
+    float denominator = light.constant + light.linear * dist + light.quadratic * dist * dist;
+#if @oblivionLighting
+    // Native candles have zero constant attenuation. Bound the near-source
+    // intensity so a wall or eye beside the flame retains its material detail.
+    denominator = max(1.0, denominator);
+#endif
+    float attenuation = 1.0 / denominator;
     #if !@classicFalloff || @lightingMethodClustered
         // Fade illumination out to 0 when reaching the lights radius
         attenuation *= 1.0 - fade((dist / light.radius - 0.75) / 0.25);
@@ -96,7 +102,7 @@ void calcPointLighting(PointLight light, vec3 viewDir, vec3 viewPos, vec3 viewNo
         return;
 #endif
 
-    vec3 lightDir = lightPos / lightDistance;
+    vec3 lightDir = lightPos / max(lightDistance, 0.0001);
 
     float attenuation = calcAttenuation(light, lightDistance) * clusterFade(viewPos, light.radius);
 

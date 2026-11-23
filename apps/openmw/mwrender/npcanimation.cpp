@@ -793,8 +793,9 @@ namespace MWRender
                 if ((i == ESM4::Race::EyeLeft || i == ESM4::Race::EyeRight) && !player->mEyes.isZeroOrUnset())
                     if (const ESM4::Eyes* eyes = store.get<ESM4::Eyes>().search(player->mEyes))
                         texture = eyes->mIcon;
-                attachPart(head[i].mesh, "Bip01 Head", texture, true, false,
-                    shouldCorrectTes4HeadPartOrientation(i));
+                if (auto node = attachPart(head[i].mesh, "Bip01 Head", texture, true, false,
+                        shouldCorrectTes4HeadPartOrientation(i)))
+                    configureTes4HeadPartLighting(*node, i);
             }
             const ESM::FormId hairId
                 = player->mHair.isZeroOrUnset() ? race->mDefaultHair[female ? 1 : 0] : player->mHair;

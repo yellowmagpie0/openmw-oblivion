@@ -321,6 +321,19 @@ namespace MWRender
         mPrecipitationOccluder = std::make_unique<PrecipitationOccluder>(mSkyRootNode, parentNode, rootNode, camera);
     }
 
+    void SkyManager::createSun()
+    {
+        auto sun = mNativeSunTexture;
+        auto glare = mNativeGlareTexture;
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            if (sun.empty()) sun = VFS::Path::Normalized("textures/sky/sun.dds");
+            if (glare.empty()) glare = VFS::Path::Normalized("textures/sky/sunglare.dds");
+        }
+        mSun = std::make_unique<Sun>(mEarlyRenderBinRoot, *mSceneManager, sun, glare);
+        mSun->setSunglare(mSunglareEnabled);
+    }
+
     void SkyManager::create()
     {
         assert(!mCreated);
@@ -344,8 +357,7 @@ namespace MWRender
 
         constexpr VFS::Path::NormalizedView nativeMoon("textures/sky/masser_full.dds");
         const bool nativeAssets = mSceneManager->getVFS()->exists(nativeMoon);
-        mSun = std::make_unique<Sun>(mEarlyRenderBinRoot, *mSceneManager, mNativeSunTexture, mNativeGlareTexture);
-        mSun->setSunglare(mSunglareEnabled);
+        createSun();
         mMasser = std::make_unique<Moon>(
             mEarlyRenderBinRoot, *mSceneManager, Fallback::Map::getFloat("Moons_Masser_Size") / 125,
             Moon::Type_Masser, nativeAssets);
@@ -904,8 +916,7 @@ namespace MWRender
 
         constexpr VFS::Path::NormalizedView nativeMoon("textures/sky/masser_full.dds");
         const bool nativeAssets = mSceneManager->getVFS()->exists(nativeMoon);
-        mSun = std::make_unique<Sun>(mEarlyRenderBinRoot, *mSceneManager, mNativeSunTexture, mNativeGlareTexture);
-        mSun->setSunglare(mSunglareEnabled);
+        createSun();
         mMasser = std::make_unique<Moon>(
             mEarlyRenderBinRoot, *mSceneManager, Fallback::Map::getFloat("Moons_Masser_Size") / 125,
             Moon::Type_Masser, nativeAssets);

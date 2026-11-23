@@ -47,6 +47,7 @@ namespace MWBase
         public:
             virtual ~ResponseCallback() = default;
             virtual void addResponse(std::string_view title, std::string_view text) = 0;
+            virtual void setVoiceFiles(std::vector<std::string>) {}
         };
 
         DialogueManager() {}

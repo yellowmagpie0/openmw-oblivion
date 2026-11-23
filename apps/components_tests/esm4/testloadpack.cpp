@@ -440,6 +440,27 @@ TEST(ESM4LoadInfo, AutomaticVoiceResolvesOnlyTheFirstResponse)
     EXPECT_FALSE(ESM4::dialogueVoiceFiles(info, files, "imperial", "m", true));
 }
 
+TEST(ESM4LoadInfo, OwnVoiceStaysNullWhenMasterHasShiftedRuntimeIndex)
+{
+    auto plugin = makeHeader();
+    std::vector<char> voices;
+    append(voices, std::uint32_t(0));
+    append(voices, std::uint32_t(0x907));
+    std::vector<char> payload;
+    appendSubRecord(payload, ESM::fourCC("VNAM"), voices);
+    appendRecord(plugin, ESM4::REC_RACE, 0, 0x224fc, payload);
+    auto stream = std::make_unique<std::stringstream>(std::string(plugin.begin(), plugin.end()));
+    const ToUTF8::StatelessUtf8Encoder encoder(ToUTF8::WINDOWS_1252);
+    ESM4::Reader reader(std::move(stream), "memory.esm", nullptr, &encoder, true);
+    reader.setModIndex(3);
+    ASSERT_TRUE(reader.getRecordHeader());
+    reader.getRecordData();
+    ESM4::Race race{};
+    race.load(reader);
+    EXPECT_TRUE(race.mVNAM[0].isZeroOrUnset());
+    EXPECT_EQ(race.mVNAM[1], (ESM::FormId{ 0x907, 3 }));
+}
+
 TEST(ESM4LoadInfo, ResolvesSexSpecificVoiceRaceAndRejectsBrokenOrCyclicLinks)
 {
     ESM4::Race source{}, male{}, female{};

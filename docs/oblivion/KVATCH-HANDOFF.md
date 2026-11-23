@@ -3,7 +3,7 @@
 **The player found Martin and reunited him with Jauffre in Weynon Priory Chapel.**
 Find the Heir (MQ03) is complete at stage 100. Martin recruited through reply 01e8d7. At the reunion, Jauffre's
 greeting 01ee25 and reply 01ee2b advanced Weynon Priory (MQ04) to stage 20.
-The next journal objective is to check the Amulet of Kings in Weynon House.
+The chapel checkpoint leads into the [Weynon House investigation](WEYNON-HOUSE-HANDOFF.md).
 
 ## Resume the playthrough
 

@@ -102,8 +102,12 @@ namespace MWMechanics
                 doorPosition = resident.getRefData().getPosition().asVec3();
             return MWWorld::QuestMarker{ space, doorPosition };
         };
+        // Both walks read one snapshot. Index it once rather than scanning all saved references for each exit.
+        std::optional<OblivionSavedReferenceIndex> references;
         const auto canUseDoor = [&](const UnloadedLocation& door) {
-            const auto state = currentDoorState(door);
+            if (!references && mWorld.mOblivionRuntimeState)
+                references.emplace(mWorld.mOblivionRuntimeState->mReferences);
+            const auto state = currentDoorState(door, nullptr, references ? &*references : nullptr);
             return state.mAvailable
                 && (!state.mLocked || mWorld.oblivionPlayerHasItem(state.mKey));
         };
@@ -116,7 +120,7 @@ namespace MWMechanics
         // preserves one-way links, and does not materialize other cells.
         std::deque<ESM::FormKey> pending{ cellKey };
         std::set<ESM::FormKey> visited{ cellKey };
-        while (!pending.empty())
+        while (!pending.empty() && !(result.mNearby && result.mWorldMap && result.mWorldMap->mSpace == preferredExterior))
         {
             const auto incoming = mUnloadedDoorsByDestinationCell.find(pending.front());
             pending.pop_front();
@@ -145,8 +149,6 @@ namespace MWMechanics
                     pending.push_back(door.mCell);
                 }
             }
-            if (result.mNearby && result.mWorldMap && result.mWorldMap->mSpace == preferredExterior)
-                break;
         }
 
         // An interior on the far side of the map is a separate walk to the
@@ -586,6 +588,10 @@ namespace MWWorld
             const auto* state = scripts->findQuestState(quest.mFormKey);
             const bool manual = tracked == quest.mFormKey && !tracked.isNull();
             if (!state || (!manual && !state->mRunning) || quest.mQuestName.empty())
+                continue;
+            const auto bestPossible = std::tuple{ true, unsigned(quest.mData.priority) };
+            if (!manual && objective
+                && (bestPossible < best || (bestPossible == best && !(quest.mFormKey < objective->mQuest))))
                 continue;
 
             auto journal = projectQuest(quest, *state, context);

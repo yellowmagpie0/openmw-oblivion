@@ -165,6 +165,8 @@ namespace MWRender
         // only show the crosshair in game mode
         MWBase::WindowManager* wm = MWBase::Environment::get().getWindowManager();
         wm->showCrosshair(!wm->isGuiMode() && mShowCrosshair);
+        if (mFirstPersonAnimation && mMode == Mode::FirstPerson)
+            mFirstPersonAnimation->setPresentationVisible(!wm->containsMode(MWGui::GM_Dialogue));
 
         if (!paused)
             updateFocalPointOffset(duration);

@@ -93,6 +93,7 @@ namespace MWMechanics
         void fastForward(float gameHours);
 
         bool evaluatePackage(const MWWorld::Ptr& actor);
+        void questStageChanged();
         bool addScriptPackage(const MWWorld::Ptr& actor, const ESM::FormKey& package);
         bool removeScriptPackage(const MWWorld::Ptr& actor);
         bool setPackageWaiting(const MWWorld::Ptr& actor, const ESM::FormKey& package, bool waiting);
@@ -240,6 +241,8 @@ namespace MWMechanics
             bool mPhysicalDoorOpened = false;
             bool mPendingRealization = false;
             bool mNeedsSelection = false;
+            // A restored travel assignment may predate the quest's current stage.
+            bool mCheckTravelAfterStage = true;
             // Low-process movement advances the persisted last-valid position
             // while the resident actor remains at its old render position.
             // This bit makes that abstract position authoritative until the
@@ -267,7 +270,11 @@ namespace MWMechanics
             ESM::FormId mRuntimeId;
             bool mOpenByDefault = false;
         };
-        using DoorStateCache = std::map<const UnloadedLocation*, OblivionDoorState>;
+        struct DoorStateCache
+        {
+            std::map<const UnloadedLocation*, OblivionDoorState> mDoors;
+            std::optional<OblivionSavedReferenceIndex> mReferences;
+        };
 
         MWWorld::World& mWorld;
         const OblivionSavedReferenceIndex* mLowProcessReferenceIndex = nullptr;
@@ -325,7 +332,8 @@ namespace MWMechanics
 
         MWWorld::Ptr ptrFor(const ESM::FormKey& key) const;
         MWWorld::Ptr loadedPtrFor(const ESM::FormKey& key) const;
-        OblivionDoorState currentDoorState(const UnloadedLocation& door, DoorStateCache* cache = nullptr) const;
+        OblivionDoorState currentDoorState(const UnloadedLocation& door, DoorStateCache* cache = nullptr,
+            const OblivionSavedReferenceIndex* references = nullptr) const;
         bool doorInterruptionResolved(const LiveActor& live, const MWWorld::Ptr* actor = nullptr) const;
         void buildUnloadedLocationIndex();
         void ensureDoorRegionIndex();

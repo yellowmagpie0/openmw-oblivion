@@ -36,6 +36,7 @@ namespace MWGui
         }
 
         void addResponse(std::string_view title, std::string_view text) override;
+        void setVoiceFiles(std::vector<std::string> files) override;
 
         void updateTopics() const;
     };
@@ -154,11 +155,12 @@ namespace MWGui
         bool setKeywords(const std::list<std::string>& keyWord);
 
         void addResponse(std::string_view title, std::string_view text, bool needMargin = true);
+        void setVoiceFiles(std::vector<std::string> files);
 
         void addMessageBox(std::string_view text);
 
         void onFrame(float dt) override;
-        void clear() override { resetReference(); }
+        void clear() override;
 
         void updateTopics();
 
@@ -192,6 +194,9 @@ namespace MWGui
         void restock();
         void deleteLater();
         void redrawTopicsList();
+        void updateVoice();
+        std::vector<std::string> mVoiceFiles;
+        std::size_t mNextVoiceFile = 0;
 
         bool mIsCompanion;
         std::list<std::string> mKeywords;

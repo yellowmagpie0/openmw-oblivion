@@ -1,5 +1,6 @@
 #include "tooltips.hpp"
 
+#include <algorithm>
 #include <format>
 #include <iomanip>
 
@@ -25,6 +26,7 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/esmstore.hpp"
 
+#include "hud.hpp"
 #include "inventorywindow.hpp"
 #include "mapwindow.hpp"
 
@@ -310,7 +312,10 @@ namespace MWGui
                 MyGUI::IntSize tooltipSize = getToolTipViaPtr(mFocusObject.getCellRef().getCount(), true, checkOwned());
 
                 const int left = viewSize.width / 2 - tooltipSize.width / 2;
-                const int top = std::max(0, int(mFocusToolTipY * viewSize.height - tooltipSize.height - 20));
+                const int objectiveBottom = winMgr->getHud()->getQuestObjectiveBottom();
+                const int minTop = objectiveBottom > 0 ? objectiveBottom + 4 : 0;
+                const int top = std::min(std::max(minTop, int(mFocusToolTipY * viewSize.height - tooltipSize.height - 20)),
+                    std::max(0, viewSize.height - tooltipSize.height));
                 setCoord(left, top, tooltipSize.width, tooltipSize.height);
 
                 mDynamicToolTipBox->setVisible(true);

@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "ptr.hpp"
+#include "oblivionmaptravel.hpp"
 
 namespace MWWorld
 {
@@ -91,6 +92,8 @@ namespace MWWorld
             const ESM::FormKey& base, const ESM::FormKey& from, const ESM::FormKey& to,
             bool initializeStateless = false);
         void setStage(const ESM::FormKey& quest, std::int32_t stage);
+        MapMarkerReveals revealedMapMarkers() const;
+        std::vector<std::string> menuVoiceFiles(const ESM::FormKey& info, const Ptr& actor) const;
         bool hasSpokenDialogueInfo(const ESM::FormKey& info) const;
         void markSpokenDialogueInfo(const ESM::FormKey& info);
         bool hasTalkedToPlayer(const ESM::FormKey& actor) const;

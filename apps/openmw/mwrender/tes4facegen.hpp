@@ -40,6 +40,7 @@ namespace MWRender
     // be made actor-private.
     std::size_t isolateTes4ActorGeometry(osg::Node& node);
     bool shouldCorrectTes4HeadPartOrientation(std::size_t partIndex);
+    void configureTes4HeadPartLighting(osg::Node& node, std::size_t partIndex);
     osg::Quat getTes4HeadPartCorrection(const osg::Matrixf& headBindMatrix);
     osg::ref_ptr<osg::Image> applyTes4FaceGenEgt(const osg::Image& base, const ESM4::FaceGenEgt& egt,
         const std::vector<float>& raceCoefficients, const std::vector<float>& npcCoefficients);

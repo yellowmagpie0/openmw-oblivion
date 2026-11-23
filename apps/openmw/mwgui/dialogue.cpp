@@ -1,5 +1,7 @@
 #include "dialogue.hpp"
 
+#include <cmath>
+
 #include <MyGUI_Button.h>
 #include <MyGUI_LanguageManager.h>
 #include <MyGUI_ProgressBar.h>
@@ -17,10 +19,12 @@
 #include "../mwbase/dialoguemanager.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
+#include "../mwbase/soundmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
 #include "../mwbase/world.hpp"
 
 #include "../mwdialogue/keywordsearch.hpp"
+#include "../mwrender/camera.hpp"
 
 #include "../mwworld/class.hpp"
 #include "../mwworld/containerstore.hpp"
@@ -44,6 +48,11 @@ namespace MWGui
     void ResponseCallback::updateTopics() const
     {
         mWindow->updateTopics();
+    }
+
+    void ResponseCallback::setVoiceFiles(std::vector<std::string> files)
+    {
+        mWindow->setVoiceFiles(std::move(files));
     }
 
     PersuasionDialog::PersuasionDialog(std::unique_ptr<ResponseCallback> callback)
@@ -495,6 +504,7 @@ namespace MWGui
         bool sameActor = (mPtr == actor);
         if (!sameActor)
         {
+            setVoiceFiles({});
             // The history is not reset here
             mKeywords.clear();
             mTopicsList->clear();
@@ -517,6 +527,31 @@ namespace MWGui
             if (isCompanion(actor))
                 MWBase::Environment::get().getWindowManager()->pushGuiMode(MWGui::GM_Companion, actor);
             return;
+        }
+
+        auto world = MWBase::Environment::get().getWorld();
+        if (world->getGameProfile() == ESM::GameProfile::Oblivion && actor.getType() == ESM::REC_NPC_4)
+        {
+            auto* camera = world->getCamera();
+            if (camera && camera->getMode() == MWRender::Camera::Mode::FirstPerson)
+            {
+                // A package can initiate dialogue from behind the player. Frame the speaker
+                // above the response pane, including models without an animated head node.
+                const auto feet = actor.getRefData().getPosition().asVec3();
+                auto head = world->getActorHeadTransform(actor).getTrans();
+                if (head == feet)
+                    head.z() += 1.8f * world->getHalfExtents(actor, true).z();
+                const osg::Vec3d offset = osg::Vec3d(feet + (head - feet) * 0.83f) - camera->getPosition();
+                const auto distance = std::hypot(offset.x(), offset.y());
+                if (distance > 0.01)
+                {
+                    const float yaw = static_cast<float>(std::atan2(offset.x(), offset.y()));
+                    const float pitch = -static_cast<float>(std::atan2(offset.z(), distance));
+                    world->rotateObject(world->getPlayerPtr(), { pitch, 0.f, yaw });
+                    camera->setYaw(-yaw);
+                    camera->setPitch(-pitch);
+                }
+            }
         }
 
         MWBase::Environment::get().getWindowManager()->setKeyFocusWidget(mGoodbyeButton);
@@ -570,8 +605,40 @@ namespace MWGui
     {
         if (MWBase::Environment::get().getWindowManager()->containsMode(GM_Dialogue))
             return;
+        setVoiceFiles({});
         // Reset history
         mHistoryContents.clear();
+    }
+
+    void DialogueWindow::clear()
+    {
+        setVoiceFiles({});
+        resetReference();
+    }
+
+    void DialogueWindow::setVoiceFiles(std::vector<std::string> files)
+    {
+        if (!mPtr.isEmpty() && mNextVoiceFile > 0)
+        {
+            auto sound = MWBase::Environment::get().getSoundManager();
+            if (sound->getSaySoundFile(mPtr).value() == mVoiceFiles[mNextVoiceFile - 1])
+                sound->stopSay(mPtr);
+        }
+        mVoiceFiles = std::move(files);
+        mNextVoiceFile = 0;
+        updateVoice();
+    }
+
+    void DialogueWindow::updateVoice()
+    {
+        if (mPtr.isEmpty() || mNextVoiceFile >= mVoiceFiles.size())
+            return;
+        auto sound = MWBase::Environment::get().getSoundManager();
+        if (mNextVoiceFile > 0 && sound->sayActive(mPtr))
+            return;
+        const VFS::Path::Normalized file(mVoiceFiles[mNextVoiceFile++]);
+        sound->say(mPtr, file);
+        Log(Debug::Verbose) << "Native menu voice: " << file << " active=" << sound->sayActive(mPtr);
     }
 
     bool DialogueWindow::setKeywords(const std::list<std::string>& keyWords)
@@ -866,6 +933,7 @@ namespace MWGui
         if (mPtr.isEmpty())
             return;
 
+        updateVoice();
         updateDisposition();
         deleteLater();
 

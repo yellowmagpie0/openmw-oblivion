@@ -18,15 +18,24 @@
 #include "cellstore.hpp"
 #include "class.hpp"
 #include "datetimemanager.hpp"
+#include "oblivionscriptmanager.hpp"
 #include "worldimp.hpp"
 #include "worldspaceutils.hpp"
 
 namespace MWWorld
 {
+    std::uint8_t oblivionMapMarkerFlags(const ESM4::Reference& marker, const MapMarkerReveals& reveals)
+    {
+        const auto it = reveals.find(marker.mFormKey);
+        return it == reveals.end() ? marker.mMapMarkerFlags : marker.mMapMarkerFlags | it->second;
+    }
+
     std::string_view travelToOblivionMapMarker(World& world, const ESM4::Reference& marker)
     {
         const auto& store = world.getStore();
-        if (!marker.mIsMapMarker || (marker.mMapMarkerFlags & 3) != 3
+        const auto* scripts = world.getOblivionScriptManager();
+        const auto flags = scripts ? oblivionMapMarkerFlags(marker, scripts->revealedMapMarkers()) : marker.mMapMarkerFlags;
+        if (!marker.mIsMapMarker || (flags & 3) != 3
             || (marker.mFlags & ESM4::Rec_Deleted)
             || !world.getOblivionReferenceEnabled(marker.mFormKey).value_or(!(marker.mFlags & ESM4::Rec_Disabled)))
             return "You have not discovered this location yet.";

@@ -546,8 +546,15 @@ void ESM4::Race::load(ESM4::Reader& reader)
             {
                 if (subHdr.dataSize == 8) // TES4
                 {
-                    reader.getFormId(mVNAM[0]); // For TES4 seems to be 2 race formids
-                    reader.getFormId(mVNAM[1]);
+                    // A zero slot uses this race's voice. Preserve that sentinel
+                    // even when the owning plugin has a nonzero runtime index.
+                    for (auto& voice : mVNAM)
+                    {
+                        ESM::FormKey key;
+                        reader.getFormId(voice, key);
+                        if (key.isNull())
+                            voice = {};
+                    }
                 }
                 else if (subHdr.dataSize == 4) // TES5
                 {

@@ -157,6 +157,19 @@ namespace MWMechanics
                     <= world.getMaxActivationDistance();
         }
 
+        bool reevaluateStalledPackage(const ESM4::RuntimeActorAiState& state, const ESM4::AIPackage* package)
+        {
+            return state.mPhase == ESM4::PackagePhase::Stalled && package
+                && !package->mPackageFlags.has(ESM4::PackageFlag::MustComplete);
+        }
+
+        bool canInterruptTravel(const ESM4::AIPackage* package)
+        {
+            return package && package->mPackageType == ESM4::AIPackageType::Travel
+                && !package->mPackageFlags.has(ESM4::PackageFlag::MustComplete)
+                && !package->mPackageFlags.has(ESM4::PackageFlag::MustReachLocation);
+        }
+
         bool reevaluateWaitingAmbush(const ESM4::RuntimeActorAiState& state, const ESM4::AIPackage* package)
         {
             return package && state.mPackageType == ESM4::AIPackageType::Ambush
@@ -310,7 +323,7 @@ namespace MWMechanics
         }
 
         MWWorld::Ptr findBlockingOblivionDoor(const MWWorld::Ptr& actor, const MWPhysics::PhysicsSystem& physics,
-            const osg::Vec3f& destination, float maximumDistance)
+            const osg::Vec3f& destination, float maximumDistance, const MWWorld::Ptr& traversedDoor)
         {
             const osg::Vec3f position = actor.getRefData().getPosition().asVec3();
             osg::Vec3f direction(destination.x() - position.x(), destination.y() - position.y(), 0.f);
@@ -319,8 +332,11 @@ namespace MWMechanics
                 return {};
 
             const osg::Vec3f from = position + osg::Vec3f(0.f, 0.f, 32.f);
+            std::vector<MWWorld::ConstPtr> ignore{ actor };
+            if (!traversedDoor.isEmpty())
+                ignore.push_back(traversedDoor);
             const auto hit = physics.castRay(from,
-                from + direction * std::min(distance, maximumDistance), { actor }, {},
+                from + direction * std::min(distance, maximumDistance), ignore, {},
                 MWPhysics::CollisionType_World | MWPhysics::CollisionType_Door);
             const MWWorld::Ptr door = hit.mHitObject;
             if (!hit.mHit || door.isEmpty() || door.getClass().getType() != ESM::REC_DOOR4
@@ -2962,6 +2978,7 @@ namespace MWMechanics
 
     ESM4::PackageSelection OblivionAiService::selectUnloaded(LiveActor& live, bool restart)
     {
+        live.mCheckTravelAfterStage = false;
         ESM4::PackageSelectionRequest request;
         request.mNow = now();
         request.mBasePackages = basePackages(live.mState.mBase);
@@ -3514,6 +3531,7 @@ namespace MWMechanics
 
     ESM4::PackageSelection OblivionAiService::select(const MWWorld::Ptr& actor, LiveActor& live, bool restart)
     {
+        live.mCheckTravelAfterStage = false;
         ESM4::PackageSelectionRequest request;
         request.mNow = now();
         request.mBasePackages = basePackages(actor);
@@ -4060,7 +4078,10 @@ namespace MWMechanics
         while (!pending.empty())
         {
             const auto [region, hops] = pending.front(); pending.pop_front();
-            if (remaining[region] != hops || hops > remaining[startRegion]) continue;
+            if (remaining[region] != hops) continue;
+            // The deque visits costs in order. Every eligible first exit lands
+            // at cost remaining[startRegion] - 1, including ties across walking regions.
+            if (hops >= remaining[startRegion]) break;
             for (const auto from : mDoorRegions[region].mIncomingWalk)
                 relax(from, hops, true);
             for (const auto index : mDoorRegions[region].mIncomingDoors)
@@ -4788,6 +4809,8 @@ namespace MWMechanics
         if (live.mNeedsSelection
             || (live.mSelectionCheckTimer <= 0.f
                 && (live.mState.mPhase == ESM4::PackagePhase::Interrupted
+                    || (live.mCheckTravelAfterStage && canInterruptTravel(waitingPackage))
+                    || reevaluateStalledPackage(live.mState, waitingPackage)
                     || live.mState.mPhase == ESM4::PackagePhase::Complete
                     || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull())
                     || routeChanged || waitingWander || waitingAmbush)))
@@ -5511,17 +5534,31 @@ namespace MWMechanics
         const auto& references = mWorld.mOblivionRuntimeState->mReferences;
         if (mLowProcessReferenceIndex && mLowProcessReferenceIndex->matches(references))
             return mLowProcessReferenceIndex->find(key);
-        const auto found = std::find_if(references.begin(), references.end(),
-            [&](const auto& reference) { return reference.mKey == key; });
-        return found != references.end() ? &*found : nullptr;
+        return mWorld.findOblivionSavedReference(key);
     }
 
-    OblivionDoorState OblivionAiService::currentDoorState(const UnloadedLocation& door, DoorStateCache* cache) const
+    OblivionDoorState OblivionAiService::currentDoorState(const UnloadedLocation& door, DoorStateCache* cache,
+        const OblivionSavedReferenceIndex* references) const
     {
         if (cache)
         {
-            const auto [it, inserted] = cache->try_emplace(&door);
-            if (inserted) it->second = currentDoorState(door);
+            const auto [it, inserted] = cache->mDoors.try_emplace(&door);
+            if (inserted)
+            {
+                if (mWorld.mOblivionRuntimeState)
+                {
+                    const auto& saved = mWorld.mOblivionRuntimeState->mReferences;
+                    if (mLowProcessReferenceIndex && mLowProcessReferenceIndex->matches(saved))
+                        references = mLowProcessReferenceIndex;
+                    else
+                    {
+                        if (!cache->mReferences)
+                            cache->mReferences.emplace(saved);
+                        references = &*cache->mReferences;
+                    }
+                }
+                it->second = currentDoorState(door, nullptr, references);
+            }
             return it->second;
         }
         OblivionDoorState authored{ door.mEnabled, door.mLocked, door.mKey, door.mOwner };
@@ -5546,7 +5583,7 @@ namespace MWMechanics
             }
             return resolveOblivionDoorState(authored, nullptr, resident);
         }
-        else if (const auto* savedDoor = savedReferenceState(door.mReference))
+        else if (const auto* savedDoor = references ? references->find(door.mReference) : savedReferenceState(door.mReference))
         {
             return resolveOblivionDoorState(authored, savedDoor, std::nullopt);
         }
@@ -6038,7 +6075,11 @@ namespace MWMechanics
         const auto useBlockingDoor = [&](const osg::Vec3f& target) {
             if (live.mState.mDoorCooldown > 0.f)
                 return false;
-            const MWWorld::Ptr door = findBlockingOblivionDoor(actor, *mWorld.mPhysics, target, 192.f);
+            // The movement sweep already ignores this actor's opened leaf until
+            // it clears the doorway. Its look-ahead ray must use the same pair.
+            const auto traversed = live.mIgnoredPhysicalDoor.isNull()
+                ? MWWorld::Ptr{} : loadedPtrFor(live.mIgnoredPhysicalDoor);
+            const MWWorld::Ptr door = findBlockingOblivionDoor(actor, *mWorld.mPhysics, target, 192.f, traversed);
             if (door.isEmpty())
                 return false;
             live.mState.mDoor = actorKey(door);
@@ -6069,7 +6110,11 @@ namespace MWMechanics
             while (live.mContinuousRouteCursor < live.mContinuousRoute.size())
             {
                 const osg::Vec3f& point = live.mContinuousRoute[live.mContinuousRouteCursor];
-                if (distanceSquared(position, point) <= sArrivalTolerance * sArrivalTolerance)
+                // A door link includes an approach and an exit. Skipping its
+                // approach at the package arrival radius cuts across the jamb.
+                const bool lastPoint = live.mContinuousRouteCursor + 1 == live.mContinuousRoute.size();
+                if (lastPoint ? distanceSquared(position, point) <= sArrivalTolerance * sArrivalTolerance
+                              : oblivionPathgridWaypointReached(position, point))
                 {
                     ++live.mContinuousRouteCursor;
                     continue;
@@ -6855,6 +6900,8 @@ namespace MWMechanics
             && canActivatePlacedObject(mWorld, actor, loadedPtrFor(interruptedPackage->mTargetData.mReferenceKey));
         if (followContextChanged || (live.mSelectionCheckTimer <= 0.f
             && (live.mState.mPhase == ESM4::PackagePhase::Interrupted || live.mState.mPhase == ESM4::PackagePhase::Complete
+                || (live.mCheckTravelAfterStage && canInterruptTravel(waitingPackage))
+                || reevaluateStalledPackage(live.mState, waitingPackage)
                 || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull())
                 || stalledRouteChanged || waitingWander)))
         {
@@ -7687,6 +7734,13 @@ namespace MWMechanics
             mSimulationNow.reset();
         }
         dispatchPendingPackageDone();
+    }
+
+    void OblivionAiService::questStageChanged()
+    {
+        for (auto& [key, live] : mActors)
+            if (live.mState.mPackageType == ESM4::AIPackageType::Travel)
+                live.mCheckTravelAfterStage = true;
     }
 
     bool OblivionAiService::evaluatePackage(const MWWorld::Ptr& actor)

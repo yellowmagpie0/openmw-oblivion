@@ -635,6 +635,24 @@ namespace MWRender
         return partIndex < ESM4::Race::Mouth || partIndex > ESM4::Race::Tongue;
     }
 
+    void configureTes4HeadPartLighting(osg::Node& node, std::size_t partIndex)
+    {
+        const bool eye = partIndex == ESM4::Race::EyeLeft || partIndex == ESM4::Race::EyeRight;
+        const bool ear = partIndex == ESM4::Race::EarMale || partIndex == ESM4::Race::EarFemale;
+        if (!eye && !ear)
+            return;
+        // The legacy ear mesh includes an export light of its own. Assembled
+        // facial parts share the actor's scene lighting. Keep a small corneal
+        // highlight without the opaque white sheen of the legacy materials.
+        osg::ref_ptr<osg::StateSet> state = node.getStateSet()
+            ? new osg::StateSet(*node.getStateSet(), osg::CopyOp::SHALLOW_COPY) : new osg::StateSet;
+        const auto mode = osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE;
+        for (const auto* name : { "nifEmbeddedLightAmbient", "nifEmbeddedLightDirection" })
+            state->addUniform(new osg::Uniform(name, osg::Vec4f()), mode);
+        state->addUniform(new osg::Uniform("specStrength", eye ? 0.2f : 0.05f), mode);
+        node.setStateSet(state);
+    }
+
     osg::ref_ptr<osg::Image> applyTes4FaceGenEgt(const osg::Image& base, const ESM4::FaceGenEgt& egt,
         const std::vector<float>& raceCoefficients, const std::vector<float>& npcCoefficients)
     {
@@ -1263,8 +1281,11 @@ namespace MWRender
                 }
                 if (osg::ref_ptr<osg::Node> node = insertPart(part.mesh, "Bip01 Head", texture,
                         shouldCorrectTes4HeadPartOrientation(i)))
+                {
                     applyTes4FaceGen(
                         part.mesh, *node, traits, *race, isFemale, texture, false, mResourceSystem, mFaceMorphs);
+                    configureTes4HeadPartLighting(*node, i);
+                }
             }
         }
 

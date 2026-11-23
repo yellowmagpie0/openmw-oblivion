@@ -15,6 +15,7 @@
 #include <components/esm4/nativeclampframe.hpp>
 #include <components/esm4/nativesequencedeactivation.hpp>
 #include <components/resource/niffilemanager.hpp>
+#include "../mwclass/esm4interactive.hpp"
 #include "../mwclass/esm4npc.hpp"
 #include "../mwclass/light4.hpp"
 #include "customdata.hpp"
@@ -194,6 +195,7 @@
 #include "manualref.hpp"
 #include "oblivionprofileservices.hpp"
 #include "oblivioninventoryidentity.hpp"
+#include "oblivionmaptravel.hpp"
 #include "oblivionscriptmanager.hpp"
 #include "player.hpp"
 #include "projectilemanager.hpp"
@@ -259,6 +261,20 @@ namespace MWWorld
     namespace
     {
         constexpr std::string_view lightUsageKey = "native.light.remaining_usage_time";
+        constexpr char doorMotionKey[] = "native.door.motion";
+
+        std::optional<DoorState> savedDoorMotion(const ESMStore& store, const ESM4::RuntimeReferenceState& reference)
+        {
+            const auto found = reference.mCustomState.find(doorMotionKey);
+            if (found == reference.mCustomState.end())
+                return std::nullopt;
+            const auto* motion = std::get_if<std::int64_t>(&found->second);
+            const auto* placement = store.search<ESM4::Reference>(reference.mKey);
+            if (!motion || *motion < 0 || *motion > static_cast<int>(DoorState::Closing)
+                || !store.search<ESM4::Door>(reference.mBase) || (placement && placement->mDoor.destDoor != ESM::FormId{}))
+                throw std::invalid_argument("Invalid native physical door motion for " + reference.mKey.serialize());
+            return static_cast<DoorState>(*motion);
+        }
 
         std::optional<float> savedNativeLightUsageTime(
             const ESMStore& store, const ESM4::RuntimeReferenceState& reference)
@@ -2419,6 +2435,15 @@ namespace MWWorld
                     reference.mCustomState["scale"] = static_cast<double>(ptr.getCellRef().getScale());
                     reference.mCustomState["record_type"]
                         = static_cast<std::int64_t>(ptr.getClass().getType());
+                    if (type == ESM::REC_DOOR4 && !ptr.getCellRef().getTeleport())
+                    {
+                        const auto motion = ptr.getClass().getDoorState(ptr);
+                        // An explicit idle distinguishes a changed default from a pending transition.
+                        if (motion != DoorState::Idle || reference.mCustomState.contains("obscript.door_default_open"))
+                            reference.mCustomState[doorMotionKey] = static_cast<std::int64_t>(motion);
+                        else
+                            reference.mCustomState.erase(doorMotionKey);
+                    }
                     if (type == ESM::REC_LIGH4)
                     {
                         reference.mCustomState.erase(std::string(lightUsageKey));
@@ -7357,8 +7382,8 @@ namespace MWWorld
             std::optional<float> mScale;
             std::optional<ESM::AnimationState> mAnimation;
             std::optional<CellRef> mItemCellRef;
-            std::unique_ptr<CustomData> mLightUsage;
-            bool mReplaceLightUsage = false;
+            std::unique_ptr<CustomData> mCustomData;
+            bool mReplaceCustomData = false;
         };
         std::optional<CellRef> preparedPlayerDropRelations;
         if (state.mVersion >= 47)
@@ -7425,10 +7450,29 @@ namespace MWWorld
                 savedActorDrawState(mStore, found->second, state); // Validate incoming state, not the accepted cache.
             std::optional<CellRef> itemCellRef;
             const auto lightUsage = savedNativeLightUsageTime(mStore, reference);
-            auto lightData = lightUsage ? MWClass::ESM4Light::prepareRemainingUsageTime(*lightUsage) : nullptr;
+            std::unique_ptr<CustomData> customData
+                = lightUsage ? MWClass::ESM4Light::prepareRemainingUsageTime(*lightUsage) : nullptr;
+            const auto& itemClass = found->second.getClass();
+            const bool physicalDoor = itemClass.getType() == ESM::REC_DOOR4 && !found->second.getCellRef().getTeleport();
+            if (physicalDoor)
+            {
+                auto motion = savedDoorMotion(mStore, reference);
+                // Older saves recorded the script's default but lost an off-cell Open request.
+                // Prefer an explicit animation or hinge position whenever the save has one.
+                const auto defaultOpen = reference.mCustomState.find("obscript.door_default_open");
+                if (!motion && defaultOpen != reference.mCustomState.end()
+                    && std::get<bool>(defaultOpen->second) && !reference.mCustomState.contains("obscript.animation_group")
+                    && reference.mPosition.rot[2] == found->second.getCellRef().getPosition().rot[2])
+                    motion = DoorState::Opening;
+                if (motion && *motion != DoorState::Idle)
+                {
+                    auto doorData = std::make_unique<MWClass::ESM4DoorCustomData>();
+                    doorData->mDoorState = *motion;
+                    customData = std::move(doorData);
+                }
+            }
             const bool hasItemExtras = reference.mItemCondition || reference.mItemCharge
                 || !reference.mWeaponPoison.isNull();
-            const auto& itemClass = found->second.getClass();
             if (hasItemExtras && !itemClass.isItem(found->second))
                 throw std::invalid_argument("TES4 loose item extras require a native takeable reference");
             if (itemClass.isItem(found->second))
@@ -7543,8 +7587,8 @@ namespace MWWorld
             const auto cellId = resolver.toFormId(reference.mCell);
             preparedReferences.push_back({&reference, found->second,
                 &mWorldModel.getCell(ESM::RefId(*cellId)), owner, locked, scale,
-                std::move(animationState), std::move(itemCellRef), std::move(lightData),
-                itemClass.getType() == ESM::REC_LIGH4});
+                std::move(animationState), std::move(itemCellRef), std::move(customData),
+                physicalDoor || itemClass.getType() == ESM::REC_LIGH4});
         }
         // Construct detached replacement items before changing globals, player
         // identity or live inventories. Content/owner/projection errors must not
@@ -7855,8 +7899,8 @@ namespace MWWorld
         {
             const auto& reference = *binding.mState;
             Ptr ptr = binding.mReference;
-            if (binding.mReplaceLightUsage)
-                ptr.getRefData().setCustomData(std::move(binding.mLightUsage));
+            if (binding.mReplaceCustomData)
+                ptr.getRefData().setCustomData(std::move(binding.mCustomData));
             if (binding.mItemCellRef)
             {
                 static_assert(std::is_nothrow_swappable_v<CellRef>);
@@ -8367,7 +8411,7 @@ namespace MWWorld
                     throw std::runtime_error("TES4 runtime-state owner cannot be resolved: "
                         + reference.mOwner->serialize());
             }
-            for (const auto name : {"obscript.dead", "locked", "obscript.animation_scripted",
+            for (const auto name : {"obscript.dead", "locked", "obscript.animation_scripted", "obscript.door_default_open",
                      "native.dialogue.talked_to_player"})
                 if (const auto value = reference.mCustomState.find(name); value != reference.mCustomState.end()
                     && !std::holds_alternative<bool>(value->second))
@@ -8414,7 +8458,16 @@ namespace MWWorld
                     || (reference.mItemCharge && item->mMaxCharge < 0.f))
                     throw std::invalid_argument("TES4 loose item extras disagree with the winning item category");
             }
-            savedNativeLightUsageTime(incoming && reference.mBase.isDynamic() ? *incoming : mStore, reference);
+            const auto& definitions = incoming && reference.mBase.isDynamic() ? *incoming : mStore;
+            savedNativeLightUsageTime(definitions, reference);
+            savedDoorMotion(definitions, reference);
+            if (const auto it = reference.mCustomState.find(mapMarkerRevealKey); it != reference.mCustomState.end())
+            {
+                const auto* marker = mStore.search<ESM4::Reference>(reference.mKey);
+                const auto* flags = std::get_if<std::int64_t>(&it->second);
+                if (!marker || !marker->mIsMapMarker || !flags || (*flags != 1 && *flags != 3))
+                    throw std::invalid_argument("TES4 revealed map marker has invalid reference or flags");
+            }
             if (reference.mKey.isDynamic())
                 continue; // Dynamic references are reconstructed from shared save records.
             const auto* npc = mStore.get<ESM4::ActorCharacter>().search(reference.mKey);

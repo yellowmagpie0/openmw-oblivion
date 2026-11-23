@@ -600,6 +600,19 @@ namespace MWWorld
         return NativeVoice{info, selected.value_or(std::vector<std::string>{})};
     }
 
+    std::vector<std::string> OblivionScriptManager::menuVoiceFiles(const ESM::FormKey& info, const Ptr& actor) const
+    {
+        try
+        {
+            return findNativeVoice(info, actor, {}).mFiles;
+        }
+        catch (const std::runtime_error& e)
+        {
+            Log(Debug::Warning) << "Native dialogue voice unavailable for " << info.serialize() << ": " << e.what();
+            return {};
+        }
+    }
+
     void OblivionScriptManager::dispatchAutomaticDialogueResponse(
         const ESM::FormKey& topic, const Ptr& actor, const Ptr& target)
     {
@@ -1498,6 +1511,16 @@ namespace MWWorld
         return result;
     }
 
+    MapMarkerReveals OblivionScriptManager::revealedMapMarkers() const
+    {
+        MapMarkerReveals result;
+        if (mWorld.mOblivionRuntimeState)
+            for (const auto& ref : mWorld.mOblivionRuntimeState->mReferences)
+                if (const auto it = ref.mCustomState.find(mapMarkerRevealKey); it != ref.mCustomState.end())
+                    result.emplace(ref.mKey, static_cast<std::uint8_t>(std::get<std::int64_t>(it->second)));
+        return result;
+    }
+
     void OblivionScriptManager::setStage(const ESM::FormKey& quest, std::int32_t stage)
     {
         requireMutableRuntime();
@@ -1509,7 +1532,11 @@ namespace MWWorld
         const auto insert = std::lower_bound(state.mCompletedStages.begin(), state.mCompletedStages.end(), stage);
         const bool completed = insert != state.mCompletedStages.end() && *insert == stage;
         if (!completed)
+        {
             state.mCompletedStages.insert(insert, stage);
+            if (auto* ai = mWorld.getOblivionAiService())
+                ai->questStageChanged();
+        }
         trace("setstage quest=" + quest.serialize() + " stage=" + std::to_string(stage));
         const auto* definition = mStore.search<ESM4::Quest>(quest);
         if (completed && (!definition || !(definition->mData.flags & ESM4::Quest::Flag_AllowRepeatStages)))
@@ -1636,7 +1663,16 @@ namespace MWWorld
             state.mKey = key;
             state.mBase = base->second;
             state.mCell = *metadata->mParent;
-            if (const Ptr ptr = ptrFor(key); !ptr.isEmpty())
+            const auto* placed = mStore.search<ESM4::Reference>(key);
+            const bool marker = placed && placed->mIsMapMarker;
+            if (marker)
+            {
+                // Showing a distant marker must not load its worldspace or move it to the cell origin.
+                state.mPosition = placed->mPos;
+                state.mEnabled = !(placed->mFlags & ESM4::Rec_Disabled);
+                state.mDeleted = (placed->mFlags & ESM4::Rec_Deleted) != 0;
+            }
+            if (const Ptr ptr = marker ? mWorld.mWorldModel.getPtr(placed->mId) : ptrFor(key); !ptr.isEmpty())
             {
                 state.mEnabled = ptr.getRefData().isEnabled();
                 state.mDeleted = ptr.mRef->isDeleted();
@@ -3891,11 +3927,40 @@ namespace MWWorld
             }
         }
 
+        if (name == "showmap")
+        {
+            const auto key = keyFromValue(argument(0));
+            const auto* marker = key ? mStore.search<ESM4::Reference>(*key) : nullptr;
+            if (marker && marker->mIsMapMarker)
+            {
+                const std::int64_t reveal = arguments.size() > 1 && ObScript::asBoolean(argument(1)) ? 3 : 1;
+                auto* saved = referenceState(*key);
+                if (!saved)
+                    throw ObScript::RuntimeError("OBSV110", "Map marker has no placed reference state", name);
+                auto it = saved->mCustomState.find(mapMarkerRevealKey);
+                const auto previous = it == saved->mCustomState.end() ? 0 : std::get<std::int64_t>(it->second);
+                const auto flags = marker->mMapMarkerFlags | previous;
+                if ((flags & reveal) != reveal)
+                {
+                    saved->mCustomState[mapMarkerRevealKey] = previous | reveal;
+                    if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
+                    {
+                        const auto id = mStore.findEsm4FormKey("sMapMarkerAdded");
+                        const auto* setting = id ? mStore.search<ESM4::GameSetting>(*id) : nullptr;
+                        const auto* message = setting ? std::get_if<std::string>(&setting->mData) : nullptr;
+                        windows->messageBox(message ? *message : "Map marker added.");
+                    }
+                }
+                trace("showmap ref=" + key->serialize() + " flags="
+                    + std::to_string(flags | reveal));
+            }
+            return std::int64_t(1);
+        }
+
         // These commands acknowledge state owned by later AI/UI/audio/magic
         // milestones without pretending their subsystem effect occurred. They
         // retain deterministic control-flow compatibility for M7 scripts.
         static const std::set<std::string, std::less<>> deferred{
-            "showmap",
             "cast", "addspell", "removespell",
             "setquestobject", "modfactionrank",
             "setunconscious" };

@@ -50,12 +50,15 @@ namespace MWMechanics
         explicit OblivionSavedReferenceIndex(std::span<const ESM4::RuntimeReferenceState> references)
             : mSource(references)
         {
+            // Captured saves already have key order. Search those references in place.
+            if (std::is_sorted(references.begin(), references.end(),
+                    [](const auto& left, const auto& right) { return left.mKey < right.mKey; }))
+                return;
             mIndex.reserve(references.size());
             for (const auto& reference : references)
                 mIndex.push_back(&reference);
             const auto less = [](const auto* left, const auto* right) { return left->mKey < right->mKey; };
-            if (!std::is_sorted(mIndex.begin(), mIndex.end(), less))
-                std::stable_sort(mIndex.begin(), mIndex.end(), less);
+            std::stable_sort(mIndex.begin(), mIndex.end(), less);
         }
 
         bool matches(std::span<const ESM4::RuntimeReferenceState> references) const
@@ -65,6 +68,12 @@ namespace MWMechanics
 
         const ESM4::RuntimeReferenceState* find(const ESM::FormKey& key) const
         {
+            if (mIndex.empty())
+            {
+                const auto found = std::lower_bound(mSource.begin(), mSource.end(), key,
+                    [](const auto& reference, const auto& wanted) { return reference.mKey < wanted; });
+                return found != mSource.end() && found->mKey == key ? &*found : nullptr;
+            }
             const auto found = std::lower_bound(mIndex.begin(), mIndex.end(), key,
                 [](const auto* reference, const ESM::FormKey& wanted) { return reference->mKey < wanted; });
             return found != mIndex.end() && (*found)->mKey == key ? *found : nullptr;

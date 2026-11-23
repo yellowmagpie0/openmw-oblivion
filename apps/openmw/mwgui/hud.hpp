@@ -54,6 +54,7 @@ namespace MWGui
 
         void onFrame(float dt) override;
         void setQuestObjective(const std::optional<MWWorld::QuestObjective>& objective);
+        int getQuestObjectiveBottom() const;
 
         void setCellName(const std::string& cellName);
 

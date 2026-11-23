@@ -115,6 +115,7 @@ namespace MWRender
         void createRain();
         void destroyRain();
         void createNightSky();
+        void createSun();
         void switchUnderwaterRain();
         void updateRainParameters();
 

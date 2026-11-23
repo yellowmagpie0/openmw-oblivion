@@ -2439,6 +2439,70 @@ TEST(OblivionTutorialDoor, ScriptDefaultOpenOverridesAuthoredDefaultIndependentl
     EXPECT_FALSE(std::get<bool>(ref->mCustomState.at("obscript.door_default_open")));
 }
 
+TEST(OblivionTutorialDoor, PendingOffscreenDoorMotionSurvivesSaveIndependentlyOfDefault)
+{
+    AnimatedDoorFixture f;
+    auto& world = f.mFixture.mWorld;
+    ObScript::RuntimeContext context;
+    context.mSelf = key(0xc01);
+    auto* scripts = world.getOblivionScriptManager();
+    scripts->call("SetDoorDefaultOpen", {}, { std::int64_t(1) }, context, {});
+
+    const auto restore = [&](const ESM4::RuntimeState& snapshot) {
+        TestingOpenMW::readNativeSnapshot(f.mFixture, snapshot);
+        world.applyOblivionRuntimeState();
+    };
+
+    const auto idle = world.captureOblivionRuntimeState();
+    scripts->call("SetOpenState", {}, { std::int64_t(1) }, context, {});
+    const auto opening = world.captureOblivionRuntimeState();
+    restore(idle);
+    EXPECT_EQ(f.query(), 3);
+    restore(opening);
+    EXPECT_EQ(f.query(), 2);
+    EXPECT_TRUE(f.mDoor.getCellRef().isLocked());
+
+    auto legacy = idle;
+    const auto ref = std::find_if(legacy.mReferences.begin(), legacy.mReferences.end(),
+        [&](const auto& r) { return r.mKey == context.mSelf; });
+    ASSERT_NE(ref, legacy.mReferences.end());
+    ASSERT_EQ(ref->mCustomState.erase("native.door.motion"), 1u);
+    restore(legacy);
+    EXPECT_EQ(f.query(), 2);
+    ref->mCustomState["native.door.motion"] = std::int64_t(99);
+    EXPECT_THROW(world.prepareOblivionSaveState(legacy), std::invalid_argument);
+}
+
+TEST(OblivionMapTravel, ShowMapPersistsVisibilityAndTravelWithoutClearingAuthoredFlags)
+{
+    SwitchFixture f;
+    auto& world = f.mFixture.mWorld;
+    auto& store = world.getStore();
+    auto marker = *store.search<ESM4::Reference>(key(0xb02));
+    marker.mIsMapMarker = true;
+    marker.mMapMarkerFlags = 4;
+    store.getWritable<ESM4::Reference>().insertStatic(marker, marker.mFormKey);
+    auto* scripts = world.getOblivionScriptManager();
+    const ObScript::ReferenceValue target{ marker.mFormKey, {} };
+    ObScript::RuntimeContext context;
+    const auto flags = [&] { return MWWorld::oblivionMapMarkerFlags(marker, scripts->revealedMapMarkers()); };
+    EXPECT_EQ(flags(), 4);
+    scripts->call("ShowMap", {}, { target }, context, {});
+    EXPECT_EQ(flags(), 5);
+    scripts->call("ShowMap", {}, { target, std::int64_t(1) }, context, {});
+    scripts->call("ShowMap", {}, { target, std::int64_t(0) }, context, {});
+    EXPECT_EQ(flags(), 7);
+    auto snapshot = world.captureOblivionRuntimeState();
+    TestingOpenMW::readNativeSnapshot(f.mFixture, snapshot);
+    world.applyOblivionRuntimeState();
+    EXPECT_EQ(flags(), 7);
+    const auto ref = std::find_if(snapshot.mReferences.begin(), snapshot.mReferences.end(),
+        [&](const auto& r) { return r.mKey == marker.mFormKey; });
+    ASSERT_NE(ref, snapshot.mReferences.end());
+    ref->mCustomState[MWWorld::mapMarkerRevealKey] = std::int64_t(2);
+    EXPECT_THROW(world.prepareOblivionSaveState(snapshot), std::invalid_argument);
+}
+
 TEST(OblivionTutorialDoor, RestoredAnimationOwnerReportsDoorTransitionAndEndpointWithoutReferenceRotation)
 {
     AnimatedDoorFixture f;
@@ -4669,6 +4733,47 @@ TEST(OblivionTutorialAction, FollowCellContextReevaluatesAndRestoredStaleRouteKe
                     if (mandatory) EXPECT_EQ(after->mSelectionGeneration, generation);
                     else EXPECT_GT(after->mSelectionGeneration, generation);
                 }
+}
+
+TEST(OblivionTutorialAction, QuestStageCanReplaceInterruptibleTravelBeforeArrival)
+{
+    MWClass::ESM4Door::registerSelf();
+    ESM4::AIPackage::CTDA atStage{};
+    atStage.fnIndex = ESM4::FUN_GetStage;
+    atStage.param1 = 0xe00;
+    atStage.compValue = 30.f;
+    const auto follow = record(ESM4::REC_PACK, 0xd60,
+        sub(ESM::fourCC("PKDT"), bytes(0u) + std::string{1, 0, 0, 0})
+        + sub(ESM::fourCC("PSDT"), std::string{char(0xff), char(0xff), 0, char(0xff)} + bytes(0u))
+        + sub(ESM::fourCC("PTDT"), bytes(0u) + bytes(0x14u) + bytes(350u))
+        + sub(ESM::fourCC("CTDA"), bytes(atStage)));
+    for (const bool mandatory : {false, true})
+    {
+        SCOPED_TRACE(mandatory);
+        SwitchFixture f(true, false, sameCellTeleportRecords(true, true) + follow
+            + record(ESM4::REC_QUST, 0xe00, sub(ESM::fourCC("DATA"), std::string{0, 50})), 10, false);
+        auto& world = f.mFixture.mWorld;
+        MWMechanics::MechanicsManager mechanics;
+        f.mFixture.mEnvironment.setMechanicsManager(mechanics);
+        world.initializePhysics(new osg::Group);
+        auto& store = world.getStore();
+        auto npc = *store.search<ESM4::Npc>(key(0x800));
+        npc.mAIPackageKeys = {key(0xd60), key(0xd05)};
+        store.getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+        auto travel = *store.search<ESM4::AIPackage>(key(0xd05));
+        if (!mandatory)
+            travel.mPackageFlags = {};
+        store.getWritable<ESM4::AIPackage>().insertStatic(travel, key(0xd05));
+        auto& ai = *world.getOblivionAiService();
+        auto& scripts = *world.getOblivionScriptManager();
+        scripts.setStage(key(0xe00), 25);
+        ASSERT_TRUE(ai.evaluatePackage(f.mActor));
+        ASSERT_EQ(ai.state(f.mActor)->mPackage, key(0xd05));
+        scripts.setStage(key(0xe00), 30);
+        for (int n = 0; n < 6; ++n)
+            ai.update(f.mActor, .25f, true);
+        EXPECT_EQ(ai.state(f.mActor)->mPackage, mandatory ? key(0xd05) : key(0xd60));
+    }
 }
 
 TEST(OblivionTutorialDoor, UnavailableForeignRouteNeverDrivesTowardInteriorCoordinates)

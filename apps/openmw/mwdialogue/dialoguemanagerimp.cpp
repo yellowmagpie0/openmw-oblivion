@@ -504,6 +504,7 @@ namespace MWDialogue
         mNativeChoiceSerial = serial;
         mGoodbye = flags & ESM4::INFO_Goodbye;
         mIsInChoice = !mChoices.empty();
+        callback->setVoiceFiles(scripts->menuVoiceFiles(key, speaker));
         Log(Debug::Info) << "Native dialogue menu: actor=" << speaker.getCellRef().getFormKey().serialize()
             << " info=" << key.serialize() << " choices=" << mChoices.size() << " goodbye=" << mGoodbye;
         return true;
