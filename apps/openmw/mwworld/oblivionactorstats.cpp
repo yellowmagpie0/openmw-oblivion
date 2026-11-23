@@ -1,4 +1,5 @@
 #include "oblivionactorstats.hpp"
+#include "oblivionactorupdatesettings.hpp"
 
 #include "../mwmechanics/oblivioncombat.hpp"
 
@@ -22,6 +23,7 @@
 #include <bit>
 #include <set>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace MWWorld
@@ -140,12 +142,47 @@ namespace MWWorld
         }
     }
 
+    thread_local ScopedOblivionActorSettings* ScopedOblivionActorSettings::sActive = nullptr;
+
+    ScopedOblivionActorSettings::ScopedOblivionActorSettings(const ESMStore& store)
+        : mStore(store)
+        , mPrevious(std::exchange(sActive, this))
+    {
+    }
+
+    ScopedOblivionActorSettings::~ScopedOblivionActorSettings()
+    {
+        sActive = mPrevious;
+    }
+
+    template <class T, class Builder>
+    T ScopedOblivionActorSettings::resolve(
+        const ESMStore& store, std::optional<T> ScopedOblivionActorSettings::* member, Builder build)
+    {
+        if (!sActive || &sActive->mStore != &store)
+            return build(winningRecords<ESM4::GameSetting>(store));
+        auto& cached = sActive->*member;
+        if (!cached)
+            cached = build(winningRecords<ESM4::GameSetting>(store));
+        return *cached;
+    }
+
     MWMechanics::OblivionFrameSettings resolveOblivionFrameSettings(const ESMStore& store)
     {
-        const auto settings = winningRecords<ESM4::GameSetting>(store);
-        return {{ESM4::buildMovementFatigueSettings(settings), ESM4::buildFatigueRegenerationSettings(settings),
-                    ESM4::buildCombatMasterySettings(settings), ESM4::buildPlayerDynamicBaseSettings(settings), ESM4::buildBowFatigueSettings(settings)},
-            ESM4::buildMagickaRegenerationSettings(settings)};
+        return ScopedOblivionActorSettings::resolve(store, &ScopedOblivionActorSettings::mFrame,
+            [](const auto& settings) -> MWMechanics::OblivionFrameSettings {
+                return {{ESM4::buildMovementFatigueSettings(settings), ESM4::buildFatigueRegenerationSettings(settings),
+                            ESM4::buildCombatMasterySettings(settings), ESM4::buildPlayerDynamicBaseSettings(settings),
+                            ESM4::buildBowFatigueSettings(settings)}, ESM4::buildMagickaRegenerationSettings(settings)};
+            });
+    }
+
+    OblivionArmorWeightSettings resolveOblivionArmorWeightSettings(const ESMStore& store)
+    {
+        return ScopedOblivionActorSettings::resolve(store, &ScopedOblivionActorSettings::mArmorWeight,
+            [](const auto& settings) -> OblivionArmorWeightSettings {
+                return {ESM4::buildCombatMasterySettings(settings), ESM4::buildArmorMasterySettings(settings)};
+            });
     }
 
     float resolveOblivionFriendHitTimer(const ESMStore& store)
@@ -172,7 +209,8 @@ namespace MWWorld
 
     ESM4::EssentialRecoverySettings resolveOblivionEssentialRecoverySettings(const ESMStore& store)
     {
-        return ESM4::buildEssentialRecoverySettings(winningRecords<ESM4::GameSetting>(store));
+        return ScopedOblivionActorSettings::resolve(store, &ScopedOblivionActorSettings::mRecovery,
+            ESM4::buildEssentialRecoverySettings);
     }
 
     ESM4::MeleeInputSettings resolveOblivionMeleeInputSettings(const ESMStore& store)

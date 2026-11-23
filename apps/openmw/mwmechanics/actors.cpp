@@ -23,6 +23,7 @@
 #include "../mwworld/datetimemanager.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/inventorystore.hpp"
+#include "../mwworld/oblivionactorupdatesettings.hpp"
 #include "../mwworld/oblivionscriptmanager.hpp"
 #include "../mwworld/player.hpp"
 #include "../mwworld/scene.hpp"
@@ -1735,6 +1736,9 @@ namespace MWMechanics
             }
             const int actorsProcessingRange = Settings::game().mActorsProcessingRange;
             MWWorld::World* const nativeWorld = dynamic_cast<MWWorld::World*>(world);
+            std::optional<MWWorld::ScopedOblivionActorSettings> actorSettings;
+            if (nativeWorld && nativeWorld->getOblivionCombatService())
+                actorSettings.emplace(nativeWorld->getStore());
             if (nativeWorld != nullptr)
                 nativeWorld->advanceOblivionActorClock(duration);
 

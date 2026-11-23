@@ -20,6 +20,7 @@
 
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/oblivionactorstats.hpp"
+#include "apps/openmw/mwworld/oblivionactorupdatesettings.hpp"
 #include "apps/openmw/mwlua/context.hpp"
 #include "apps/openmw/mwlua/object.hpp"
 #include "apps/openmw/mwlua/stats.hpp"
@@ -5197,6 +5198,43 @@ namespace
         native.mData = std::int32_t{2};
         mStore.getWritable<ESM4::GameSetting>().insertStatic(native, key);
         EXPECT_THROW(MWWorld::resolveOblivionFrameSettings(mStore), std::invalid_argument);
+    }
+
+    TEST_F(OblivionActorStatsTest, actorUpdateSettingsRespectWorldAndPassLifetime)
+    {
+        auto& settings = mStore.getWritable<ESM4::GameSetting>();
+        ESM4::GameSetting perk{};
+        perk.mId = {0x980, 3};
+        perk.mEditorId = "fPerkHeavyArmorExpertSpeedMult";
+        perk.mData = .25f;
+        settings.insertStatic(perk);
+        const auto multiplier = [](const MWWorld::ESMStore& store) {
+            return MWWorld::resolveOblivionArmorWeightSettings(store).mArmor.mHeavyExpertWeightMultiplier;
+        };
+        MWWorld::ESMStore other;
+        {
+            MWWorld::ScopedOblivionActorSettings pass(mStore);
+            EXPECT_EQ(multiplier(mStore), .25f);
+            EXPECT_EQ(multiplier(other), .5f);
+        }
+        perk.mData = .75f;
+        settings.insert(perk);
+        {
+            MWWorld::ScopedOblivionActorSettings pass(mStore);
+            EXPECT_EQ(multiplier(mStore), .75f);
+        }
+        settings.clearDynamic();
+        EXPECT_EQ(multiplier(mStore), .25f);
+        perk.mData = std::int32_t{1};
+        settings.insertStatic(perk);
+        EXPECT_THROW(
+            {
+                MWWorld::ScopedOblivionActorSettings pass(mStore);
+                multiplier(mStore);
+            }, std::invalid_argument);
+        perk.mData = .125f;
+        settings.insertStatic(perk);
+        EXPECT_EQ(multiplier(mStore), .125f);
     }
 
     void verifyMagickaFrameTransactions(MWMechanics::OblivionCombatService& service,

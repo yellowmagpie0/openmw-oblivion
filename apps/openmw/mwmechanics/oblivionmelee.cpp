@@ -8,6 +8,7 @@
 #include "steering.hpp"
 #include "../mwworld/oblivioncombatdata.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
+#include "../mwworld/oblivionactorupdatesettings.hpp"
 #include "../mwworld/oblivioncombatmagic.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
 #include "../mwbase/environment.hpp"
@@ -2432,14 +2433,9 @@ namespace MWMechanics
         const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
         const bool hasValues = service && service->findActorValues(key);
         auto& inventory = actor.getClass().getInventoryStore(actor);
-        std::vector<const ESM4::GameSetting*> settings;
-        std::set<ESM::FormId> seen;
+        std::optional<MWWorld::OblivionArmorWeightSettings> settings;
         if (hasValues)
-            for (const auto& record : world.getStore().get<ESM4::GameSetting>())
-                if (seen.insert(record.mId).second)
-                    settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
-        const auto mastery = ESM4::buildCombatMasterySettings(settings);
-        const auto armorMastery = ESM4::buildArmorMasterySettings(settings);
+            settings = MWWorld::resolveOblivionArmorWeightSettings(world.getStore());
         double result = 0;
         for (auto iterator = inventory.begin(); iterator != inventory.end(); ++iterator)
         {
@@ -2448,7 +2444,7 @@ namespace MWMechanics
             if (count <= 0) continue;
             const float weight = item.getClass().getWeight(item);
             result += double(weight) * count;
-            if (!hasValues || item.getType() != ESM::REC_ARMO || !inventory.isEquipped(item)) continue;
+            if (!settings || item.getType() != ESM::REC_ARMO || !inventory.isEquipped(item)) continue;
             const auto id = MWWorld::OblivionProfileServices::nativeItemId(
                 world.getStore(), item.getCellRef().getRefId());
             const auto* armor = world.getStore().get<ESM4::Armor>().search(id);
@@ -2458,7 +2454,7 @@ namespace MWMechanics
                 : service->getNonPlayerBaseValue(key, heavy ? 18 : 27, world.getStore());
             // Only the worn instance receives the perk, never spare copies or
             // the stored item weight. Recompute from live slots after unequip/load.
-            result += ESM4::wornArmorWeight(weight, heavy, skill, true, armorMastery, mastery) - weight;
+            result += ESM4::wornArmorWeight(weight, heavy, skill, true, settings->mArmor, settings->mMastery) - weight;
         }
         return std::max(0.f, static_cast<float>(result));
     }
