@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "name": "oblivion-m14-chorrol-relief",
+  "cwd": "{source}",
+  "files": [
+    {"path": "config/openmw.cfg", "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{source}/scripts/data/oblivion_compat/city_life\"\ndata-local=\"{output}/local\"\nuser-data=\"{output}/userdata\"\ncontent=Oblivion.esm\ncontent=city.omwscripts\nstart=ChorrolExterior::ref=0x28f63::side=east\nskip-menu=1\nnew-game=0\nno-grab=1\n"},
+    {"path": "config/settings.cfg", "content": "[Video]\nfullscreen = false\nresolution x = 960\nresolution y = 640\nframerate limit = 30\n[Models]\nload unsupported nif files = true\n"},
+    {"path": "local/city.omwscripts", "content": "PLAYER: scripts/city_life.lua\n"},
+    {"path": "clock.txt", "content": "set gamehour to 16\n"}
+  ],
+  "command": ["{openmw}", "--replace=config", "--config", "{output}/config", "--game-profile=oblivion", "--no-sound=1", "--random-seed=12345", "--script-run", "{output}/clock.txt"],
+  "m14": {
+    "event_file": "ai-events.jsonl",
+    "actor_event_requirements": [
+      {
+        "actor": "content:oblivion.esm:0c536b",
+        "required_event_order": [
+          {"event": "phase", "package": "content:oblivion.esm:0c5387", "reason": "action-complete"},
+          {"event": "phase", "package": "content:oblivion.esm:0362b9", "reason": "destination-reached", "tier": 0}
+        ]
+      },
+      {
+        "actor": "content:oblivion.esm:0c536a",
+        "required_event_order": [
+          {"event": "phase", "package": "content:oblivion.esm:0c5385", "reason": "action-complete"},
+          {"event": "door-transition", "package": "content:oblivion.esm:0c536f", "reason": "door=content:oblivion.esm:024776"},
+          {"event": "phase", "package": "content:oblivion.esm:0c536f", "reason": "destination-reached"},
+          {"event": "phase", "package": "content:oblivion.esm:0c536f", "reason": "action-started"}
+        ]
+      },
+      {
+        "actor": "content:oblivion.esm:0c8b80",
+        "required_event_order": [
+          {"event": "door-transition", "package": "content:oblivion.esm:0389c1"},
+          {"event": "low-process-reconcile"},
+          {"event": "tier", "tier": 0}
+        ]
+      }
+    ]
+  },
+  "timeout_seconds": 240,
+  "expected_exit": 0,
+  "expected_log": ["Chorrol guard relieved and Honditar in town"],
+  "forbidden_log": ["Unexpected or duplicate city NPC", "Error in frame", "onFrame failed", "TES4 low-process AI update failed"]
+}
