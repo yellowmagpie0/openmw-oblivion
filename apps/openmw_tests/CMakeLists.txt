@@ -51,6 +51,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwphysics/testactorragdoll.cpp
     mwphysics/testoblivionragdoll.cpp
 
+    mwrender/testgroundcover.cpp
     mwrender/testtes4facegen.cpp
     mwrender/testphysicalpose.cpp
     mwrender/testnativeidle.cpp

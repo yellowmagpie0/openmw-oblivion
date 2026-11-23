@@ -165,6 +165,7 @@ VFS::Path::Normalized Misc::ResourceHelpers::correctTexturePath(
         std::pair{ "textures/dungeons/fortruins/ivy.dds", "textures/landscape/ivy.dds" },
         std::pair{ "textures/dungeons/fortruins/ivy_lite.dds", "textures/landscape/ivylite.dds" },
         std::pair{ "textures/dungeons/sewers/sewerfloor02.dds", "textures/dungeons/sewers/sewerfloor01.dds" },
+        std::pair{ "textures/plants/bwcattail02.dds", "textures/plants/bwcattail01.dds" },
         std::pair{ "textures/plants/vineyard/vine.dds", "textures/plants/grapevine01.dds" },
         std::pair{ "textures/oblivion/citadel interior/scampknocker01.dds",
             "textures/oblivion/citadel interior/obsidian01.dds" },

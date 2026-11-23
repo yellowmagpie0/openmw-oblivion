@@ -815,14 +815,22 @@ void OMW::Engine::prepareEngine()
     {
         std::size_t registered = 0;
         const auto defaults = ESM::getDefaultArchives(resourceProfile);
-        std::vector<std::string_view> archives(defaults.begin(), defaults.end());
-        // The expansion's TREE records live in Oblivion.esm. Its small activation
-        // plugin supplies the associated asset archives in an ordinary installation.
-        if (resourceProfile == ESM::GameProfile::Oblivion
-            && std::ranges::any_of(mContentFiles,
-                [](const auto& name) { return Misc::StringUtils::ciEqual(name, "DLCShiveringIsles.esp"); }))
-            archives.insert(archives.end(), { "DLCShiveringIsles - Meshes.bsa", "DLCShiveringIsles - Textures.bsa",
-                "DLCShiveringIsles - Sounds.bsa", "DLCShiveringIsles - Voices.bsa" });
+        std::vector<std::string> archives(defaults.begin(), defaults.end());
+        if (resourceProfile == ESM::GameProfile::Oblivion)
+        {
+            for (const std::string& plugin : mContentFiles)
+            {
+                if (!Misc::StringUtils::ciEndsWith(plugin, ".esp") && !Misc::StringUtils::ciEndsWith(plugin, ".esm"))
+                    continue;
+                // Ordinary TES4 plugins package their models and textures in a namesake BSA.
+                const std::string archive = plugin.substr(0, plugin.size() - 4) + ".bsa";
+                if (mFileCollections.doesExist(archive))
+                    archives.push_back(archive);
+                if (Misc::StringUtils::ciEqual(plugin, "DLCShiveringIsles.esp"))
+                    archives.insert(archives.end(), { "DLCShiveringIsles - Meshes.bsa", "DLCShiveringIsles - Textures.bsa",
+                        "DLCShiveringIsles - Sounds.bsa", "DLCShiveringIsles - Voices.bsa" });
+            }
+        }
         for (std::string_view archive : archives)
         {
             if (mFileCollections.doesExist(archive))

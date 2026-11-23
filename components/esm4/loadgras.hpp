@@ -52,14 +52,14 @@ namespace ESM4
             std::uint16_t distanceFromWater;
             std::uint16_t unused2;
             /*
-            1 Above - At Least
-            2 Above - At Most
-            3 Below - At Least
-            4 Below - At Most
-            5 Either - At Least
-            6 Either - At Most
-            7 Either - At Most Above
-            8 Either - At Most Below
+            0 Above - At Least
+            1 Above - At Most
+            2 Below - At Least
+            3 Below - At Most
+            4 Either - At Least
+            5 Either - At Most
+            6 Either - At Most Above
+            7 Either - At Most Below
             */
             std::uint32_t waterDistApplication;
             float positionRange;

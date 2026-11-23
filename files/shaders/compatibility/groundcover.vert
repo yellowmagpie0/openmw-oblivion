@@ -9,7 +9,10 @@
 #define GROUNDCOVER
 
 attribute vec4 aOffset;
-attribute vec3 aRotation;
+attribute vec4 aRotation;
+attribute vec4 aGrassLighting;
+uniform float groundcoverRangeFactor;
+varying vec4 grassLighting;
 
 #if @diffuseMap
 varying vec2 diffuseMapUV;
@@ -124,10 +127,10 @@ mat3 rotation3(in mat4 rot4)
 void main(void)
 {
     vec3 position = aOffset.xyz;
-    float scale = aOffset.w;
+    vec3 scale = vec3(aRotation.w, aRotation.w, aOffset.w);
 
-    mat4 rotation = rotation(aRotation);
-    vec4 displacedVertex = rotation * scale * gl_Vertex;
+    mat4 rotation = rotation(aRotation.xyz);
+    vec4 displacedVertex = rotation * vec4(scale * gl_Vertex.xyz, 1.0);
 
     displacedVertex = vec4(displacedVertex.xyz + position, 1.0);
 
@@ -138,17 +141,23 @@ void main(void)
     gl_ClipVertex = viewPos;
     euclideanDepth = length(viewPos.xyz);
 
-    if (length(gl_ModelViewMatrix * vec4(position, 1.0)) > @groundcoverFadeEnd)
+    if (length(gl_ModelViewMatrix * vec4(position, 1.0)) > @groundcoverFadeEnd * groundcoverRangeFactor)
         gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
     else
         gl_Position = viewToClip(viewPos);
 
     linearDepth = getLinearDepth(gl_Position.z, viewPos.z);
 
-    passNormal = rotation3(rotation) * gl_Normal.xyz;
+    // Most TES4 grass uses the terrain lighting beneath the whole clump.
+    // Mesh-lit groundcover carries a zero terrain normal.
+    bool terrainLit = aGrassLighting.z > 0.0;
+    grassLighting = vec4(gl_NormalMatrix * aGrassLighting.xyz, aGrassLighting.w);
+    passNormal = terrainLit ? aGrassLighting.xyz : rotation3(rotation) * gl_Normal.xyz;
     normalToViewMatrix = gl_NormalMatrix;
 #if @normalMap
-    normalToViewMatrix *= generateTangentSpace(gl_MultiTexCoord7.xyzw * rotation, passNormal);
+    if (!terrainLit)
+        normalToViewMatrix *= generateTangentSpace(
+            vec4(rotation3(rotation) * gl_MultiTexCoord7.xyz, gl_MultiTexCoord7.w), passNormal);
 #endif
 
 #if (!PER_PIXEL_LIGHTING || @shadows_enabled)

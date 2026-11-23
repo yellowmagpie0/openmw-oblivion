@@ -43,16 +43,21 @@ namespace MWRender
         {
             ESM::Position mPos;
             float mScale;
+            float mWidthScale;
+            osg::Vec3f mGroundNormal;
+            float mBrightness = 1.f;
 
             GroundcoverEntry(const ESM::CellRef& ref)
                 : mPos(ref.mPos)
                 , mScale(ref.mScale)
+                , mWidthScale(ref.mScale)
             {
             }
 
             GroundcoverEntry(const ESM::Position& pos, float scale)
                 : mPos(pos)
                 , mScale(scale)
+                , mWidthScale(scale)
             {
             }
         };
@@ -69,9 +74,10 @@ namespace MWRender
         ESM::RefId mWorldspace;
         std::atomic_bool mLoggedNativeInstances{ false };
 
-        osg::ref_ptr<osg::Node> createChunk(InstanceMap& instances, const osg::Vec2f& center);
+        osg::ref_ptr<osg::Node> createChunk(InstanceMap& instances, const osg::Vec2f& center, float rangeFactor);
         void collectInstances(InstanceMap& instances, float size, const osg::Vec2f& center);
-        void collectEsm4Instances(InstanceMap& instances, float size, const osg::Vec2f& center);
+        void collectEsm4Instances(
+            InstanceMap& farInstances, InstanceMap& nearInstances, float size, const osg::Vec2f& center);
     };
 }
 

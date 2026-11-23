@@ -35,6 +35,21 @@ cell-specific compatibility layer.
 - ROAD and GRAS are live stores rather than discarded parse-only records. Native
   reference marker flags are parsed and initialized safely.
 
+## Groundcover rendering follow-up
+
+Oblivion terrain cover uses roughly 80-unit spacing at full density. Each painted
+landscape texture supplies its own weighted plant mix. Groundcover uses the
+visible terrain triangle for height, slope and lighting, including the depth
+limits on seaweed and cattails. The renderer draws a dense inner band and keeps
+a stable quarter of the instances to the configured groundcover distance.
+Harvestable plants continue to use their placed FLOR references.
+
+The Windows outdoor comparison uses a fixed daylight view in Tamriel cell
+`0,-1` and a submerged view in `22,-22`. Local captures and frame statistics
+are in `build-windows/vegetation-outdoors`. The focused
+`OblivionGroundcover` tests exercise the eight GRAS water modes and both
+terrain triangle diagonals.
+
 ## Official-content and automated verification
 
 The released base master contains 84 worldspaces, 108 grass definitions, and two

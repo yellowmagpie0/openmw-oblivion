@@ -24,6 +24,8 @@ varying vec2 normalMapUV;
 
 varying float euclideanDepth;
 varying float linearDepth;
+varying vec4 grassLighting;
+uniform float groundcoverRangeFactor;
 uniform vec2 screenRes;
 uniform float far;
 uniform float alphaRef;
@@ -51,18 +53,25 @@ void main()
     gl_FragData[0] = vec4(1.0);
 #endif
 
-    if (euclideanDepth > @groundcoverFadeStart)
-        gl_FragData[0].a *= 1.0-smoothstep(@groundcoverFadeStart, @groundcoverFadeEnd, euclideanDepth);
+    float fadeEnd = @groundcoverFadeEnd * groundcoverRangeFactor;
+    float fadeStart = @groundcoverFadeStart * groundcoverRangeFactor;
+    if (euclideanDepth > fadeStart)
+        gl_FragData[0].a *= 1.0 - smoothstep(fadeStart, fadeEnd, euclideanDepth);
 
     gl_FragData[0].a = alphaTest(gl_FragData[0].a, alphaRef);
 
 #if @normalMap
-    vec4 normalTex = texture2D(normalMap, normalMapUV);
-    vec3 normal = normalTex.xyz * 2.0 - 1.0;
+    vec3 viewNormal;
+    if (dot(grassLighting.xyz, grassLighting.xyz) > 0.0)
+        viewNormal = normalize(grassLighting.xyz);
+    else
+    {
+        vec3 normal = texture2D(normalMap, normalMapUV).xyz * 2.0 - 1.0;
 #if @reconstructNormalZ
-    normal.z = sqrt(1.0 - dot(normal.xy, normal.xy));
+        normal.z = sqrt(max(0.0, 1.0 - dot(normal.xy, normal.xy)));
 #endif
-    vec3 viewNormal = normalToView(normal);
+        viewNormal = normalToView(normal);
+    }
 #else
     vec3 viewNormal = normalToView(normalize(passNormal));
 #endif
@@ -79,7 +88,7 @@ void main()
     clampLighting(lighting);
 #endif
 
-    gl_FragData[0].xyz *= lighting;
+    gl_FragData[0].xyz *= lighting * grassLighting.w;
     gl_FragData[0] = applyFogAtDist(gl_FragData[0], euclideanDepth, linearDepth, far);
 
 #if !@disableNormals
