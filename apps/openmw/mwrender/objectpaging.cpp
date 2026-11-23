@@ -104,7 +104,10 @@ namespace MWRender
                 case ESM::REC_DOOR4:
                     return getEsm4Model(store.get<ESM4::Door>().searchStatic(id));
                 case ESM::REC_TREE4:
-                    return getEsm4Model(store.get<ESM4::Tree>().searchStatic(id));
+                {
+                    const auto* tree = store.get<ESM4::Tree>().searchStatic(id);
+                    return tree->mGeneratedModel.empty() ? getEsm4Model(tree) : tree->mGeneratedModel;
+                }
                 case ESM::REC_ACTI4:
                     return getEsm4Model(store.get<ESM4::Activator>().searchStatic(id));
                 case ESM::REC_CONT4:
@@ -675,6 +678,7 @@ namespace MWRender
             std::vector<const PagedCellRef*> mInstances;
             AnalyzeVisitor::Result mAnalyzeResult;
             bool mNeedCompile = false;
+            bool mLiveTreeLOD = false;
         };
         typedef std::map<osg::ref_ptr<const osg::Node>, InstanceList> NodeMap;
         NodeMap nodes;
@@ -783,11 +787,17 @@ namespace MWRender
             const auto emplaced = nodes.emplace(std::move(cnode), InstanceList());
             if (emplaced.second)
             {
-                analyzeVisitor.mDistances = LODRange{ smallestDistanceToChunk, higherDistanceToChunk } / ref.mScale;
+                // Active pages can stay cached as the camera walks right up to a tree.
+                // Share its template and let cull traversal select the actual viewing distance.
+                emplaced.first->second.mLiveTreeLOD = activeGrid && model.extension() == "spt";
                 const osg::Node* const nodePtr = emplaced.first->first.get();
-                // const-trickery required because there is no const version of NodeVisitor
-                const_cast<osg::Node*>(nodePtr)->accept(analyzeVisitor);
-                emplaced.first->second.mAnalyzeResult = analyzeVisitor.retrieveResult();
+                if (!emplaced.first->second.mLiveTreeLOD)
+                {
+                    analyzeVisitor.mDistances = LODRange{ smallestDistanceToChunk, higherDistanceToChunk } / ref.mScale;
+                    // const-trickery required because there is no const version of NodeVisitor
+                    const_cast<osg::Node*>(nodePtr)->accept(analyzeVisitor);
+                    emplaced.first->second.mAnalyzeResult = analyzeVisitor.retrieveResult();
+                }
                 emplaced.first->second.mNeedCompile = compile && nodePtr->referenceCount() <= 2;
             }
             else
@@ -810,7 +820,7 @@ namespace MWRender
 
             const float mergeCost = analyzeResult.mNumVerts * size;
             const float mergeBenefit = analyzeVisitor.getMergeBenefit(analyzeResult) * mMergeFactor;
-            const bool merge = mergeBenefit > mergeCost;
+            const bool merge = !pair.second.mLiveTreeLOD && mergeBenefit > mergeCost;
 
             const float factor2
                 = mergeBenefit > 0 ? std::min(1.f, mergeCost * mMinSizeCostMultiplier / mergeBenefit) : 1;
@@ -863,7 +873,10 @@ namespace MWRender
                 copyop.setCopyFlags(merge ? osg::CopyOp::DEEP_COPY_NODES | osg::CopyOp::DEEP_COPY_DRAWABLES
                                           : osg::CopyOp::DEEP_COPY_NODES);
                 copyop.mDistances = LODRange{ smallestDistanceToChunk, higherDistanceToChunk } / ref.mScale;
-                copyop.copy(cnode, trans);
+                if (pair.second.mLiveTreeLOD)
+                    trans->addChild(const_cast<osg::Node*>(cnode));
+                else
+                    copyop.copy(cnode, trans);
 
                 if (activeGrid)
                 {

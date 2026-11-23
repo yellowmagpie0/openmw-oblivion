@@ -3,6 +3,7 @@
 
 #include <array>
 #include <memory>
+#include <map>
 #include <mutex>
 #include <string>
 
@@ -10,6 +11,7 @@
 #include <osg/ref_ptr>
 
 #include "resourcemanager.hpp"
+#include "treemodel.hpp"
 
 #include <components/sceneutil/lightmanager.hpp>
 #include <filesystem>
@@ -95,6 +97,9 @@ namespace Resource
         ~SceneManager();
 
         Shader::ShaderManager& getShaderManager();
+
+        /// Register TREE descriptors during content loading, before scene loading workers start.
+        void registerTreeModel(VFS::Path::Normalized key, TreeModel model);
 
         /// Re-create shaders for this node, need to call this if alpha testing, texture stages or vertex color mode
         /// have changed.
@@ -229,6 +234,7 @@ namespace Resource
         osg::ref_ptr<osg::Node> cloneErrorMarker();
 
         mutable std::mutex mSharedStateMutex;
+        std::map<VFS::Path::Normalized, TreeModel, std::less<>> mTreeModels;
 
         std::unique_ptr<Shader::ShaderManager> mShaderManager;
         std::string mNormalMapPattern;

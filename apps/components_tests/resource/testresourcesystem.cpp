@@ -1,5 +1,8 @@
 #include <components/testing/util.hpp>
 #include <osg/Group>
+#include <osg/Geode>
+#include <osg/Geometry>
+#include <osg/LOD>
 #include <osg/StateSet>
 #include <osg/Uniform>
 #include <osgDB/Registry>
@@ -118,6 +121,64 @@ namespace
         auto fallback = scenes->getTemplate(bad, false);
         ASSERT_TRUE(fallback);
         EXPECT_THROW(scenes->getTemplate(bad, false, true), std::runtime_error);
+    }
+
+    TEST(ResourceResourceSystem, TreeTemplatesKeepRecordDimensionsAndShareGeometryAcrossPlacements)
+    {
+        osg::ref_ptr<osg::Image> sprite = new osg::Image;
+        sprite->allocateImage(16, 16, 1, GL_RGBA, GL_UNSIGNED_BYTE);
+        for (unsigned y = 0; y < 16; ++y)
+            for (unsigned x = 0; x < 16; ++x)
+                sprite->setColor(osg::Vec4f(0.2f, 0.5f, 0.1f, x > 2 && x < 13 ? 1.f : 0.f), x, y);
+        auto* writer = osgDB::Registry::instance()->getReaderWriterForExtension("dds");
+        ASSERT_NE(writer, nullptr);
+        std::ostringstream bytes;
+        ASSERT_TRUE(writer->writeImage(*sprite, bytes).success());
+        TestingOpenMW::VFSTestFile texture(bytes.str());
+        auto vfs = TestingOpenMW::createTestVFS({
+            { VFS::Path::NormalizedView("textures/trees/billboards/test.dds"), &texture },
+            { VFS::Path::NormalizedView("textures/trees/leaves/test.dds"), &texture },
+        });
+        Resource::ResourceSystem resources(vfs.get(), 0., nullptr);
+        const VFS::Path::Normalized source("test.spt"), leaves("test.dds");
+        auto& images = *resources.getImageManager();
+        const auto model = Resource::loadTree({ source, leaves, 800.f, 1200.f }, *vfs, images);
+        const auto* lod = dynamic_cast<const osg::LOD*>(model.get());
+        ASSERT_NE(lod, nullptr);
+        ASSERT_EQ(lod->getNumChildren(), 3u);
+        EXPECT_FLOAT_EQ(lod->getMinRange(0), 0.f);
+        EXPECT_FLOAT_EQ(lod->getMaxRange(0), lod->getMinRange(1));
+        EXPECT_FLOAT_EQ(lod->getMaxRange(1), lod->getMinRange(2));
+        for (unsigned tier : { 1u, 2u })
+        {
+            const auto* geode = lod->getChild(tier)->asGeode();
+            ASSERT_NE(geode, nullptr);
+            ASSERT_EQ(geode->getNumDrawables(), 1u);
+            const auto* geom = geode->getDrawable(0)->asGeometry();
+            ASSERT_NE(geom, nullptr);
+            ASSERT_EQ(geom->getNumPrimitiveSets(), 1u);
+            EXPECT_EQ(geom->getPrimitiveSet(0)->getNumIndices(), tier == 1 ? 18u : 12u);
+        }
+        const auto instance = resources.getSceneManager()->getInstance(model);
+        const auto* copy = dynamic_cast<const osg::LOD*>(instance.get());
+        ASSERT_NE(copy, nullptr);
+        EXPECT_EQ(copy->getChild(2)->asGeode()->getDrawable(0), lod->getChild(2)->asGeode()->getDrawable(0));
+        const auto small = Resource::loadTree({ source, {}, 200.f, 300.f }, *vfs, images);
+        EXPECT_GT(model->getBound().radius(), 3.f * small->getBound().radius());
+    }
+
+    TEST(ResourceResourceSystem, MissingExpansionTreeHasNoVisibleMarkerAndStillFailsStrictLoading)
+    {
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0., nullptr);
+        configureTemplateTestScene(resources);
+        auto* scenes = resources.getSceneManager();
+        constexpr VFS::Path::NormalizedView missing("trees/no-such-tree.spt");
+        const auto model = scenes->getTemplate(missing, false);
+        ASSERT_TRUE(model);
+        EXPECT_FALSE(model->getBound().valid());
+        EXPECT_EQ(scenes->getTemplate(missing, false), model);
+        EXPECT_THROW(scenes->getTemplate(missing, false, true), std::runtime_error);
     }
 }
 

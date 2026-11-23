@@ -117,6 +117,8 @@ namespace MWClass
         VFS::Path::NormalizedView getModel(const MWWorld::ConstPtr& ptr) const override
         {
             VFS::Path::NormalizedView model = getClassModel<Record>(ptr);
+            if constexpr (std::is_same_v<Record, ESM4::Tree>)
+                model = ptr.get<Record>()->mBase->renderModel();
             if constexpr (std::is_same_v<Record, ESM4::Armor> || std::is_same_v<Record, ESM4::Clothing>)
             {
                 const auto* base = ptr.get<Record>()->mBase;

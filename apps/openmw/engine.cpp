@@ -23,6 +23,7 @@
 #include <components/esm/format.hpp>
 #include <components/files/openfile.hpp>
 #include <components/misc/rng.hpp>
+#include <components/misc/strings/algorithm.hpp>
 #include <components/misc/strings/lower.hpp>
 #include <components/misc/strings/format.hpp>
 
@@ -813,7 +814,16 @@ void OMW::Engine::prepareEngine()
     if (mArchives.empty())
     {
         std::size_t registered = 0;
-        for (std::string_view archive : ESM::getDefaultArchives(resourceProfile))
+        const auto defaults = ESM::getDefaultArchives(resourceProfile);
+        std::vector<std::string_view> archives(defaults.begin(), defaults.end());
+        // The expansion's TREE records live in Oblivion.esm. Its small activation
+        // plugin supplies the associated asset archives in an ordinary installation.
+        if (resourceProfile == ESM::GameProfile::Oblivion
+            && std::ranges::any_of(mContentFiles,
+                [](const auto& name) { return Misc::StringUtils::ciEqual(name, "DLCShiveringIsles.esp"); }))
+            archives.insert(archives.end(), { "DLCShiveringIsles - Meshes.bsa", "DLCShiveringIsles - Textures.bsa",
+                "DLCShiveringIsles - Sounds.bsa", "DLCShiveringIsles - Voices.bsa" });
+        for (std::string_view archive : archives)
         {
             if (mFileCollections.doesExist(archive))
             {

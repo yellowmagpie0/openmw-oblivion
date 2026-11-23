@@ -47,9 +47,18 @@ namespace ESM4
         std::string mEditorId;
         ESM::Path mModel;
 
-        float mBoundRadius;
+        float mBoundRadius = 0;
+        float mBillboardWidth = 0;
+        float mBillboardHeight = 0;
 
         std::string mLeafTexture;
+
+        // Two TREE records may share an SPT but specify different dimensions or leaf textures.
+        VFS::Path::Normalized mGeneratedModel;
+        VFS::Path::NormalizedView renderModel() const
+        {
+            return mGeneratedModel.empty() ? mModel.getNormalized() : mGeneratedModel;
+        }
 
         void load(ESM4::Reader& reader);
         // void save(ESM4::Writer& writer) const;

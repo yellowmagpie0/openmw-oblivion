@@ -782,10 +782,7 @@ namespace Resource
         if (ext == "nif")
             return NifOsg::Loader::load(*nifFileManager->get(normalizedFilename), imageManager, materialMgr);
         else if (ext == "spt")
-        {
-            Log(Debug::Warning) << "Ignoring SpeedTree data file " << normalizedFilename;
-            return new osg::Node();
-        }
+            return loadTree({ VFS::Path::Normalized(normalizedFilename) }, *vfs, *imageManager);
         else
             return loadNonNif(normalizedFilename, *vfs->get(normalizedFilename), imageManager);
     }
@@ -940,6 +937,11 @@ namespace Resource
         return static_cast<osg::Node*>(mErrorMarker->clone(osg::CopyOp::DEEP_COPY_ALL));
     }
 
+    void SceneManager::registerTreeModel(VFS::Path::Normalized key, TreeModel model)
+    {
+        mTreeModels.insert_or_assign(std::move(key), std::move(model));
+    }
+
     osg::ref_ptr<const osg::Node> SceneManager::getTemplate(VFS::Path::NormalizedView path, bool compile, bool strict)
     {
         osg::ref_ptr<osg::Object> obj = mCache->getRefFromObjectCache(path);
@@ -948,7 +950,7 @@ namespace Resource
             bool failed = false;
             obj->getUserValue("openmw.resource.loadFailed", failed);
             if (strict && failed)
-                throw std::runtime_error(std::format("Cached scene is an error marker for {}", path.value()));
+                throw std::runtime_error(std::format("Cached scene failed to load: {}", path.value()));
             return osg::ref_ptr<const osg::Node>(static_cast<osg::Node*>(obj.get()));
         }
         else
@@ -957,13 +959,26 @@ namespace Resource
             bool failed = false;
             try
             {
-                loaded = load(path, mVFS, mImageManager, mNifFileManager, mBgsmFileManager);
+                const auto tree = path.extension() == "spt" ? mTreeModels.find(path) : mTreeModels.end();
+                if (tree != mTreeModels.end())
+                    loaded = loadTree(tree->second, *mVFS, *mImageManager);
+                else
+                    loaded = load(path, mVFS, mImageManager, mNifFileManager, mBgsmFileManager);
             }
             catch (const std::exception& e)
             {
                 if (strict) throw;
-                Log(Debug::Error) << "Failed to load '" << path << "': " << e.what() << ", using marker_error instead";
-                loaded = cloneErrorMarker();
+                if (path.extension() == "spt")
+                {
+                    // Long-distance decoration can reference assets from an inactive expansion.
+                    Log(Debug::Warning) << "Skipping tree '" << path << "': " << e.what();
+                    loaded = new osg::Node;
+                }
+                else
+                {
+                    Log(Debug::Error) << "Failed to load '" << path << "': " << e.what() << ", using marker_error instead";
+                    loaded = cloneErrorMarker();
+                }
                 failed = true;
             }
 

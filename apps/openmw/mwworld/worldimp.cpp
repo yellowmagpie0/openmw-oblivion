@@ -108,6 +108,7 @@
 
 #include <components/resource/bulletshape.hpp>
 #include <components/resource/resourcesystem.hpp>
+#include <components/resource/scenemanager.hpp>
 #include <components/sceneutil/actorragdollpose.hpp>
 #include <components/sceneutil/keyframe.hpp>
 
@@ -1122,6 +1123,14 @@ namespace MWWorld
     void World::init(Debug::Level maxRecastLogLevel, osgViewer::Viewer* viewer, osg::ref_ptr<osg::Group> rootNode,
         SceneUtil::WorkQueue* workQueue, SceneUtil::UnrefQueue& unrefQueue)
     {
+        for (const auto& tree : mStore.get<ESM4::Tree>())
+        {
+            if (!tree.mGeneratedModel.empty())
+                mResourceSystem->getSceneManager()->registerTreeModel(
+                    Misc::ResourceHelpers::correctMeshPath(tree.mGeneratedModel),
+                    { tree.mModel.getNormalized(), VFS::Path::Normalized(tree.mLeafTexture),
+                        tree.mBillboardWidth, tree.mBillboardHeight });
+        }
         initializePhysics(rootNode);
 
         if (Settings::navigator().mEnable)

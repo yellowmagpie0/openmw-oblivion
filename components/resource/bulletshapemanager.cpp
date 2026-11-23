@@ -109,6 +109,9 @@ namespace Resource
 
     osg::ref_ptr<const BulletShape> BulletShapeManager::getShape(VFS::Path::NormalizedView name)
     {
+        // The visual canopy and impostor cards have no physical surface.
+        if (name.extension() == "spt")
+            return nullptr;
         if (osg::ref_ptr<osg::Object> obj = mCache->getRefFromObjectCache(name))
             return osg::ref_ptr<BulletShape>(static_cast<BulletShape*>(obj.get()));
 

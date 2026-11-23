@@ -53,12 +53,20 @@ void ESM4::Tree::load(ESM4::Reader& reader)
             case ESM::fourCC("MODB"):
                 reader.get(mBoundRadius);
                 break;
+            case ESM::fourCC("BNAM"):
+                if (!reader.hasFormVersion() && subHdr.dataSize == 2 * sizeof(float))
+                {
+                    reader.get(mBillboardWidth);
+                    reader.get(mBillboardHeight);
+                }
+                else
+                    reader.skipSubRecordData();
+                break;
             case ESM::fourCC("MODT"): // Model data
             case ESM::fourCC("MODC"):
             case ESM::fourCC("MODS"):
             case ESM::fourCC("MODF"): // Model data end
             case ESM::fourCC("CNAM"):
-            case ESM::fourCC("BNAM"):
             case ESM::fourCC("SNAM"):
             case ESM::fourCC("FULL"):
             case ESM::fourCC("OBND"):
@@ -70,6 +78,8 @@ void ESM4::Tree::load(ESM4::Reader& reader)
                 throw std::runtime_error("ESM4::TREE::load - Unknown subrecord " + ESM::printName(subHdr.typeId));
         }
     }
+    if (!reader.hasFormVersion() && VFS::Path::NormalizedView(mModel.getNormalized()).extension() == "spt")
+        mGeneratedModel = VFS::Path::Normalized("openmw-trees/" + mId.toString() + ".spt");
 }
 
 // void ESM4::Tree::save(ESM4::Writer& writer) const
