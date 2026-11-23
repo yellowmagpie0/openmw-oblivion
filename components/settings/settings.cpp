@@ -120,7 +120,8 @@ namespace Settings
         mChangedSettings.clear();
     }
 
-    std::filesystem::path Manager::load(const Files::ConfigurationManager& cfgMgr, bool loadEditorSettings)
+    std::filesystem::path Manager::load(const Files::ConfigurationManager& cfgMgr, bool loadEditorSettings,
+        const CategorySettingValueMap& profileDefaults)
     {
         SettingsFileParser parser;
         const std::vector<std::filesystem::path>& paths = cfgMgr.getActiveConfigPaths();
@@ -148,6 +149,9 @@ namespace Settings
             throw std::runtime_error("No default settings file found! Make sure the file \"" + defaultSettingsFile
                 + "\" was properly installed.");
         parser.loadSettingsFile(defaultsBin, mDefaultSettings, true, false);
+
+        for (const auto& [key, value] : profileDefaults)
+            mDefaultSettings.at(key) = value;
 
         const CategorySettingValueMap originalDefaultSettings = mDefaultSettings;
 

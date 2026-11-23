@@ -68,10 +68,6 @@ bool parseOptions(int argc, char** argv, OMW::Engine& engine, Files::Configurati
     Debug::setupLogging(cfgMgr.getLogPath(), "OpenMW");
     Log(Debug::Info) << Version::getOpenmwVersionDescription();
 
-    Settings::Manager::load(cfgMgr);
-
-    MWGui::DebugWindow::startLogRecording();
-
     engine.setGrabMouse(!variables["no-grab"].as<bool>());
 
     // Font encoding settings
@@ -141,6 +137,17 @@ bool parseOptions(int argc, char** argv, OMW::Engine& engine, Files::Configurati
     engine.setCell(variables["start"].as<std::string>());
     engine.setSkipMenu(variables["skip-menu"].as<bool>(), variables["new-game"].as<bool>());
     engine.setGameProfile(ESM::parseGameProfile(variables["game-profile"].as<std::string>()));
+    Settings::CategorySettingValueMap profileDefaults;
+    if (engine.resolveResourceProfile() == ESM::GameProfile::Oblivion)
+    {
+        profileDefaults = { { { "Post Processing", "enabled" }, "true" },
+            { { "Post Processing", "chain" }, "oblivionhdr" },
+            { { "Shaders", "match sunlight to sun" }, "true" }, { { "Shaders", "auto use terrain normal maps" }, "true" },
+            { { "Shaders", "minimum interior brightness" }, "0" } };
+    }
+    Settings::Manager::load(cfgMgr, false, profileDefaults);
+    MWGui::DebugWindow::startLogRecording();
+
     if (!variables["skip-menu"].as<bool>() && variables["new-game"].as<bool>())
         Log(Debug::Warning) << "Warning: new-game used without skip-menu -> ignoring it";
 

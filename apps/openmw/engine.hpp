@@ -200,7 +200,6 @@ namespace OMW
 
         /// Prepare engine for game play
         void prepareEngine();
-        ESM::GameProfile resolveResourceProfile() const;
 
         void createWindow();
         void setWindowIcon();
@@ -208,6 +207,7 @@ namespace OMW
     public:
         Engine(Files::ConfigurationManager& configurationManager);
         virtual ~Engine();
+        ESM::GameProfile resolveResourceProfile() const;
 
         /// Set data dirs
         void setDataDirs(const Files::PathContainer& dataDirs);

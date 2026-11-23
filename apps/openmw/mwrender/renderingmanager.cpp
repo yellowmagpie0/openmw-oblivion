@@ -549,6 +549,11 @@ namespace MWRender
         mSky->setMoonColour(red);
     }
 
+    void RenderingManager::setOblivionLighting(const osg::Vec4f& bloom, const osg::Vec4f& exposure)
+    {
+        mPostProcessor->getStateUpdater()->setOblivionLighting(bloom, exposure);
+    }
+
     void RenderingManager::configureAmbient(const MWWorld::Cell& cell)
     {
         bool isInterior = !cell.isExterior() && !cell.isQuasiExterior();
@@ -583,9 +588,17 @@ namespace MWRender
         osg::Vec4f diffuse = SceneUtil::colourFromRGB(cell.getMood().mDirectionalColor);
 
         setSunColour(diffuse, diffuse, 1.f);
-        // This is total nonsense but it's what Morrowind uses
-        static const osg::Vec4f interiorSunPos
-            = osg::Vec4f(-1.f, osg::DegreesToRadians(45.f), osg::DegreesToRadians(45.f), 0.f);
+        osg::Vec4f interiorSunPos(-1.f, osg::DegreesToRadians(45.f), osg::DegreesToRadians(45.f), 0.f);
+        if (cell.isEsm4() && isInterior)
+        {
+            const auto& light = cell.getEsm4().mLighting;
+            const float azimuth = osg::DegreesToRadians(static_cast<float>(light.rotationXY));
+            const float elevation = osg::DegreesToRadians(static_cast<float>(light.rotationZ));
+            interiorSunPos.set(std::sin(azimuth) * std::cos(elevation), std::cos(azimuth) * std::cos(elevation),
+                std::sin(elevation), 0.f);
+            // Oblivion.ini [BlurShaderHDRInterior]
+            setOblivionLighting({ 0.225f, 2.25f, 7.f, 1.f }, { 1.f, 1.f, 0.5f, 1.f });
+        }
         mPostProcessor->getStateUpdater()->setSunPos(interiorSunPos, false);
         mPostProcessor->getStateUpdater()->setSunVec(-interiorSunPos);
         mSunLight->setPosition(interiorSunPos);

@@ -291,6 +291,12 @@ namespace MWWorld
         , mFlashDecrement(4.f)
         , mFlashBrightness(0.f)
     {
+        const auto& hdr = weather.mHdr.mValues;
+        if (hdr[4] > 0.f) // Older or incomplete records may have no HNAM.
+        {
+            mOblivionLighting.mBloom.set(hdr[7], hdr[6], hdr[1], hdr[2]);
+            mOblivionLighting.mExposure.set(hdr[4], hdr[5], hdr[0], hdr[11]);
+        }
         mNativeClassification = weather.mData.mClassification;
         if (mCloudTexture.empty())
             mCloudTexture = weather.mUpperCloudTexture;
@@ -1166,7 +1172,15 @@ namespace MWWorld
             rendering.configureUnderwaterFog(water->mData.mFogNear, water->mData.mFogFar,
                 SceneUtil::colourFromRGBA(water->mData.mDeepColor));
         rendering.setAmbientColour(mResult.mAmbientColor);
-        rendering.setSunColour(mResult.mSunColor, mResult.mSunColor, mResult.mGlareView * glareFade);
+        auto sunlight = mResult.mSunColor;
+        if (mNativeWeather)
+        {
+            const auto& hdr = mResult.mOblivionLighting;
+            rendering.setOblivionLighting(hdr.mBloom, hdr.mExposure);
+            sunlight *= hdr.mExposure.w();
+            sunlight.a() = mResult.mSunColor.a();
+        }
+        rendering.setSunColour(sunlight, sunlight, mResult.mGlareView * glareFade);
 
         rendering.getSkyManager()->setWeather(mResult);
 
@@ -1776,6 +1790,7 @@ namespace MWWorld
         mResult.mBaseWindSpeed = mWeatherSettings[weatherID].mWindSpeed;
 
         mResult.mCloudSpeed = current.mCloudSpeed;
+        mResult.mOblivionLighting = current.mOblivionLighting;
         mResult.mGlareView = current.mGlareView;
         mResult.mAmbientLoopSoundID = current.mAmbientLoopSoundID;
         mResult.mRainLoopSoundID = current.mRainLoopSoundID;
@@ -1885,6 +1900,10 @@ namespace MWWorld
 
         mResult.mWindSpeed = lerp(mResult.mCurrentWindSpeed, mResult.mNextWindSpeed, factor);
         mResult.mCloudSpeed = lerp(current.mCloudSpeed, other.mCloudSpeed, factor);
+        mResult.mOblivionLighting.mBloom
+            = lerp(current.mOblivionLighting.mBloom, other.mOblivionLighting.mBloom, factor);
+        mResult.mOblivionLighting.mExposure
+            = lerp(current.mOblivionLighting.mExposure, other.mOblivionLighting.mExposure, factor);
         mResult.mGlareView = lerp(current.mGlareView, other.mGlareView, factor);
         mResult.mNightFade = lerp(current.mNightFade, other.mNightFade, factor);
 

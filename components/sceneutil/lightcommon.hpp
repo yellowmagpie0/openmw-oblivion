@@ -26,6 +26,7 @@ namespace SceneUtil
         bool mPulse;
         bool mPulseSlow;
         bool mOffDefault;
+        bool mUseOblivionAttenuation = false;
 
         osg::Vec4 mColor;
         float mRadius;

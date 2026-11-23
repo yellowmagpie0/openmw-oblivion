@@ -1,0 +1,100 @@
+render_target RT_Bright {
+    width_ratio = 0.25;
+    height_ratio = 0.25;
+    internal_format = rgb16f;
+    source_type = half_float;
+    source_format = rgb;
+    min_filter = linear;
+    mag_filter = linear;
+}
+
+render_target RT_Horizontal {
+    width_ratio = 0.25;
+    height_ratio = 0.25;
+    internal_format = rgb16f;
+    source_type = half_float;
+    source_format = rgb;
+    min_filter = linear;
+    mag_filter = linear;
+}
+
+render_target RT_Vertical {
+    width_ratio = 0.25;
+    height_ratio = 0.25;
+    internal_format = rgb16f;
+    source_type = half_float;
+    source_format = rgb;
+    min_filter = linear;
+    mag_filter = linear;
+}
+
+shared {
+    // OpenMW scene colors are display encoded. Extract and combine light in radiance space.
+    vec3 radiance(vec3 color)
+    {
+        return pow(max(color, vec3(0.0)), vec3(2.2));
+    }
+
+    vec3 blur(sampler2D source, vec2 uv, vec2 axis)
+    {
+        // Repeated Gaussian passes add their variances.
+        vec2 stepUV = axis * omw.rcpResolution * omw.oblivionBloom.z * sqrt(max(0.0, omw.oblivionBloom.w));
+        vec3 color = omw_Texture2D(source, uv).rgb * 0.227027;
+        color += (omw_Texture2D(source, uv + 1.384615 * stepUV).rgb
+                + omw_Texture2D(source, uv - 1.384615 * stepUV).rgb) * 0.316216;
+        color += (omw_Texture2D(source, uv + 3.230769 * stepUV).rgb
+                + omw_Texture2D(source, uv - 3.230769 * stepUV).rgb) * 0.070270;
+        return color;
+    }
+}
+
+fragment extract(target=RT_Bright) {
+    omw_In vec2 omw_TexCoord;
+    void main()
+    {
+        vec3 scene = radiance(omw_GetLastShader(omw_TexCoord).rgb);
+        omw_FragColor = vec4(max(vec3(0.0), scene - omw.oblivionBloom.x) * omw.oblivionBloom.y, 1.0);
+    }
+}
+
+fragment horizontal(target=RT_Horizontal, rt1=RT_Bright) {
+    omw_In vec2 omw_TexCoord;
+    void main()
+    {
+        omw_FragColor = vec4(blur(RT_Bright, omw_TexCoord, vec2(1.0, 0.0)), 1.0);
+    }
+}
+
+fragment vertical(target=RT_Vertical, rt1=RT_Horizontal) {
+    omw_In vec2 omw_TexCoord;
+    void main()
+    {
+        omw_FragColor = vec4(blur(RT_Horizontal, omw_TexCoord, vec2(0.0, 1.0)), 1.0);
+    }
+}
+
+fragment compose(rt1=RT_Vertical) {
+    omw_In vec2 omw_TexCoord;
+    void main()
+    {
+        vec3 scene = radiance(omw_GetLastShader(omw_TexCoord).rgb);
+        vec3 bloom = omw_Texture2D(RT_Vertical, omw_TexCoord).rgb;
+        float target = max(0.001, omw.oblivionExposure.x);
+        vec3 adapted = omw_Texture2D(omw_EyeAdaptation, vec2(0.5)).gba;
+        float divisor = max(target, dot(adapted, vec3(1.0)));
+        vec3 color = (scene * target + 0.5 * bloom) / divisor;
+        // Roll bright values into the display range while preserving the color of the highlight.
+        float peak = max(color.r, max(color.g, color.b));
+        if (peak > 0.75)
+            color *= (1.0 - 0.0625 / (peak - 0.5)) / peak;
+        omw_FragColor = vec4(pow(max(color, vec3(0.0)), vec3(1.0 / 2.2)), 1.0);
+    }
+}
+
+technique {
+    passes = extract, horizontal, vertical, compose;
+    hdr = true;
+    description = "Oblivion weather and interior HDR lighting";
+    author = "OpenMW";
+    version = "1.0";
+}

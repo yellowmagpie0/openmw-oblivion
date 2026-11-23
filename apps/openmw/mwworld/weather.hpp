@@ -182,6 +182,8 @@ namespace MWWorld
         // Cloud animation speed multiplier
         float mCloudSpeed;
 
+        MWRender::OblivionLighting mOblivionLighting;
+
         // Value between 0 and 1, defines the strength of the sun glare effect.
         // Also appears to modify how visible the sun, moons, and stars are for various weather effects.
         float mGlareView;

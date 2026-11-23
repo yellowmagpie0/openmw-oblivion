@@ -28,6 +28,13 @@ namespace MWRender
     class SunFlashCallback;
     class SunGlareCallback;
 
+    // TES4 exterior defaults from Oblivion.ini. Weather HNAM overrides these.
+    struct OblivionLighting
+    {
+        osg::Vec4f mBloom{ 0.35f, 1.5f, 4.f, 2.f }; // bright clamp, bright scale, blur radius, blur passes
+        osg::Vec4f mExposure{ 1.2f, 1.f, 0.7f, 1.3f }; // target, upper clamp, adaptation speed, sunlight dimmer
+    };
+
     struct WeatherResult
     {
         std::string mCloudTexture;
@@ -61,6 +68,7 @@ namespace MWRender
 
         float mCloudSpeed;
 
+        OblivionLighting mOblivionLighting;
         float mGlareView;
 
         bool mNight; // use night skybox

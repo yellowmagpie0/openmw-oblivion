@@ -140,6 +140,7 @@ namespace MWRender
 
         void setNightEyeFactor(float factor);
 
+        void setOblivionLighting(const osg::Vec4f& bloom, const osg::Vec4f& exposure);
         void setAmbientColour(const osg::Vec4f& colour);
 
         int skyGetMasserPhase() const;

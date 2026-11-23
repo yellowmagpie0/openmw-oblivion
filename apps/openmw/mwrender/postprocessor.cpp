@@ -324,7 +324,7 @@ namespace MWRender
         mCanvases[frameId]->setPostProcessing(mUsePostProcessing);
         mCanvases[frameId]->setTextureNormals(mNormals ? getTexture(Tex_Normal, frameId) : nullptr);
         mCanvases[frameId]->setMask(mUnderwater, mExteriorFlag);
-        mCanvases[frameId]->setCalculateAvgLum(mHDR);
+        mCanvases[frameId]->setCalculateAvgLum(mHDR, mStateUpdater->getOblivionExposure());
 
         mCanvases[frameId]->setTextureScene(getTexture(Tex_Scene, frameId));
         mCanvases[frameId]->setTextureDepth(getTexture(Tex_OpaqueDepth, frameId));
@@ -431,6 +431,14 @@ namespace MWRender
             mCanvases[frameId]->setPasses(Fx::DispatchArray(mTemplateData));
         }
 
+        if (mFloatScene != (mHDR && mUsePostProcessing))
+        {
+            mFloatScene = mHDR && mUsePostProcessing;
+            createObjectsForFrame(frameId);
+            mDirty = true;
+            mDirtyFrameId = !frameId;
+        }
+
         if ((mNormalsSupported && mNormals != mPrevNormals) || (mPassLights != mPrevPassLights))
         {
             mPrevNormals = mNormals;
@@ -487,6 +495,12 @@ namespace MWRender
             texture->setResizeNonPowerOfTwoHint(false);
             Stereo::setMultiviewCompatibleTextureSize(texture, width, height);
             texture->dirtyTextureObject();
+        }
+
+        if (mFloatScene)
+        {
+            textures[Tex_Scene]->setSourceType(GL_HALF_FLOAT);
+            textures[Tex_Scene]->setInternalFormat(GL_RGBA16F);
         }
 
         textures[Tex_Normal]->setSourceFormat(GL_RGB);

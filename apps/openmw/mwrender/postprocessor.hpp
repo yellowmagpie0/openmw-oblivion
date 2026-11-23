@@ -255,6 +255,7 @@ namespace MWRender
 
         bool mUBO = false;
         bool mHDR = false;
+        bool mFloatScene = false;
         bool mNormals = false;
         bool mUnderwater = false;
         bool mPassLights = false;

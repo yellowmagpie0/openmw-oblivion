@@ -58,6 +58,7 @@ namespace MWRender
 
         bool mCompiled = false;
         bool mEnabled = false;
+        bool mColorExposure = false;
         bool mIsBlank = true;
 
         int mWidth = 1;

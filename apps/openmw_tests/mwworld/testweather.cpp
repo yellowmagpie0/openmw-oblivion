@@ -293,6 +293,19 @@ namespace MWWorld
             EXPECT_FALSE(snow.mParticleEffect.empty());
         }
 
+        TEST(MWWorldWeatherTest, oblivionLightingLoadsWeatherHdrAndFallsBackForEmptyRecords)
+        {
+            ESM4::Weather native{};
+            const Weather defaults(native, 0);
+            EXPECT_EQ(defaults.mOblivionLighting.mBloom, osg::Vec4f(0.35f, 1.5f, 4.f, 2.f));
+            EXPECT_EQ(defaults.mOblivionLighting.mExposure, osg::Vec4f(1.2f, 1.f, 0.7f, 1.3f));
+
+            native.mHdr.mValues = { 0.5f, 8.f, 3.f, 1.f, 1.2f, 1.1f, 2.f, 0.275f, 1.f, 0.f, 0.f, 0.6f, 1.f, 1.f };
+            const Weather rainy(native, 1);
+            EXPECT_EQ(rainy.mOblivionLighting.mBloom, osg::Vec4f(0.275f, 2.f, 8.f, 3.f));
+            EXPECT_EQ(rainy.mOblivionLighting.mExposure, osg::Vec4f(1.2f, 1.1f, 0.5f, 0.6f));
+        }
+
         TEST(MWWorldWeatherTest, nativeWeatherRestoreStagesFreshRegionsAndChecksConsumedIndexDomains)
         {
             const auto known = ESM::RefId::stringRefId("known-climate");

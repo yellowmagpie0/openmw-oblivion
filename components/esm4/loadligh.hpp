@@ -99,7 +99,7 @@ namespace ESM4
         ESM::FormId mScriptId;
         ESM::FormId mSound;
 
-        float mFade;
+        float mFade = 1.f;
 
         Data mData;
 

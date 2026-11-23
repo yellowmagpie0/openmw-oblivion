@@ -50,13 +50,20 @@ namespace MWRender
 
         void setTextureDistortion(osg::ref_ptr<osg::Texture> tex) { mTextureDistortion = tex; }
 
-        void setCalculateAvgLum(bool enabled) { mAvgLum = enabled; }
+        void setCalculateAvgLum(bool enabled, const osg::Vec4f& exposure)
+        {
+            mAvgLum = enabled;
+            mExposure = exposure;
+        }
+
+        const osg::Vec4f& getExposure() const { return mExposure; }
 
         void setPostProcessing(bool enabled) { mPostprocessing = enabled; }
 
         const osg::ref_ptr<osg::Texture>& getSceneTexture(size_t frameId) const { return mTextureScene; }
 
     private:
+        osg::Vec4f mExposure;
         bool mAvgLum = false;
         bool mPostprocessing = false;
 

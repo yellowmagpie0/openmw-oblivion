@@ -122,7 +122,15 @@ namespace SceneUtil
         const float radius = std::max(esmLight.mRadius, 16.f);
         lightSource->setRadius(radius);
 
-        configureLight(light, radius, isExterior);
+        if (esmLight.mUseOblivionAttenuation)
+        {
+            // Oblivion.ini [bLightAttenuation] uses quadratic falloff for both interior and exterior lights.
+            light->setConstantAttenuation(0.f);
+            light->setLinearAttenuation(0.f);
+            light->setQuadraticAttenuation(16.f / (radius * radius));
+        }
+        else
+            configureLight(light, radius, isExterior);
 
         osg::Vec4f diffuse = esmLight.mColor;
         osg::Vec4f specular = esmLight.mColor; // ESM format doesn't provide specular

@@ -170,6 +170,7 @@ set(BUILTIN_DATA_FILES
     
     shaders/adjustments.omwfx
     shaders/bloomlinear.omwfx
+    shaders/oblivionhdr.omwfx
     shaders/debug.omwfx
     shaders/internal_distortion.omwfx
 

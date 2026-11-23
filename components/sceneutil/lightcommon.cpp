@@ -21,13 +21,14 @@ namespace SceneUtil
     LightCommon::LightCommon(const ESM4::Light& light)
         : mFlicker(light.mData.flags & ESM4::Light::Flicker)
         , mFlickerSlow(light.mData.flags & ESM4::Light::FlickerSlow)
-        , mNegative(light.mData.flags & ESM::Light::Negative)
+        , mNegative(light.mData.flags & ESM4::Light::Negative)
         , mPulse(light.mData.flags & ESM4::Light::Pulse)
         , mPulseSlow(light.mData.flags & ESM4::Light::PulseSlow)
         , mOffDefault(light.mData.flags & ESM4::Light::OffDefault)
-        , mColor(SceneUtil::colourFromRGB(light.mData.colour))
+        , mUseOblivionAttenuation(true)
+        , mColor(SceneUtil::colourFromRGB(light.mData.colour) * light.mFade)
         , mRadius(static_cast<float>(light.mData.radius))
-
     {
+        mColor.a() = 1.f;
     }
 }

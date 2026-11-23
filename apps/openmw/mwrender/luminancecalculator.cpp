@@ -46,17 +46,10 @@ namespace MWRender
             buffer.luminanceProxyTex->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
             buffer.luminanceProxyTex->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
 
-            buffer.resolveFbo = new osg::FrameBufferObject;
-            buffer.resolveFbo->setAttachment(osg::FrameBufferObject::BufferComponent::COLOR_BUFFER0,
-                osg::FrameBufferAttachment(buffer.luminanceTex));
-
-            buffer.luminanceProxyFbo = new osg::FrameBufferObject;
-            buffer.luminanceProxyFbo->setAttachment(osg::FrameBufferObject::BufferComponent::COLOR_BUFFER0,
-                osg::FrameBufferAttachment(buffer.luminanceProxyTex));
-
             buffer.sceneLumSS = new osg::StateSet;
             buffer.sceneLumSS->setAttributeAndModes(mLuminanceProgram);
             buffer.sceneLumSS->addUniform(new osg::Uniform("sceneTex", 0));
+            buffer.sceneLumSS->addUniform(new osg::Uniform("colorExposure", false));
             buffer.sceneLumSS->addUniform(new osg::Uniform("scaling", mScale));
 
             buffer.resolveSS = new osg::StateSet;
@@ -64,6 +57,7 @@ namespace MWRender
             buffer.resolveSS->setTextureAttribute(0, buffer.luminanceProxyTex);
             buffer.resolveSS->addUniform(new osg::Uniform("luminanceSceneTex", 0));
             buffer.resolveSS->addUniform(new osg::Uniform("prevLuminanceSceneTex", 1));
+            buffer.resolveSS->addUniform(new osg::Uniform("exposure", osg::Vec4f()));
         }
 
         mBuffers[0].resolveSS->setTextureAttribute(1, mBuffers[1].luminanceTex);
@@ -76,7 +70,22 @@ namespace MWRender
 
         for (auto& buffer : mBuffers)
         {
+            buffer.sceneLumSS->getUniform("colorExposure")->set(mColorExposure);
             buffer.mipmappedSceneLuminanceTex->setTextureSize(mWidth, mHeight);
+            for (auto* texture : { buffer.mipmappedSceneLuminanceTex.get(), buffer.luminanceTex.get(),
+                     buffer.luminanceProxyTex.get() })
+            {
+                texture->setInternalFormat(mColorExposure ? GL_RGBA16F_ARB : GL_R16F);
+                texture->setSourceFormat(mColorExposure ? GL_RGBA : GL_RED);
+                texture->dirtyTextureObject();
+            }
+            buffer.resolveFbo = new osg::FrameBufferObject;
+            buffer.resolveFbo->setAttachment(osg::FrameBufferObject::BufferComponent::COLOR_BUFFER0,
+                osg::FrameBufferAttachment(buffer.luminanceTex));
+
+            buffer.luminanceProxyFbo = new osg::FrameBufferObject;
+            buffer.luminanceProxyFbo->setAttachment(osg::FrameBufferObject::BufferComponent::COLOR_BUFFER0,
+                osg::FrameBufferAttachment(buffer.luminanceProxyTex));
             buffer.mipmappedSceneLuminanceTex->setNumMipmapLevels(mipmapLevels);
             buffer.mipmappedSceneLuminanceTex->dirtyTextureObject();
 
@@ -89,6 +98,7 @@ namespace MWRender
                 osg::FrameBufferAttachment(buffer.mipmappedSceneLuminanceTex));
         }
 
+        mIsBlank = true;
         mCompiled = true;
     }
 
@@ -98,9 +108,13 @@ namespace MWRender
         if (!mEnabled)
             return;
 
-        bool dirty = !mCompiled;
-
-        if (dirty)
+        const auto& exposure = canvas.getExposure();
+        if (mColorExposure != (exposure.x() > 0.f))
+        {
+            mColorExposure = exposure.x() > 0.f;
+            mCompiled = false;
+        }
+        if (!mCompiled)
             compile();
 
         auto& buffer = mBuffers[frameId];
@@ -129,6 +143,7 @@ namespace MWRender
         }
 
         buffer.resolveFbo->apply(state, osg::FrameBufferObject::DRAW_FRAMEBUFFER);
+        buffer.resolveSS->getUniform("exposure")->set(exposure);
         state.apply(buffer.resolveSS);
         canvas.drawGeometry(renderInfo);
 

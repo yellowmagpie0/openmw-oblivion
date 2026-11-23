@@ -38,6 +38,14 @@ namespace Fx
 
         void setSkyColor(const osg::Vec4f& color) { mData.get<SkyColor>() = color; }
 
+        void setOblivionLighting(const osg::Vec4f& bloom, const osg::Vec4f& exposure)
+        {
+            mData.get<OblivionBloom>() = bloom;
+            mData.get<OblivionExposure>() = exposure;
+        }
+
+        const osg::Vec4f& getOblivionExposure() const { return mData.get<OblivionExposure>(); }
+
         void setSunColor(const osg::Vec4f& color) { mData.get<SunColor>() = color; }
 
         void setSunPos(const osg::Vec4f& pos, bool night)
@@ -281,11 +289,21 @@ namespace Fx
             static constexpr std::string_view sName = "isInterior";
         };
 
+        struct OblivionBloom : Std140::Vec4
+        {
+            static constexpr std::string_view sName = "oblivionBloom";
+        };
+
+        struct OblivionExposure : Std140::Vec4
+        {
+            static constexpr std::string_view sName = "oblivionExposure";
+        };
+
         using UniformData = Std140::UBO<ProjectionMatrix, InvProjectionMatrix, ViewMatrix, PrevViewMatrix,
             InvViewMatrix, EyePos, EyeVec, FogColor, AmbientColor, SkyColor, SunColor, SunPos, SunVec, Resolution,
             RcpResolution, FogNear, FogFar, Near, Far, Fov, GameHour, SunVis, WaterHeight, IsWaterEnabled,
             SimulationTime, DeltaSimulationTime, FrameNumber, WindSpeed, WeatherTransition, WeatherID, NextWeatherID,
-            IsUnderwater, IsInterior>;
+            IsUnderwater, IsInterior, OblivionBloom, OblivionExposure>;
 
         UniformData mData;
         bool mUseUBO;
