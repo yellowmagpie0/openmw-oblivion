@@ -23,7 +23,6 @@
 #include <components/esm/format.hpp>
 #include <components/files/openfile.hpp>
 #include <components/misc/rng.hpp>
-#include <components/misc/strings/algorithm.hpp>
 #include <components/misc/strings/lower.hpp>
 #include <components/misc/strings/format.hpp>
 
@@ -813,37 +812,9 @@ void OMW::Engine::prepareEngine()
         mVFS->addArchive(Resource::makeOblivionUiArchive(*mVFS));
     if (mArchives.empty())
     {
-        std::size_t registered = 0;
-        const auto defaults = ESM::getDefaultArchives(resourceProfile);
-        std::vector<std::string> archives(defaults.begin(), defaults.end());
-        if (resourceProfile == ESM::GameProfile::Oblivion)
-        {
-            for (const std::string& plugin : mContentFiles)
-            {
-                if (!Misc::StringUtils::ciEndsWith(plugin, ".esp") && !Misc::StringUtils::ciEndsWith(plugin, ".esm"))
-                    continue;
-                // Ordinary TES4 plugins package their models and textures in a namesake BSA.
-                const std::string archive = plugin.substr(0, plugin.size() - 4) + ".bsa";
-                if (mFileCollections.doesExist(archive))
-                    archives.push_back(archive);
-                if (Misc::StringUtils::ciEqual(plugin, "DLCShiveringIsles.esp"))
-                    archives.insert(archives.end(), { "DLCShiveringIsles - Meshes.bsa", "DLCShiveringIsles - Textures.bsa",
-                        "DLCShiveringIsles - Sounds.bsa", "DLCShiveringIsles - Voices.bsa" });
-            }
-        }
-        for (std::string_view archive : archives)
-        {
-            if (mFileCollections.doesExist(archive))
-            {
-                mArchives.emplace_back(archive);
-                ++registered;
-            }
-            else
-                Log(Debug::Warning) << "Default " << ESM::toString(resourceProfile) << " archive is unavailable: "
-                                    << archive;
-        }
-        if (registered != 0)
-            Log(Debug::Info) << "Registered " << registered << " default " << ESM::toString(resourceProfile)
+        mArchives = VFS::discoverDefaultArchives(resourceProfile, mFileCollections, mContentFiles);
+        if (!mArchives.empty())
+            Log(Debug::Info) << "Registered " << mArchives.size() << " default " << ESM::toString(resourceProfile)
                              << " archives from the configured data directories";
     }
 

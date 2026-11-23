@@ -165,6 +165,7 @@ file(GLOB UNITTEST_SRC_FILES
     resource/testoblivionui.cpp
 
     vfs/testpathutil.cpp
+    vfs/testarchivediscovery.cpp
 
     sceneutil/osgacontroller.cpp
     sceneutil/actorragdollpose.cpp
