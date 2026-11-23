@@ -1,6 +1,7 @@
 #include "resourcesystem.hpp"
 
 #include <algorithm>
+#include <mutex>
 
 #include "animblendrulesmanager.hpp"
 #include "bgsmfilemanager.hpp"
@@ -72,6 +73,7 @@ namespace Resource
 
     void ResourceSystem::setExpiryDelay(double expiryDelay)
     {
+        std::shared_lock lock(mResourceManagersMutex);
         for (std::vector<BaseResourceManager*>::iterator it = mResourceManagers.begin(); it != mResourceManagers.end();
              ++it)
             (*it)->setExpiryDelay(expiryDelay);
@@ -83,6 +85,7 @@ namespace Resource
 
     void ResourceSystem::updateCache(double referenceTime)
     {
+        std::shared_lock lock(mResourceManagersMutex);
         for (std::vector<BaseResourceManager*>::iterator it = mResourceManagers.begin(); it != mResourceManagers.end();
              ++it)
             (*it)->updateCache(referenceTime);
@@ -90,6 +93,7 @@ namespace Resource
 
     void ResourceSystem::clearCache()
     {
+        std::shared_lock lock(mResourceManagersMutex);
         for (std::vector<BaseResourceManager*>::iterator it = mResourceManagers.begin(); it != mResourceManagers.end();
              ++it)
             (*it)->clearCache();
@@ -97,11 +101,13 @@ namespace Resource
 
     void ResourceSystem::addResourceManager(BaseResourceManager* resourceMgr)
     {
+        std::unique_lock lock(mResourceManagersMutex);
         mResourceManagers.push_back(resourceMgr);
     }
 
     void ResourceSystem::removeResourceManager(BaseResourceManager* resourceMgr)
     {
+        std::unique_lock lock(mResourceManagersMutex);
         std::vector<BaseResourceManager*>::iterator found
             = std::find(mResourceManagers.begin(), mResourceManagers.end(), resourceMgr);
         if (found != mResourceManagers.end())
@@ -115,6 +121,7 @@ namespace Resource
 
     void ResourceSystem::reportStats(unsigned int frameNumber, osg::Stats* stats) const
     {
+        std::shared_lock lock(mResourceManagersMutex);
         for (std::vector<BaseResourceManager*>::const_iterator it = mResourceManagers.begin();
              it != mResourceManagers.end(); ++it)
             (*it)->reportStats(frameNumber, stats);
@@ -122,6 +129,7 @@ namespace Resource
 
     void ResourceSystem::releaseGLObjects(osg::State* state)
     {
+        std::shared_lock lock(mResourceManagersMutex);
         for (std::vector<BaseResourceManager*>::const_iterator it = mResourceManagers.begin();
              it != mResourceManagers.end(); ++it)
             (*it)->releaseGLObjects(state);

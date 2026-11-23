@@ -14,6 +14,15 @@ namespace MWWorld
     {
         using ResidentFlags = std::map<ESM::FormKey, bool>;
 
+        bool hasEnableParent(const CellRef& ref)
+        {
+            if (const auto* placed = ref.getNativeReference())
+                return !placed->mEsp.parent.isZeroOrUnset();
+            if (const auto* actor = ref.getNativeActor())
+                return !actor->mEsp.parent.isZeroOrUnset();
+            return false;
+        }
+
         std::optional<OblivionEnableReference> authoredEnableReference(
             const ESMStore& store, const ESM::FormKeyResolver& resolver, const ESM::FormKey& key)
         {
@@ -122,6 +131,24 @@ namespace MWWorld
     void World::synchronizeOblivionEnableParents(CellStore* loadingCell)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || mSynchronizingOblivionEnableParents) return;
+        if (loadingCell)
+        {
+            // Streaming a cell with only roots at their already-authoritative
+            // values introduces no changes to any enable-parent chain.
+            bool needsSync = false;
+            loadingCell->forEach([&](const Ptr& ptr) {
+                const auto& ref = ptr.getCellRef();
+                const auto* placed = ref.getNativeReference();
+                const auto* actor = ref.getNativeActor();
+                if (!placed && !actor) return true;
+                const auto* snapshot = findOblivionSavedReference(placed ? placed->mFormKey : actor->mFormKey);
+                const bool expected = snapshot ? snapshot->mEnabled
+                    : ((placed ? placed->mFlags : actor->mFlags) & ESM4::Rec_Disabled) == 0;
+                needsSync = hasEnableParent(ref) || ptr.getRefData().isEnabled() != expected;
+                return !needsSync;
+            }, true);
+            if (!needsSync) return;
+        }
         mSynchronizingOblivionEnableParents = true;
         struct Reset { bool& flag; ~Reset() { flag = false; } } reset{mSynchronizingOblivionEnableParents};
         const ESM::FormKeyResolver resolver(mContentFiles);
@@ -140,8 +167,7 @@ namespace MWWorld
         const auto* index = references ? &*references : nullptr;
         std::vector<std::pair<Ptr, bool>> changes;
         for (const auto& [key, ptr] : pointers)
-            if (const auto node = authoredEnableReference(mStore, resolver, key);
-                node && !node->mParent.isNull())
+            if (hasEnableParent(ptr.getCellRef()))
                 changes.emplace_back(ptr, *enabled(mStore, resolver, key, index, &mWorldModel, &flags));
         for (const auto& [ptr, value] : changes)
         {

@@ -23,6 +23,7 @@
 #include "../mwbase/world.hpp"
 
 #include "../mwworld/cellstore.hpp"
+#include "../mwworld/player.hpp"
 #include "../mwworld/esmstore.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
@@ -1425,13 +1426,15 @@ namespace MWSound
         if (!mVFS->exists(oblivionTitleMusic) || mMusicType == MusicType::MWScript)
             return;
 
-        const MWWorld::ConstPtr player = MWBase::Environment::get().getWorld()->getPlayerPtr();
+        const auto world = MWBase::Environment::get().getWorld();
+        const MWWorld::ConstPtr player = world->getPlayerPtr();
         if (!player.isInCell())
             return;
         const MWWorld::Cell& cell = *player.getCell()->getCell();
         const bool exterior = cell.isExterior() || cell.isQuasiExterior();
         const std::uint8_t musicType = cell.isEsm4() ? cell.getEsm4().mMusicType : 0;
-        const std::string playlist(nativeMusicPlaylist(MWMechanics::isPlayerInCombat(), exterior, musicType));
+        const bool nearbyFight = MWMechanics::isPlayerInCombat() && world->getPlayer().enemiesNearby();
+        const std::string playlist(nativeMusicPlaylist(nearbyFight, exterior, musicType));
 
         if (isMusicPlaying() && playlist == mNativePlaylist)
             return;

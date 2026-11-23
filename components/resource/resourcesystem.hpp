@@ -2,6 +2,7 @@
 #define OPENMW_COMPONENTS_RESOURCE_RESOURCESYSTEM_H
 
 #include <memory>
+#include <shared_mutex>
 #include <vector>
 
 namespace VFS
@@ -86,6 +87,7 @@ namespace Resource
         // Store the base classes separately to get convenient access to the common interface
         // Here users can register their own resourcemanager as well
         std::vector<BaseResourceManager*> mResourceManagers;
+        mutable std::shared_mutex mResourceManagersMutex;
 
         const VFS::Manager* mVFS;
 

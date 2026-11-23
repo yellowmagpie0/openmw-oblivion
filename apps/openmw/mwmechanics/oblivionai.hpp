@@ -30,6 +30,7 @@
 #include <components/esm4/runtimestate.hpp>
 
 #include "../mwworld/ptr.hpp"
+#include "obstacle.hpp"
 #include "oblivionpackageevents.hpp"
 #include "obliviondoorstate.hpp"
 #include "../mwworld/oblivionquestguidance.hpp"
@@ -188,6 +189,9 @@ namespace MWMechanics
         };
         struct LiveActor
         {
+            ObstacleCheck mFollowObstacle;
+            ESM::FormId mPlacedActorId;
+            std::optional<bool> mRootEnabledByDefault;
             TargetRoute mCombatRoute;
             // Combat cleanup must not erase the peaceful recipient's cursor.
             TargetRoute mEscortRoute;
@@ -351,7 +355,7 @@ namespace MWMechanics
         void invalidateOverlayRoutes(const std::set<ESM::FormKey>& changedPathgrids);
         float unloadedMovementSpeed(const LiveActor& live) const;
         float travelArrivalRadius(const LiveActor& live) const;
-        void refreshMovingTargetRoute(LiveActor& live, const ESM4::AIPackage& current,
+        bool refreshMovingTargetRoute(LiveActor& live, const ESM4::AIPackage& current,
             const MWWorld::Ptr& residentActor = {});
         bool shouldRunPackage(const LiveActor& live, const ESM4::AIPackage* current,
             const osg::Vec3f& position) const;

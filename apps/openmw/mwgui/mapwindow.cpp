@@ -55,7 +55,6 @@
 namespace
 {
 
-    constexpr int cellSize = Constants::CellSizeInUnits;
     constexpr float speed = 1.08f; // the zoom speed, it should be greater than 1
 
     enum LocalMapWidgetDepth
@@ -281,7 +280,9 @@ namespace MWGui
 
         if (mActiveCell->isExterior())
         {
-            ESM::ExteriorCellLocation cellPos = ESM::positionToExteriorCellLocation(worldX, worldY);
+            const auto worldspace = mActiveCell->getWorldSpace();
+            const int cellSize = ESM::getCellSize(worldspace);
+            ESM::ExteriorCellLocation cellPos = ESM::positionToExteriorCellLocation(worldX, worldY, worldspace);
             cellIndex.x() = cellPos.mX;
             cellIndex.y() = cellPos.mY;
 
@@ -569,6 +570,8 @@ namespace MWGui
 
     void LocalMapBase::setPlayerPos(int cellX, int cellY, const float nx, const float ny)
     {
+        const int cellSize = mActiveCell && mActiveCell->isExterior()
+            ? ESM::getCellSize(mActiveCell->getWorldSpace()) : Constants::CellSizeInUnits;
         const osg::Vec2d logical(double(cellX) + nx, double(cellY) + 1 - ny);
         const bool moved = !mHavePlayerMapPosition || (logical - mPlayerMapPosition).length2() > 0.001 / double(cellSize * cellSize);
         if (moved) setInteriorViewCenter(logical.x(), logical.y());
@@ -717,7 +720,7 @@ namespace MWGui
             {
                 if (mActiveCell->isExterior())
                     requestMapRender(&MWBase::Environment::get().getWorldModel()->getExterior(
-                        ESM::ExteriorCellLocation(entry.mCellX, entry.mCellY, ESM::Cell::sDefaultWorldspaceId)));
+                        ESM::ExteriorCellLocation(entry.mCellX, entry.mCellY, mActiveCell->getWorldSpace())));
 
                 osg::ref_ptr<osg::Texture2D> texture = mLocalMapRender->getMapTexture(entry.mCellX, entry.mCellY);
                 if (texture)
@@ -775,7 +778,7 @@ namespace MWGui
                     continue;
                 if (mExteriorDoorsByCell.contains({ entry.mCellX, entry.mCellY }))
                     continue;
-                ESM::ExteriorCellLocation id(entry.mCellX, entry.mCellY, ESM::Cell::sDefaultWorldspaceId);
+                ESM::ExteriorCellLocation id(entry.mCellX, entry.mCellY, mActiveCell->getWorldSpace());
                 world->getDoorMarkers(worldModel->getExterior(id), doors);
             }
         }
@@ -1029,6 +1032,7 @@ namespace MWGui
         }
         else
         {
+            const int cellSize = ESM::getCellSize(mActiveCell->getWorldSpace());
             worldPos.x() = (x + nX) * cellSize;
             worldPos.y() = (y + (1.0f - nY)) * cellSize;
         }

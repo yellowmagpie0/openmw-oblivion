@@ -7,8 +7,6 @@
 
 namespace MWRender
 {
-    class NotifyDrawCompletedCallback;
-
     class ScreenshotManager
     {
     public:
@@ -19,7 +17,6 @@ namespace MWRender
 
     private:
         osg::ref_ptr<osgViewer::Viewer> mViewer;
-        osg::ref_ptr<NotifyDrawCompletedCallback> mDrawCompleteCallback;
     };
 }
 

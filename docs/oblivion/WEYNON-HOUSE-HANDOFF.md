@@ -2,7 +2,7 @@
 
 MQ04 stage 20 begins with Martin and Jauffre alive in Weynon Priory Chapel. Leave through the chapel door, cross the courtyard, and enter Weynon House. Go upstairs and through the two secret cabinet doors. Inspect the empty chest and finish Jauffre's conversation about Martin's safety. At stage 30 the journal directs the player to escort both men to Cloud Ruler Temple.
 
-The earlier [Kvatch and chapel course](KVATCH-HANDOFF.md) supplies the starting save and its provenance. The next gameplay check begins with leaving the house with both companions and ends at the temple gates.
+The earlier [Kvatch and chapel course](KVATCH-HANDOFF.md) supplies the starting save and its provenance. Continue with the [escort to Cloud Ruler Temple](CLOUD-RULER-GATES-HANDOFF.md).
 
 ## Replay and resume
 

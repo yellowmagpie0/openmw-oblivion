@@ -318,9 +318,14 @@ namespace MWRender
 
         struct WorldspaceChunkMgr
         {
-            std::unique_ptr<Terrain::World> mTerrain;
+            explicit WorldspaceChunkMgr(Resource::ResourceSystem& resources);
+            WorldspaceChunkMgr(WorldspaceChunkMgr&&) noexcept;
+            ~WorldspaceChunkMgr();
+            Resource::ResourceSystem& mResources;
             std::unique_ptr<ObjectPaging> mObjectPaging;
             std::unique_ptr<Groundcover> mGroundcover;
+            // The terrain references its chunk managers until destruction.
+            std::unique_ptr<Terrain::World> mTerrain;
         };
 
         WorldspaceChunkMgr& getWorldspaceChunkMgr(ESM::RefId worldspace);

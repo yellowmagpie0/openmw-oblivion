@@ -2098,6 +2098,11 @@ namespace MWWorld
             return std::int64_t(0);
         }
 
+        if (name == "menumode" && arguments.empty())
+        {
+            const auto* windows = MWBase::Environment::get().getWindowManagerOrNull();
+            return std::int64_t(windows && windows->isGuiMode());
+        }
         if (name == "getsecondspassed")
             return context.mSecondsPassed;
         if (name == "getbuttonpressed")

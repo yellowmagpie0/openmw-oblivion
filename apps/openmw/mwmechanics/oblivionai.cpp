@@ -1075,7 +1075,12 @@ namespace MWMechanics
                 = 0.25f * (1.f + static_cast<float>(reference.mFormKey.mValue % 32)) / 32.f;
             live.mLastRiddenHorse = reference.mHorseKey;
             live.mNeedsSelection = true;
-            actors.emplace(reference.mFormKey, std::move(live));
+            auto& placed = actors.try_emplace(reference.mFormKey, std::move(live)).first->second;
+            // These two properties belong to the winning content record,
+            // including when the actor's package came from a saved game.
+            placed.mPlacedActorId = reference.mId;
+            if (reference.mEsp.parent.isZeroOrUnset())
+                placed.mRootEnabledByDefault = (reference.mFlags & ESM4::Rec_Disabled) == 0;
         };
 
         for (const ESM4::ActorCharacter& reference : mWorld.mStore.get<ESM4::ActorCharacter>())
@@ -1106,6 +1111,8 @@ namespace MWMechanics
 
     void OblivionAiService::setPhase(LiveActor& live, ESM4::PackagePhase phase)
     {
+        if (phase != ESM4::PackagePhase::Path)
+            live.mFollowObstacle.clear();
         if (live.mState.mPhase == ESM4::PackagePhase::Door && phase != ESM4::PackagePhase::Door)
             live.mState.mDoorAnimationStarted = false;
         live.mState.mPhase = phase;
@@ -4219,10 +4226,15 @@ namespace MWMechanics
                 }
             }
 
-            std::ostringstream navmeshEvent;
-            navmeshEvent << "status=" << DetourNavigator::getMessage(status)
-                         << " continuous=" << (success ? "true" : "false");
-            logEvent("route-navmesh", live, navmeshEvent.str());
+            if (mEventStream.is_open())
+            {
+                std::ostringstream event;
+                event << "status=" << DetourNavigator::getMessage(status)
+                      << " continuous=" << (success ? "true" : "false");
+                for (const auto& point : live.mContinuousRoute)
+                    event << " (" << point.x() << ',' << point.y() << ',' << point.z() << ')';
+                logEvent("route-navmesh", live, event.str());
+            }
             return success;
         };
 
@@ -4232,11 +4244,28 @@ namespace MWMechanics
             hasContinuousRoute = prepareContinuousRoute(destination, {});
         }
 
-        if (!destinationCell.isNull() && live.mState.mCell != destinationCell)
+        else if (live.mState.mPackageType == ESM4::AIPackageType::Follow
+            && !loadedPtrFor(live.mState.mTarget).isEmpty())
         {
-            // A cross-cell route is valid only when the native graph contains
-            // a foreign edge.  We retain the route intent and let the door
-            // phase handle the boundary; no direct position mutation occurs.
+            // A moving leader can cross an exterior grid line while still in
+            // sight. The resident navmesh spans that line, so there is no need
+            // to detour to the authored PGRI crossing for distant travel.
+            const auto& cells = mWorld.mStore.get<ESM4::Cell>();
+            const auto* source = cells.search(live.mState.mCell);
+            const auto* target = cells.search(destinationCell);
+            if (source && target && source->isExterior() && target->isExterior()
+                && !source->mParentKey.isNull() && source->mParentKey == target->mParentKey
+                && prepareContinuousRoute(destination, {}))
+            {
+                live.mRoute.clear();
+                live.mRouteCursor = 0;
+                live.mForeignRouteTarget.reset();
+                live.mState.mDoor = {};
+                live.mState.mPathgrid = {};
+                live.mState.mPathNode = 0;
+                live.mState.mRouteGeneration = 0;
+                return true;
+            }
         }
 
         const ESM4::PathgridService& service = mWorld.mStore.getOblivionPathgridService();
@@ -4441,7 +4470,7 @@ namespace MWMechanics
         return true;
     }
 
-    void OblivionAiService::refreshMovingTargetRoute(
+    bool OblivionAiService::refreshMovingTargetRoute(
         LiveActor& live, const ESM4::AIPackage& current, const MWWorld::Ptr& residentActor)
     {
         const auto type = live.mState.mPackageType;
@@ -4449,11 +4478,11 @@ namespace MWMechanics
             && current.mLocationData.mKind == ESM4::PackageLocationKind::NearReference;
         if (type != ESM4::AIPackageType::Follow && type != ESM4::AIPackageType::Accompany
             && type != ESM4::AIPackageType::Pursue && type != ESM4::AIPackageType::Escort && !travelToReference)
-            return;
+            return false;
         // Finish an already-entered boundary before considering another
         // target route. A moving leader must not make us oscillate on an edge.
         if (live.mForeignRouteTarget || !live.mState.mDoor.isNull() || live.mPendingDoor)
-            return;
+            return false;
         const ESM::FormKey oldCell = live.mDestinationCell;
         ESM::FormKey target;
         const std::optional<osg::Vec3f> destination = residentActor.isEmpty()
@@ -4464,12 +4493,12 @@ namespace MWMechanics
             // Retain the last known route. The existing Wait/Resolve handling
             // reports an unavailable target once that route has been consumed.
             live.mDestinationCell = oldCell;
-            return;
+            return false;
         }
         if (!residentActor.isEmpty())
             live.mState.mTarget = target;
         if (!updateOblivionMovingDestination(live.mState, live.mDestinationCell, *destination))
-            return;
+            return false;
         live.mDestination = destination;
         live.mRoute.clear();
         live.mContinuousRoute.clear();
@@ -4482,6 +4511,7 @@ namespace MWMechanics
         // Keep no-progress and retry budgets: target motion is not evidence
         // that this actor actually moved. Path prepares the new route once.
         logEvent("target-route-refresh", live, "moving-target");
+        return true;
     }
 
     bool OblivionAiService::shouldRunPackage(const LiveActor& live, const ESM4::AIPackage* current,
@@ -5167,7 +5197,8 @@ namespace MWMechanics
         const float elapsed = std::clamp(duration, 0.f, 5.f);
         for (auto& [_, live] : mActors)
         {
-            const auto loaded = loadedPtrFor(live.mState.mActor);
+            const auto loaded = live.mPlacedActorId.isZeroOrUnset() ? loadedPtrFor(live.mState.mActor)
+                : mWorld.mWorldModel.getPtr(live.mPlacedActorId);
             if (!loaded.isEmpty())
             {
                 // A CellStore can remain registered after an NPC exits the
@@ -5188,8 +5219,18 @@ namespace MWMechanics
             {
                 refreshReferences();
                 const auto* saved = savedReferenceState(live.mState.mActor);
-                if ((saved && saved->mDeleted)
-                    || !mWorld.getOblivionReferenceEnabled(live.mState.mActor, mLowProcessReferenceIndex).value_or(false))
+                if (saved && saved->mDeleted)
+                    continue;
+                // Read mutable enable flags every pass. Only roots can skip
+                // resolving a chain, and a resident override still wins.
+                bool enabled;
+                if (live.mRootEnabledByDefault.has_value())
+                    enabled = !loaded.isEmpty() ? loaded.getRefData().isEnabled()
+                        : saved ? saved->mEnabled : *live.mRootEnabledByDefault;
+                else
+                    enabled = mWorld.getOblivionReferenceEnabled(live.mState.mActor, mLowProcessReferenceIndex)
+                        .value_or(false);
+                if (!enabled)
                     continue;
                 live.mState.mTier = ESM4::ProcessTier::Low;
                 if (!std::isfinite(live.mState.mNextLowProcessTick)
@@ -6123,6 +6164,26 @@ namespace MWMechanics
                 if (useBlockingDoor(point))
                     return true;
                 faceAndMove(actor, point, run, sneak);
+                if (live.mState.mPackageType == ESM4::AIPackageType::Follow && actor.getCell()->isExterior()
+                    && live.mState.mDoor.isNull() && live.mIgnoredPhysicalDoor.isNull())
+                {
+                    // Navmesh clearance around a rock can differ from the
+                    // actor's collision sweep. Sideways motion along its edge
+                    // is not progress toward the next corridor point.
+                    const bool wasEvading = live.mFollowObstacle.isEvading();
+                    live.mFollowObstacle.update(actor, point, duration, MWWorld::MovementDirectionFlag_Forward);
+                    if (live.mFollowObstacle.isEvading())
+                        live.mFollowObstacle.takeEvasiveAction(actor.getClass().getMovementSettings(actor));
+                    else if (wasEvading)
+                    {
+                        // Replan from the cleared side before aiming back at
+                        // the same inaccessible corner.
+                        live.mRoute.clear();
+                        live.mRouteCursor = 0;
+                        live.mContinuousRoute.clear();
+                        live.mContinuousRouteCursor = 0;
+                    }
+                }
                 return true;
             }
 
@@ -6140,12 +6201,13 @@ namespace MWMechanics
             }
 
             if (!continuesNativeRoute && !live.mRouteDoor
-                && (live.mDestinationCell.isNull() || live.mDestinationCell == live.mState.mCell))
+                && (live.mRoute.empty() || live.mDestinationCell.isNull() || live.mDestinationCell == live.mState.mCell))
             {
                 // findSmoothPath normally ends within the requested tolerance.
                 // Keep the final arrival check explicit so a partial output
                 // cannot be interpreted as arrival.
-                if (oblivionDestinationReached(live.mState.mCell, position, live.mState.mCell,
+                if (oblivionDestinationReached(live.mState.mCell, position,
+                        live.mDestinationCell.isNull() ? live.mState.mCell : live.mDestinationCell,
                         destination, sArrivalTolerance, live.mState.mPackageType, radius))
                 {
                     reached = true;
@@ -6483,6 +6545,8 @@ namespace MWMechanics
         const ESM4::PackagePhase oldPhase = live.mState.mPhase;
         ESM4::PackagePhaseState phase = toPhaseState(live.mState);
         const ESM4::PackagePhaseTransition transition = ESM4::advancePackagePhase(phase, input);
+        if (oldPhase == ESM4::PackagePhase::Path && transition.mTo != oldPhase)
+            live.mFollowObstacle.clear();
         fromPhaseState(live.mState, phase);
         if (transition.mFrom != ESM4::PackagePhase::Complete && transition.mTo == ESM4::PackagePhase::Complete)
             recordDailyCompletion(live);
@@ -6883,6 +6947,13 @@ namespace MWMechanics
         const auto* sourceGraph = mWorld.mStore.getOblivionPathgridService().graph(live.mState.mPathgrid);
         const bool sourceCellChanged = sourceGraph && sourceGraph->cellKey() != live.mState.mCell;
         const bool staleSource = live.mState.mPhase == ESM4::PackagePhase::Stalled && sourceCellChanged;
+        // Exhausting the retry budget for one location does not make the
+        // leader's next location unreachable. Keep retries bounded while the
+        // target is stationary, including after restoring a stalled follower.
+        const bool stalledLeaderMoved = !staleSource && highProcess && live.mSelectionCheckTimer <= 0.f && waitingPackage
+            && live.mState.mPhase == ESM4::PackagePhase::Stalled
+            && live.mState.mPackageType == ESM4::AIPackageType::Follow
+            && refreshMovingTargetRoute(live, *waitingPackage, actor);
         const bool followContextChanged = reevaluateFollowContext(waitingPackage)
             && (observedCellChanged || sourceCellChanged);
         const bool waitingWander = live.mState.mPhase == ESM4::PackagePhase::Wait
@@ -6914,11 +6985,10 @@ namespace MWMechanics
             const bool restart = !idleWait && (stalledRouteChanged || doorRestored || actionRestored);
             select(actor, live, restart);
         }
-        if (staleSource && live.mState.mPhase == ESM4::PackagePhase::Stalled)
+        if ((staleSource || stalledLeaderMoved) && live.mState.mPhase == ESM4::PackagePhase::Stalled)
         {
-            // Recover a save made by the old corridor handoff. The actor has
-            // already crossed physically; rebuild from its actual cell while
-            // retaining a still-selected (including mandatory) package.
+            // Rebuild from the actor's actual cell to the leader's current
+            // position without restarting a still-selected mandatory package.
             live.mRoute.clear();
             live.mContinuousRoute.clear();
             live.mRouteCursor = live.mContinuousRouteCursor = 0;
@@ -7023,7 +7093,7 @@ namespace MWMechanics
                 }
             }
             refreshMovingTargetRoute(live, *current, highProcess ? actor : MWWorld::Ptr{});
-            if (live.mRoute.empty() && live.mDestination)
+            if (live.mRoute.empty() && (!highProcess || live.mContinuousRoute.empty()) && live.mDestination)
             {
                 // A save stores the stable destination intent, not ephemeral
                 // route vectors. Rebuild the route after the cell stores and

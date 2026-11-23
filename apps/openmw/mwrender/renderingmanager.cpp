@@ -1444,12 +1444,27 @@ namespace MWRender
         mStateUpdater->setFogColor(color);
     }
 
+    RenderingManager::WorldspaceChunkMgr::WorldspaceChunkMgr(Resource::ResourceSystem& resources)
+        : mResources(resources)
+    {
+    }
+
+    RenderingManager::WorldspaceChunkMgr::WorldspaceChunkMgr(WorldspaceChunkMgr&&) noexcept = default;
+
+    RenderingManager::WorldspaceChunkMgr::~WorldspaceChunkMgr()
+    {
+        if (mObjectPaging)
+            mResources.removeResourceManager(mObjectPaging.get());
+        if (mGroundcover)
+            mResources.removeResourceManager(mGroundcover.get());
+    }
+
     RenderingManager::WorldspaceChunkMgr& RenderingManager::getWorldspaceChunkMgr(ESM::RefId worldspace)
     {
         auto existingChunkMgr = mWorldspaceChunks.find(worldspace);
         if (existingChunkMgr != mWorldspaceChunks.end())
             return existingChunkMgr->second;
-        RenderingManager::WorldspaceChunkMgr newChunkMgr;
+        WorldspaceChunkMgr newChunkMgr(*mResourceSystem);
 
         const float lodFactor = Settings::terrain().mLodFactor;
         bool nativeGroundcover = false;

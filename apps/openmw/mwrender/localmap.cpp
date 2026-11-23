@@ -11,6 +11,7 @@
 #include <osgDB/ReadFile>
 
 #include <components/debug/debuglog.hpp>
+#include <components/esm/util.hpp>
 #include <components/esm3/fogstate.hpp>
 #include <components/esm3/loadcell.hpp>
 #include <components/files/memorystream.hpp>
@@ -194,10 +195,12 @@ namespace MWRender
     {
         if (!cell->isExterior())
         {
+            mMapWorldSize = Constants::CellSizeInUnits;
             requestInteriorMap(cell);
             return;
         }
 
+        mMapWorldSize = ESM::getCellSize(cell->getCell()->getWorldSpace());
         int cellX = cell->getCell()->getGridX();
         int cellY = cell->getCell()->getGridY();
 

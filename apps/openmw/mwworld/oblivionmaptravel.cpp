@@ -1,6 +1,7 @@
 #include "oblivionmaptravel.hpp"
 
 #include <algorithm>
+#include <set>
 
 #include <components/debug/debuglog.hpp>
 #include <components/esm/util.hpp>
@@ -19,6 +20,7 @@
 #include "class.hpp"
 #include "datetimemanager.hpp"
 #include "oblivionscriptmanager.hpp"
+#include "player.hpp"
 #include "worldimp.hpp"
 #include "worldspaceutils.hpp"
 
@@ -51,7 +53,7 @@ namespace MWWorld
             || MWWorld::resolveWorldspaceInheritance(worlds, ESM::RefId(source->mId), ESM4::World::UseFlag_Map)
                 != MWWorld::resolveWorldspaceInheritance(worlds, cell->mParent, ESM4::World::UseFlag_Map))
             return "You cannot fast travel from this location.";
-        if (world.isOblivionInCombat(player).value_or(false))
+        if (world.getPlayer().enemiesNearby())
             return "You cannot fast travel with enemies nearby.";
         if (player.getClass().getEncumbrance(player) > player.getClass().getCapacity(player))
             return "You cannot fast travel while over-encumbered.";
@@ -61,35 +63,48 @@ namespace MWWorld
         const float distance = (pos - marker.mPos.asVec3()).length();
         const double hours = distance / std::max(1.f, player.getClass().getMaxSpeed(player))
             * world.getTimeManager()->getGameTimeScale() / 3600.0;
-        // Move nearby active native followers while their source cell is still resident.
-        std::vector<MWWorld::Ptr> nearby;
-        MWBase::Environment::get().getMechanicsManager()->getActorsInRange(pos, 800.f, nearby);
         auto* ai = world.getOblivionAiService();
-        std::vector<ESM::FormKey> followers;
+        // Resolve the whole party before moving its leaders out of the source
+        // scene. Follow distance is measured to the actor each package follows.
+        using PartyMember = std::pair<ESM::FormKey, MWWorld::Ptr>;
+        std::vector<PartyMember> party{ { ESM::FormKey::dynamic("player", 1), player } };
+        std::set<ESM::FormKey> visited{ party.front().first };
+        for (std::size_t i = 0; ai && i < party.size(); ++i)
+        {
+            const auto [leaderKey, leader] = party[i];
+            std::vector<MWWorld::Ptr> nearby;
+            MWBase::Environment::get().getMechanicsManager()->getActorsInRange(
+                leader.getRefData().getPosition().asVec3(), 800.f, nearby);
+            for (const auto& actor : nearby)
+            {
+                const auto* state = ai->state(actor);
+                if (actor.isInCell() && actor.getCell()->isExterior()
+                    && actor.getCell()->getCell()->getWorldSpace() == player.getCell()->getCell()->getWorldSpace()
+                    && state && state->mPackageType == ESM4::AIPackageType::Follow
+                    && ESM4::runtimeReferenceKey(state->mTarget) == leaderKey
+                    && !ai->isPackageWaiting(state->mPackage) && !actor.getClass().getCreatureStats(actor).isDead()
+                    && visited.insert(state->mActor).second)
+                    party.emplace_back(state->mActor, actor);
+            }
+        }
         // Persistent map markers share their world's dummy cell, irrespective of their coordinates.
         const auto location = ESM::positionToExteriorCellLocation(marker.mPos.pos[0], marker.mPos.pos[1], cell->mParent);
         auto& arrival = world.getWorldModel().getExterior(location);
         MWWorld::ActionTeleport travel(arrival.getCell()->getId(), marker.mPos, false);
-        for (const auto& actor : nearby)
-        {
-            const auto* state = ai ? ai->state(actor) : nullptr;
-            if (actor.isInCell() && actor.getCell()->isExterior()
-                && actor.getCell()->getCell()->getWorldSpace() == player.getCell()->getCell()->getWorldSpace() && state && state->mPackageType == ESM4::AIPackageType::Follow
-                && ESM4::runtimeReferenceKey(state->mTarget) == ESM::FormKey::dynamic("player", 1)
-                && !ai->isPackageWaiting(state->mPackage) && !actor.getClass().getCreatureStats(actor).isDead())
-            {
-                followers.push_back(state->mActor);
-                travel.execute(actor);
-            }
-        }
+        for (std::size_t i = 1; i < party.size(); ++i)
+            travel.execute(party[i].second);
         travel.execute(player);
         // The NPC was moved while the destination scene was inactive. Publish its new
         // resident identity before the fast-forward or an immediate save reads the AI snapshot.
-        for (const auto& follower : followers)
+        for (std::size_t i = 1; i < party.size(); ++i)
         {
-            const auto actor = ai->resolveReference(follower);
-            if (!actor.isEmpty())
-                ai->evaluatePackage(actor);
+            auto actor = ai->resolveReference(party[i].first);
+            if (actor.isEmpty())
+                continue;
+            const auto feet = actor.getRefData().getPosition().asVec3();
+            if (const auto clear = world.findClearDoorArrival(actor, feet); clear && *clear != feet)
+                actor = world.moveObject(actor, *clear);
+            ai->evaluatePackage(actor);
         }
         world.advanceTime(hours);
         Log(Debug::Info) << "Fast travelled to " << marker.mFullName << " (" << hours << " hours)";

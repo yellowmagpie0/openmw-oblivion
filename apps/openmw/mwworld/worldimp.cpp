@@ -9080,11 +9080,10 @@ namespace MWWorld
         const auto bounds = doorArrivalBounds(*this, *mPhysics, actor);
         auto& physics = *mPhysics;
         // A cell transition can register actors before Bullet publishes their
-        // new transforms. Include the resident positions in player landing checks.
+        // new transforms. Include resident positions when a party arrives together.
         std::vector<Ptr> residents;
-        if (actor == getPlayerPtr())
-            MWBase::Environment::get().getMechanicsManager()->getActorsInRange(
-                authored, doorArrivalBound(bounds), residents);
+        if (auto* mechanics = MWBase::Environment::get().getMechanicsManagerOrNull())
+            mechanics->getActorsInRange(authored, doorArrivalBound(bounds), residents);
         const auto overlapsResident = [&](const osg::Vec3f& feet) {
             for (const Ptr& other : residents)
             {
