@@ -53,6 +53,7 @@
 #include <components/esm4/loadclas.hpp>
 #include <components/esm4/loadclot.hpp>
 #include <components/esm4/loadglob.hpp>
+#include <components/esm4/loadfurn.hpp>
 #include <components/esm4/crimerules.hpp>
 #include <components/esm4/loadmisc.hpp>
 #include <components/esm4/loadnpc.hpp>
@@ -118,6 +119,32 @@ namespace MWMechanics
         bool placedActivator(const MWWorld::Ptr& target)
         {
             return !target.isEmpty() && target.isInCell() && target.getType() == ESM::REC_ACTI4;
+        }
+
+        float findTargetRange(const ESM4::AIPackage& package, const MWWorld::Ptr& target)
+        {
+            // An NPC Find with no authored distance (for example a guard
+            // relieving their partner) must finish before the bodies collide.
+            if (package.mTargetData.mDistance == 0 && !target.isEmpty() && target.getType() == ESM::REC_NPC_4)
+                return 128.f;
+            return std::max(1.f, static_cast<float>(package.mTargetData.mDistance));
+        }
+
+        bool returnsToEditorLocation(const ESM4::AIPackage& package)
+        {
+            return package.mPackageType == ESM4::AIPackageType::Travel
+                && package.mLocationData.mKind == ESM4::PackageLocationKind::EditorLocation
+                && package.mLocationData.mReferenceKey.isNull();
+        }
+
+        void faceEditorHeading(MWWorld::World& world, const MWWorld::Ptr& actor)
+        {
+            auto pose = actor.getRefData().getPosition();
+            pose.rot[2] = actor.getCellRef().getPosition().rot[2];
+            if (actor.getRefData().getBaseNode())
+                world.rotateObject(actor, pose.asRotationVec3());
+            else
+                actor.getRefData().setPosition(pose);
         }
 
         bool canActivatePlacedObject(const MWWorld::World& world,
@@ -895,6 +922,7 @@ namespace MWMechanics
         mUnloadedLocationByReference.clear();
         mUnloadedLocationsByBase.clear();
         mUnloadedLocationsByType.clear();
+        mBedsByCell.clear();
         mUnloadedDoorsByCell.clear();
         mUnloadedDoorsByDestinationCell.clear();
 
@@ -923,6 +951,11 @@ namespace MWMechanics
             for (std::uint32_t objectType = 1; objectType <= 35; ++objectType)
                 if (ESM4::packageObjectTypeMatches(objectType, mUnloadedLocations.back().mType))
                     mUnloadedLocationsByType[objectType].push_back(index);
+            const auto& placed = mUnloadedLocations.back();
+            if (placed.mType == ESM::REC_FURN4)
+                if (const auto* base = mWorld.mStore.search<ESM4::Furniture>(placed.mBase);
+                    base && (base->mActiveMarkerFlags & 0x80000000u))
+                    mBedsByCell[placed.mCell].push_back(index);
             if (mUnloadedLocations.back().mType == ESM::REC_DOOR4
                 && !mUnloadedLocations.back().mCell.isNull()
                 && !mUnloadedLocations.back().mTeleportDoor.isNull())
@@ -2947,6 +2980,7 @@ namespace MWMechanics
             && oblivionPackageSelectionMatches(live.mState, live.mSelectedWindow, result, request.mNow);
         if (sameSelection)
         {
+            retryInterruptedSleepArea(live);
             live.mSelectionCheckTimer = 1.0f;
             live.mNeedsSelection = false;
             return result;
@@ -3003,6 +3037,28 @@ namespace MWMechanics
         logEvent("selection", live, selection.str());
         applyPackageDoorPolicy(live, DoorPolicyEvent::Start);
         return result;
+    }
+
+    void OblivionAiService::retryInterruptedSleepArea(LiveActor& live) const
+    {
+        if (live.mState.mPhase != ESM4::PackagePhase::Interrupted
+            || live.mState.mPackageType != ESM4::AIPackageType::Sleep
+            || live.mState.mInterruptionReason != "target-unresolved")
+            return;
+        const auto* current = package(live.mState.mPackage);
+        if (!current || current->mLocationData.mKind != ESM4::PackageLocationKind::NearReference
+            || current->mLocationData.mRadius <= 0)
+            return;
+        const auto centre = mUnloadedLocationByReference.find(current->mLocationData.mReferenceKey);
+        if (centre == mUnloadedLocationByReference.end() || mUnloadedLocations[centre->second].mType == ESM::REC_FURN4)
+            return;
+        // A bed may have become available, including when loading a save
+        // whose engine could only resolve a direct furniture reference.
+        if (resolveUnloadedDestination(*current, live))
+        {
+            live.mState.mInterruptionReason.clear();
+            setPhase(live, ESM4::PackagePhase::Resolve);
+        }
     }
 
     std::optional<osg::Vec3f> OblivionAiService::resolveUnloadedDestination(
@@ -3137,6 +3193,41 @@ namespace MWMechanics
         };
         const auto usableFurniture = [&](const StableLocation& furniture) {
             return furniture.mType == ESM::REC_FURN4 && !furniture.mLocked && actorOwns(furniture.mOwner);
+        };
+        const auto bedNear = [&](const StableLocation& centre, float radius) -> std::optional<StableLocation> {
+            const auto beds = mBedsByCell.find(centre.mCell);
+            if (beds == mBedsByCell.end() || radius <= 0.f)
+                return std::nullopt;
+            std::set<ESM::FormKey> occupied;
+            for (const auto& [key, other] : mActors)
+                if (key != live.mState.mActor && other.mState.mPackageType == ESM4::AIPackageType::Sleep
+                    && !other.mState.mTarget.isNull() && other.mState.mPhase != ESM4::PackagePhase::Complete
+                    && other.mState.mPhase != ESM4::PackagePhase::Interrupted
+                    && other.mState.mPhase != ESM4::PackagePhase::Stalled)
+                    occupied.insert(other.mState.mTarget);
+
+            std::optional<StableLocation> best;
+            float bestDistance = radius * radius;
+            for (const auto index : beds->second)
+            {
+                const auto& placed = mUnloadedLocations[index];
+                if (occupied.contains(placed.mReference))
+                    continue;
+                if (const auto* saved = savedReferenceState(placed.mReference); saved && saved->mDeleted)
+                    continue;
+                const auto bed = locationFor(placed.mReference);
+                if (!bed || bed->mCell != centre.mCell || !usableFurniture(*bed)
+                    || !mWorld.getOblivionReferenceEnabled(bed->mReference, mLowProcessReferenceIndex).value_or(false))
+                    continue;
+                const float distance = distanceSquared(bed->mPosition, centre.mPosition);
+                if (distance < bestDistance
+                    || (distance == bestDistance && (!best || bed->mReference < best->mReference)))
+                {
+                    best = bed;
+                    bestDistance = distance;
+                }
+            }
+            return best;
         };
 
         const bool followLike = record.mPackageType == ESM4::AIPackageType::Follow
@@ -3353,18 +3444,29 @@ namespace MWMechanics
             case ESM4::PackageLocationKind::ObjectId:
             case ESM4::PackageLocationKind::ObjectType:
             {
-                // A null EditorLocation is the package's implicit editor
-                // location. For a low-process actor its current abstract
-                // placement is the only stable representation available.
                 if (location.mKind == ESM4::PackageLocationKind::EditorLocation
                     && location.mReferenceKey.isNull())
+                {
+                    if (returnsToEditorLocation(record))
+                        if (const auto home = mUnloadedLocationByReference.find(live.mState.mActor);
+                            home != mUnloadedLocationByReference.end())
+                        {
+                            const auto& placement = mUnloadedLocations[home->second];
+                            live.mDestinationCell = placement.mCell;
+                            return placement.mPosition;
+                        }
                     return setCurrentDestination();
-                const auto reference = location.mKind == ESM4::PackageLocationKind::ObjectType
+                }
+                auto reference = location.mKind == ESM4::PackageLocationKind::ObjectType
                     ? findObject({}, location.mObjectType)
                     : (location.mKind == ESM4::PackageLocationKind::NearReference
                             || location.mKind == ESM4::PackageLocationKind::EditorLocation)
                         ? locationFor(location.mReferenceKey)
                         : findObject(location.mReferenceKey, std::nullopt);
+                if (reference && record.mPackageType == ESM4::AIPackageType::Sleep
+                    && location.mKind == ESM4::PackageLocationKind::NearReference
+                    && reference->mType != ESM::REC_FURN4 && reference->mEnabled)
+                    reference = bedNear(*reference, static_cast<float>(location.mRadius));
                 if (reference)
                 {
                     if (record.mPackageType == ESM4::AIPackageType::Sleep && !usableFurniture(*reference))
@@ -3433,6 +3535,7 @@ namespace MWMechanics
             // Selection is a bounded reevaluation, not a phase restart.  A
             // package that is still the winner keeps its route, reservation,
             // and action boundary intact.
+            retryInterruptedSleepArea(live);
             live.mSelectionCheckTimer = 1.0f;
             live.mNeedsSelection = false;
             return result;
@@ -3795,12 +3898,27 @@ namespace MWMechanics
             {
                 if (location.mKind == ESM4::PackageLocationKind::EditorLocation
                     && location.mReferenceKey.isNull())
+                {
+                    if (returnsToEditorLocation(record))
+                        return resolveUnloadedDestination(record, live);
                     return setCurrentDestination();
+                }
                 const auto reference = resolveLocationReference();
                 if (reference)
                 {
                     if (record.mPackageType == ESM4::AIPackageType::Sleep)
+                    {
+                        // NearReference can name a search centre (e.g. a
+                        // barracks marker) rather than the piece of furniture.
+                        if (location.mKind == ESM4::PackageLocationKind::NearReference
+                            && reference->getType() != ESM::REC_FURN4)
+                        {
+                            auto destination = resolveUnloadedDestination(record, live);
+                            targetKey = live.mState.mTarget;
+                            return destination;
+                        }
                         return resolveSleepFurniture(reference);
+                    }
                     live.mDestinationCell = cellKey(*reference);
                     if (record.mPackageType == ESM4::AIPackageType::Travel)
                     {
@@ -4833,6 +4951,13 @@ namespace MWMechanics
         }
         if (live.mState.mPhase == ESM4::PackagePhase::Arrive)
         {
+            if (returnsToEditorLocation(*current))
+            {
+                if (const auto* npc = mWorld.mStore.search<ESM4::ActorCharacter>(live.mState.mActor))
+                    live.mState.mLastValidPosition.rot[2] = npc->mPos.rot[2];
+                else if (const auto* creature = mWorld.mStore.search<ESM4::ActorCreature>(live.mState.mActor))
+                    live.mState.mLastValidPosition.rot[2] = creature->mPos.rot[2];
+            }
             transitionUnloaded(live, { duration, true, true, true, false, true, false, false, false,
                 live.mState.mPackageType == ESM4::AIPackageType::CastMagic, false, true });
             return;
@@ -5067,10 +5192,10 @@ namespace MWMechanics
                 if (!std::isfinite(live.mState.mNextLowProcessTick)
                     || live.mState.mNextLowProcessTick < 0.f)
                     live.mState.mNextLowProcessTick = 0.f;
-                // An inactive resident's Ptr can still be in the previous
-                // room. Promote its authoritative low-process pose when the
-                // destination becomes visible, after actor iteration ends.
-                if (!loaded.isEmpty() && live.mAbstractPositionDirty
+                // An arrival can come from a room the player has never loaded.
+                // Resolve the original placed actor only when its simulated
+                // position enters the active scene, after actor iteration.
+                if (live.mAbstractPositionDirty
                     && live.mState.mPhase != ESM4::PackagePhase::Door
                     && visibleCells.contains(live.mState.mCell))
                     live.mPendingRealization = true;
@@ -5749,6 +5874,12 @@ namespace MWMechanics
             const MWWorld::Ptr moved = mWorld.moveObject(actor, &destinationCell, position, true, false);
             if (moved.isEmpty())
                 throw std::runtime_error("moveObject returned an empty actor pointer");
+            if (live.mState.mPhase == ESM4::PackagePhase::Act || live.mState.mPhase == ESM4::PackagePhase::Complete)
+                if (const auto* current = package(live.mState.mPackage); current && returnsToEditorLocation(*current)
+                    && moved.getCellRef().hasContentFile()
+                    && distanceSquared(position, moved.getCellRef().getPosition().asVec3())
+                        <= sArrivalTolerance * sArrivalTolerance)
+                    faceEditorHeading(mWorld, moved);
             live.mState.mLastValidPosition = moved.getRefData().getPosition();
             live.mState.mLastValidCell = cellKey(moved);
             live.mAbstractPositionDirty = false;
@@ -6830,7 +6961,7 @@ namespace MWMechanics
                 && current->mTargetData.hasReference())
             {
                 const auto target = loadedPtrFor(live.mState.mTarget);
-                const float range = std::max(1.f, static_cast<float>(current->mTargetData.mDistance));
+                const float range = findTargetRange(*current, target);
                 const bool usableActivator = canActivatePlacedObject(mWorld, actor, target);
                 if (!target.isEmpty() && target != actor
                     && (usableActivator || (target.getType() == ESM::REC_NPC_4 && getLOS(actor, target)))
@@ -6909,6 +7040,8 @@ namespace MWMechanics
         }
         if (live.mState.mPhase == ESM4::PackagePhase::Arrive)
         {
+            if (returnsToEditorLocation(*current) && actor.getCellRef().hasContentFile())
+                faceEditorHeading(mWorld, actor);
             transitionPackage(actor, live,
                 { duration, true, true, true, false, true, false, false, false,
                     live.mState.mPackageType == ESM4::AIPackageType::CastMagic, false, true });
@@ -6926,7 +7059,7 @@ namespace MWMechanics
                     return false; // Commit the script after actor iteration, including after restore.
                 if (!target.isEmpty() && target.getType() == ESM::REC_NPC_4)
                 {
-                    const float range = std::max(1.f, static_cast<float>(current->mTargetData.mDistance));
+                    const float range = findTargetRange(*current, target);
                     if (highProcess && (!getLOS(actor, target)
                             || distanceSquared(actor.getRefData().getPosition().asVec3(),
                                    target.getRefData().getPosition().asVec3()) > range * range))
@@ -7123,8 +7256,10 @@ namespace MWMechanics
                 live.mPendingRealization = false;
                 try
                 {
-                    const MWWorld::Ptr actor = loadedPtrFor(live.mState.mActor);
-                    if (!actor.isEmpty())
+                    const MWWorld::Ptr actor = ptrFor(live.mState.mActor);
+                    if (!actor.isEmpty() && !actor.mRef->isDeleted() && actor.getRefData().isEnabled()
+                        && actor.getCellRef().getCount() > 0
+                        && !actor.getClass().getCreatureStats(actor).isDead())
                         static_cast<void>(reconcileAbstractPosition(actor, live, true));
                 }
                 catch (const std::exception& error)
@@ -7311,7 +7446,7 @@ namespace MWMechanics
                 || !target.getRefData().isEnabled() || target.getCellRef().getCount() <= 0
                 || actor.getClass().getCreatureStats(actor).isDead()
                 || target.getClass().getCreatureStats(target).isDead()) continue;
-            const float range = std::max(1.f, static_cast<float>(current->mTargetData.mDistance));
+            const float range = findTargetRange(*current, target);
             if (cellKey(actor) != cellKey(target)
                 || distanceSquared(actor.getRefData().getPosition().asVec3(),
                        target.getRefData().getPosition().asVec3()) > range * range

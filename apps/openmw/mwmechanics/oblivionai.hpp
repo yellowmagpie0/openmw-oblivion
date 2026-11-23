@@ -278,6 +278,7 @@ namespace MWMechanics
         std::map<ESM::FormKey, std::size_t> mUnloadedLocationByReference;
         std::map<ESM::FormKey, std::vector<std::size_t>> mUnloadedLocationsByBase;
         std::map<std::uint32_t, std::vector<std::size_t>> mUnloadedLocationsByType;
+        std::map<ESM::FormKey, std::vector<std::size_t>> mBedsByCell;
         // Package door policies address both the source and destination CELL.
         std::map<ESM::FormKey, std::vector<std::size_t>> mUnloadedDoorsByCell;
         std::map<ESM::FormKey, std::vector<std::size_t>> mUnloadedDoorsByDestinationCell;
@@ -333,6 +334,7 @@ namespace MWMechanics
         std::vector<ESM4::PackageCandidate> basePackages(const ESM::FormKey& base) const;
         ESM4::ConditionEvaluationContext unloadedConditionContext(const LiveActor& live) const;
         ESM4::PackageSelection selectUnloaded(LiveActor& live, bool restart = true);
+        void retryInterruptedSleepArea(LiveActor& live) const;
         std::optional<osg::Vec3f> resolveUnloadedDestination(const ESM4::AIPackage& package,
             LiveActor& live) const;
         bool prepareUnloadedRoute(LiveActor& live);
