@@ -45,6 +45,9 @@
 #include <components/esm/util.hpp>
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadligh.hpp>
+#include <components/esm4/loadinfo.hpp>
+#include <components/esm4/loadstat.hpp>
+#include <components/misc/strings/algorithm.hpp>
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadgmst.hpp>
 #include <components/esm4/loadachr.hpp>
@@ -130,6 +133,12 @@ namespace MWMechanics
             return std::max(1.f, static_cast<float>(package.mTargetData.mDistance));
         }
 
+        bool useIdleAtLocation(const ESM4::AIPackage& package)
+        {
+            return package.mPackageType == ESM4::AIPackageType::UseItemAt
+                && package.mTargetData.isObjectType() && package.mTargetData.mObjectType == 0;
+        }
+
         bool returnsToEditorLocation(const ESM4::AIPackage& package)
         {
             return package.mPackageType == ESM4::AIPackageType::Travel
@@ -137,10 +146,23 @@ namespace MWMechanics
                 && package.mLocationData.mReferenceKey.isNull();
         }
 
-        void faceEditorHeading(MWWorld::World& world, const MWWorld::Ptr& actor)
+        std::optional<float> travelMarkerHeading(const MWWorld::ESMStore& store, const ESM4::AIPackage& package)
+        {
+            const auto& location = package.mLocationData;
+            if ((package.mPackageType != ESM4::AIPackageType::Travel && !useIdleAtLocation(package))
+                || location.mKind != ESM4::PackageLocationKind::NearReference || location.mRadius != 0)
+                return {};
+            const auto* marker = store.search<ESM4::Reference>(location.mReferenceKey);
+            const auto* base = marker ? store.get<ESM4::Static>().search(marker->mBaseObj) : nullptr;
+            if (base && Misc::StringUtils::ciEqual(base->mEditorId, "XMarkerHeading"))
+                return marker->mPos.rot[2];
+            return {};
+        }
+
+        void faceHeading(MWWorld::World& world, const MWWorld::Ptr& actor, float heading)
         {
             auto pose = actor.getRefData().getPosition();
-            pose.rot[2] = actor.getCellRef().getPosition().rot[2];
+            pose.rot[2] = heading;
             if (actor.getRefData().getBaseNode())
                 world.rotateObject(actor, pose.asRotationVec3());
             else
@@ -163,11 +185,12 @@ namespace MWMechanics
                 && !package->mPackageFlags.has(ESM4::PackageFlag::MustComplete);
         }
 
-        bool canInterruptTravel(const ESM4::AIPackage* package)
+        bool canReevaluateAfterStage(const ESM4::RuntimeActorAiState& state, const ESM4::AIPackage* package)
         {
-            return package && package->mPackageType == ESM4::AIPackageType::Travel
-                && !package->mPackageFlags.has(ESM4::PackageFlag::MustComplete)
-                && !package->mPackageFlags.has(ESM4::PackageFlag::MustReachLocation);
+            return package && !package->mPackageFlags.has(ESM4::PackageFlag::MustComplete)
+                && (state.mPhase == ESM4::PackagePhase::Wait
+                    || (state.mPackageType == ESM4::AIPackageType::Travel
+                        && !package->mPackageFlags.has(ESM4::PackageFlag::MustReachLocation)));
         }
 
         bool reevaluateWaitingAmbush(const ESM4::RuntimeActorAiState& state, const ESM4::AIPackage* package)
@@ -936,6 +959,21 @@ namespace MWMechanics
         mDoorRegionIndexValid = false;
         mUnloadedLocations.clear();
         mUnloadedLocationByReference.clear();
+        mNamedMapMarkers.clear();
+        mQuestPackageBases.clear();
+        const auto indexQuestPackages = [this](const auto& bases) {
+            for (const auto& base : bases)
+                for (const auto& key : base.mAIPackageKeys)
+                    if (const auto* record = package(key))
+                        for (const auto& condition : record->mCanonicalConditions)
+                        {
+                            const auto function = ESM4::conditionFunctionName(condition.mFunction);
+                            if (function == "GetStage" || function == "GetStageDone" || function == "GetQuestRunning")
+                                mQuestPackageBases[condition.mParameter1.mReferenceKey].insert(base.mFormKey);
+                        }
+        };
+        indexQuestPackages(mWorld.mStore.get<ESM4::Npc>());
+        indexQuestPackages(mWorld.mStore.get<ESM4::Creature>());
         mUnloadedLocationsByBase.clear();
         mUnloadedLocationsByType.clear();
         mBedsByCell.clear();
@@ -980,6 +1018,9 @@ namespace MWMechanics
 
         for (const ESM4::Reference& reference : mWorld.mStore.get<ESM4::Reference>())
         {
+            if (reference.mIsMapMarker && !reference.mFullName.empty() && !reference.mFormKey.isNull()
+                && !(reference.mFlags & ESM4::Rec_Deleted))
+                mNamedMapMarkers.push_back(mUnloadedLocations.size());
             UnloadedLocation location{ reference.mFormKey, resolver.toFormKey(reference.mBaseObj),
                 cellForParent(reference.mParent, reference.mParentKey), reference.mPos.asVec3(),
                 static_cast<ESM::RecNameInts>(mWorld.mStore.find(reference.mBaseObj)),
@@ -1111,6 +1152,10 @@ namespace MWMechanics
 
     void OblivionAiService::setPhase(LiveActor& live, ESM4::PackagePhase phase)
     {
+        if (phase != ESM4::PackagePhase::ReadyForDialogue)
+            live.mConversation.reset();
+        if (phase != ESM4::PackagePhase::ReadyForM15Combat)
+            live.mGreetingRoute = TargetRoute{};
         if (phase != ESM4::PackagePhase::Path)
             live.mFollowObstacle.clear();
         if (live.mState.mPhase == ESM4::PackagePhase::Door && phase != ESM4::PackagePhase::Door)
@@ -2985,7 +3030,7 @@ namespace MWMechanics
 
     ESM4::PackageSelection OblivionAiService::selectUnloaded(LiveActor& live, bool restart)
     {
-        live.mCheckTravelAfterStage = false;
+        live.mCheckPackageAfterStage = false;
         ESM4::PackageSelectionRequest request;
         request.mNow = now();
         request.mBasePackages = basePackages(live.mState.mBase);
@@ -3018,6 +3063,9 @@ namespace MWMechanics
         live.mState.mSource = result.mSource;
         live.mState.mPackage = result.mPackage;
         live.mState.mScriptPackage = live.mScriptPackage ? live.mScriptPackage->mKey : ESM::FormKey{};
+        if (live.mState.mPackageType == ESM4::AIPackageType::Sleep && result.hasPackage()
+            && result.mType != ESM4::AIPackageType::Sleep)
+            live.mPendingArmorEquip = true;
         live.mState.mPackageType = result.mType;
         live.mState.mProcedure = ESM4::packageProcedure(result.mType);
         live.mState.mListIndex = static_cast<std::uint32_t>(result.mListIndex);
@@ -3538,7 +3586,7 @@ namespace MWMechanics
 
     ESM4::PackageSelection OblivionAiService::select(const MWWorld::Ptr& actor, LiveActor& live, bool restart)
     {
-        live.mCheckTravelAfterStage = false;
+        live.mCheckPackageAfterStage = false;
         ESM4::PackageSelectionRequest request;
         request.mNow = now();
         request.mBasePackages = basePackages(actor);
@@ -3574,6 +3622,9 @@ namespace MWMechanics
         live.mState.mSource = result.mSource;
         live.mState.mPackage = result.mPackage;
         live.mState.mScriptPackage = live.mScriptPackage ? live.mScriptPackage->mKey : ESM::FormKey{};
+        if (live.mState.mPackageType == ESM4::AIPackageType::Sleep && result.hasPackage()
+            && result.mType != ESM4::AIPackageType::Sleep)
+            live.mPendingArmorEquip = true;
         live.mState.mPackageType = result.mType;
         live.mState.mProcedure = ESM4::packageProcedure(result.mType);
         live.mState.mListIndex = static_cast<std::uint32_t>(result.mListIndex);
@@ -4839,7 +4890,7 @@ namespace MWMechanics
         if (live.mNeedsSelection
             || (live.mSelectionCheckTimer <= 0.f
                 && (live.mState.mPhase == ESM4::PackagePhase::Interrupted
-                    || (live.mCheckTravelAfterStage && canInterruptTravel(waitingPackage))
+                    || (live.mCheckPackageAfterStage && canReevaluateAfterStage(live.mState, waitingPackage))
                     || reevaluateStalledPackage(live.mState, waitingPackage)
                     || live.mState.mPhase == ESM4::PackagePhase::Complete
                     || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull())
@@ -4874,6 +4925,8 @@ namespace MWMechanics
 
         if (live.mState.mPhase == ESM4::PackagePhase::Select)
         {
+            if (current->mPackageType == ESM4::AIPackageType::Ambush)
+                live.mPendingArmorEquip = true;
             transitionUnloaded(live, { duration, true, true, false, false, true, false, false, false, false, false,
                 true });
             return;
@@ -5011,12 +5064,15 @@ namespace MWMechanics
                 else if (const auto* creature = mWorld.mStore.search<ESM4::ActorCreature>(live.mState.mActor))
                     live.mState.mLastValidPosition.rot[2] = creature->mPos.rot[2];
             }
+            else if (const auto heading = travelMarkerHeading(mWorld.mStore, *current))
+                live.mState.mLastValidPosition.rot[2] = *heading;
             transitionUnloaded(live, { duration, true, true, true, false, true, false, false, false,
                 live.mState.mPackageType == ESM4::AIPackageType::CastMagic, false, true });
             return;
         }
         if (live.mState.mPhase == ESM4::PackagePhase::Act)
         {
+            if (useIdleAtLocation(*current)) return; // Evaluate the idle once the actor is visible.
             // Scripted Find actions need a resident actor and target. Preserve
             // the pending action while unloaded, just as for NPC conversations.
             if (live.mState.mPackageType == ESM4::AIPackageType::Find
@@ -5953,11 +6009,17 @@ namespace MWMechanics
             if (moved.isEmpty())
                 throw std::runtime_error("moveObject returned an empty actor pointer");
             if (live.mState.mPhase == ESM4::PackagePhase::Act || live.mState.mPhase == ESM4::PackagePhase::Complete)
-                if (const auto* current = package(live.mState.mPackage); current && returnsToEditorLocation(*current)
+            {
+                const auto* current = package(live.mState.mPackage);
+                if (current && returnsToEditorLocation(*current)
                     && moved.getCellRef().hasContentFile()
                     && distanceSquared(position, moved.getCellRef().getPosition().asVec3())
                         <= sArrivalTolerance * sArrivalTolerance)
-                    faceEditorHeading(mWorld, moved);
+                    faceHeading(mWorld, moved, moved.getCellRef().getPosition().rot[2]);
+                else if (current)
+                    if (const auto heading = travelMarkerHeading(mWorld.mStore, *current))
+                        faceHeading(mWorld, moved, *heading);
+            }
             live.mState.mLastValidPosition = moved.getRefData().getPosition();
             live.mState.mLastValidCell = cellKey(moved);
             live.mAbstractPositionDirty = false;
@@ -6076,6 +6138,29 @@ namespace MWMechanics
         return true;
     }
 
+    bool OblivionAiService::requestBlockingDoor(const MWWorld::Ptr& actor, LiveActor& live, const osg::Vec3f& target)
+    {
+        if (live.mState.mDoorCooldown > 0.f)
+            return false;
+        // The movement sweep already ignores this actor's opened leaf until
+        // it clears the doorway. Its look-ahead ray must use the same pair.
+        const auto traversed = live.mIgnoredPhysicalDoor.isNull()
+            ? MWWorld::Ptr{} : loadedPtrFor(live.mIgnoredPhysicalDoor);
+        const MWWorld::Ptr door = findBlockingOblivionDoor(actor, *mWorld.mPhysics, target, 192.f, traversed);
+        if (door.isEmpty())
+            return false;
+        live.mState.mDoor = actorKey(door);
+        live.mState.mDoorAnimationStarted = false;
+        live.mPhysicalDoorOpened = false;
+        bool locked = false;
+        const bool usable = canUseDoor(actor, live, locked);
+        stopMovement(actor);
+        logEvent("door-approach", live, "door=" + live.mState.mDoor.serialize()
+                + " same-cell=true usable=" + (usable ? "true" : "false")
+                + " locked=" + (locked ? "true" : "false"));
+        return true;
+    }
+
     bool OblivionAiService::advanceMovement(const MWWorld::Ptr& actor, LiveActor& live, float duration,
         bool highProcess, bool& reached)
     {
@@ -6113,26 +6198,9 @@ namespace MWMechanics
             return false;
         }
 
-        const auto useBlockingDoor = [&](const osg::Vec3f& target) {
-            if (live.mState.mDoorCooldown > 0.f)
-                return false;
-            // The movement sweep already ignores this actor's opened leaf until
-            // it clears the doorway. Its look-ahead ray must use the same pair.
-            const auto traversed = live.mIgnoredPhysicalDoor.isNull()
-                ? MWWorld::Ptr{} : loadedPtrFor(live.mIgnoredPhysicalDoor);
-            const MWWorld::Ptr door = findBlockingOblivionDoor(actor, *mWorld.mPhysics, target, 192.f, traversed);
-            if (door.isEmpty())
-                return false;
-            live.mState.mDoor = actorKey(door);
-            live.mState.mDoorAnimationStarted = false;
-            live.mPhysicalDoorOpened = false;
-            bool locked = false;
-            const bool usable = canUseDoor(actor, live, locked);
+        const auto useBlockingDoor = [&](const osg::Vec3f& point) {
+            if (!requestBlockingDoor(actor, live, point)) return false;
             reached = true;
-            stopMovement(actor);
-            logEvent("door-approach", live, "door=" + live.mState.mDoor.serialize()
-                    + " same-cell=true usable=" + (usable ? "true" : "false")
-                    + " locked=" + (locked ? "true" : "false"));
             return true;
         };
         const float radius = travelArrivalRadius(live);
@@ -6422,17 +6490,19 @@ namespace MWMechanics
         if (!std::isfinite(duration) || duration < 0.f)
             throw std::invalid_argument("invalid native combat navigation interval");
         stopMovement(actor);
-        if (!handles(actor) || target.isEmpty() || !actor.isInCell() || !target.isInCell()
-            || cellKey(actor) != cellKey(target))
-        {
-            if (const auto found = mActors.find(actorKey(actor)); found != mActors.end())
-                // Explicit materialization avoids GCC16's optimized conditional
-                // braced-assignment corrupting the empty FormKey strings.
-                (escort ? found->second.mEscortRoute : found->second.mCombatRoute) = TargetRoute{};
-            return; // Foreign-cell combat travel needs its own door policy.
-        }
+        if (!handles(actor) || target.isEmpty() || !actor.isInCell() || !target.isInCell()) return;
         auto& live = ensure(actor);
-        auto& navigation = escort ? live.mEscortRoute : live.mCombatRoute;
+        const bool greeting = !escort && live.mState.mPackageType == ESM4::AIPackageType::Ambush
+            && live.mState.mPhase == ESM4::PackagePhase::ReadyForM15Combat
+            && !mWorld.hasOblivionCombatController(live.mState.mActor).value_or(false);
+        auto& navigation = greeting ? live.mGreetingRoute : (escort ? live.mEscortRoute : live.mCombatRoute);
+        if (cellKey(actor) != cellKey(target) && (!greeting || !actor.getCell()->isExterior()
+                || !target.getCell()->isExterior()
+                || actor.getCell()->getCell()->getWorldSpace() != target.getCell()->getCell()->getWorldSpace()))
+        {
+            navigation = TargetRoute{};
+            return;
+        }
         const auto position = actor.getRefData().getPosition().asVec3();
         const auto destination = target.getRefData().getPosition().asVec3();
         const auto* authoredPackage = package(live.mState.mPackage);
@@ -6474,7 +6544,7 @@ namespace MWMechanics
                 if (status != DetourNavigator::Status::Success && status != DetourNavigator::Status::PartialPath)
                     route.clear();
             }
-            if (!escort)
+            if (!escort && (!greeting || route.empty()))
                 if (auto authored = shorterOblivionPathgridApproach(
                         mWorld.mStore.getOblivionPathgridService(), cellKey(actor),
                         position, destination, route))
@@ -6503,7 +6573,7 @@ namespace MWMechanics
             navigation.mTarget = actorKey(target);
             navigation.mCell = cellKey(actor);
             navigation.mDestination = destination;
-            navigation.mRepath = .25f;
+            navigation.mRepath = greeting && !navigation.mPoints.empty() ? 3.f : .25f;
         }
         // Use a smaller tolerance than escort travel: its 64-unit arrival
         // radius can leave an unarmed fighter outside actual contact reach.
@@ -6649,6 +6719,91 @@ namespace MWMechanics
         }
     }
 
+    bool OblivionAiService::updateNpcGreeting(const MWWorld::Ptr& actor, LiveActor& live, float duration)
+    {
+        const auto phase = live.mState.mPhase;
+        if (live.mState.mPackageType != ESM4::AIPackageType::Ambush || actor.getType() != ESM::REC_NPC_4
+            || (phase != ESM4::PackagePhase::ReadyForM15Combat && phase != ESM4::PackagePhase::Path && !live.mConversation)
+            || ESM4::runtimeReferenceKey(live.mState.mTarget) == ESM::FormKey::dynamic("player", 1))
+            return false;
+        const auto target = loadedPtrFor(live.mState.mTarget);
+        const auto* current = package(live.mState.mPackage);
+        auto* scripts = mWorld.getOblivionScriptManager();
+        if (!scripts || !current || target.isEmpty() || target == actor || target.getType() != ESM::REC_NPC_4
+            || !target.isInCell() || !target.getRefData().isEnabled() || target.getClass().getCreatureStats(target).isDead()
+            || actor.getCell()->getCell()->getWorldSpace() != target.getCell()->getCell()->getWorldSpace()
+            || mWorld.hasOblivionCombatController(live.mState.mActor).value_or(false))
+            return false;
+        auto speaker = actor;
+        auto listener = target;
+        std::optional<ESM::FormKey> next;
+        if (live.mConversation)
+        {
+            stopMovement(actor);
+            live.mState.mActionTimer = std::max(0.f, live.mState.mActionTimer - duration);
+            if (live.mState.mActionTimer > 0.f) return true;
+            if (live.mConversation->mTargetSpeaking) std::swap(speaker, listener);
+            if (live.mConversation->mTurns < 64)
+                next = scripts->nextConversationInfo(live.mConversation->mInfo, speaker, listener);
+        }
+        else
+        {
+            // An ambush watches an area, not just the last navmesh waypoint.
+            // A target entering the watch area can be met during the approach to the post.
+            if (phase == ESM4::PackagePhase::Path
+                && (!live.mDestination || current->mLocationData.mRadius <= 0
+                    || (actor.getRefData().getPosition().asVec3() - *live.mDestination).length() > current->mLocationData.mRadius))
+                return false;
+            const auto fight = oblivionFightScore(mWorld, actor, target);
+            if (!fight || *fight > 0) return false;
+            const auto delta = target.getRefData().getPosition().asVec3() - actor.getRefData().getPosition().asVec3();
+            // The ambush location bounds the area in which the target is approached.
+            if (live.mDestination && current->mLocationData.mRadius > 0
+                && (target.getRefData().getPosition().asVec3() - *live.mDestination).length()
+                    > current->mLocationData.mRadius)
+                return false;
+            if (phase == ESM4::PackagePhase::Path)
+            {
+                setPhase(live, ESM4::PackagePhase::ReadyForM15Combat);
+                live.mState.mBoundary = ESM4::PhaseBoundary::ReadyForM15Combat;
+            }
+            const float range = std::max(1.f, static_cast<float>(current->mTargetData.mDistance));
+            if (delta.length2() > range * range || !getLOS(actor, target))
+            {
+                if (!live.mState.mDoor.isNull() || requestBlockingDoor(actor, live, target.getRefData().getPosition().asVec3()))
+                {
+                    stopMovement(actor);
+                    live.mPendingDoor = live.mState.mDoorCooldown <= 0.f;
+                    return true;
+                }
+                approachCombatTarget(actor, target, duration);
+                actor.getClass().getCreatureStats(actor).setMovementFlag(CreatureStats::Flag_Run,
+                    shouldRunPackage(live, current, actor.getRefData().getPosition().asVec3()));
+                return true;
+            }
+            clearCombatRoute(actor);
+            stopMovement(actor);
+            if (!zTurn(actor, std::atan2(delta.x(), delta.y()), osg::DegreesToRadians(5.f))) return true;
+            if (const auto hello = mWorld.mStore.findEsm4FormKey("HELLO"))
+                next = scripts->selectNativeDialogueInfo(*hello, actor, target);
+        }
+        if (!next)
+        {
+            setPhase(live, ESM4::PackagePhase::Complete);
+            live.mState.mBoundary = ESM4::PhaseBoundary::None;
+            return true;
+        }
+        setPhase(live, ESM4::PackagePhase::ReadyForDialogue);
+        live.mState.mBoundary = ESM4::PhaseBoundary::ReadyForDialogue;
+        const auto turns = live.mConversation ? live.mConversation->mTurns + 1 : 1;
+        live.mConversation = LiveActor::Conversation{ *next, speaker == target, turns };
+        const auto seconds = scripts->playPackageDialogue(*next, speaker, listener);
+        // A response result can replace this actor's package synchronously.
+        if (live.mConversation && live.mConversation->mInfo == *next)
+            live.mState.mActionTimer = static_cast<float>(seconds);
+        return true;
+    }
+
     bool OblivionAiService::updateDialogueApproach(const MWWorld::Ptr& actor, LiveActor& live)
     {
         const ESM::FormKey playerKey = ESM::FormKey::dynamic("player", 1);
@@ -6722,7 +6877,9 @@ namespace MWMechanics
             const MWWorld::Ptr ignoredDoor = loadedPtrFor(live.mIgnoredPhysicalDoor);
             const bool traversingDoor
                 = highProcess && (live.mState.mPhase == ESM4::PackagePhase::Path
-                    || live.mState.mPhase == ESM4::PackagePhase::Door);
+                    || live.mState.mPhase == ESM4::PackagePhase::Door
+                    || (live.mState.mPackageType == ESM4::AIPackageType::Ambush
+                        && live.mState.mPhase == ESM4::PackagePhase::ReadyForM15Combat));
             if (!traversingDoor || ignoredDoor.isEmpty()
                 || distanceSquared(actor.getRefData().getPosition().asVec3(),
                        ignoredDoor.getRefData().getPosition().asVec3())
@@ -6904,6 +7061,8 @@ namespace MWMechanics
             }
         }
 
+        if (highProcess && updateNpcGreeting(actor, live, duration))
+            return true;
         if (updateDialogueApproach(actor, live))
             return true;
 
@@ -6971,7 +7130,7 @@ namespace MWMechanics
             && canActivatePlacedObject(mWorld, actor, loadedPtrFor(interruptedPackage->mTargetData.mReferenceKey));
         if (followContextChanged || (live.mSelectionCheckTimer <= 0.f
             && (live.mState.mPhase == ESM4::PackagePhase::Interrupted || live.mState.mPhase == ESM4::PackagePhase::Complete
-                || (live.mCheckTravelAfterStage && canInterruptTravel(waitingPackage))
+                || (live.mCheckPackageAfterStage && canReevaluateAfterStage(live.mState, waitingPackage))
                 || reevaluateStalledPackage(live.mState, waitingPackage)
                 || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull())
                 || stalledRouteChanged || waitingWander)))
@@ -7018,6 +7177,14 @@ namespace MWMechanics
                 false, false, true });
         }
 
+        if (highProcess && current->mPackageFlags.has(ESM4::PackageFlag::WeaponsUnequipped)
+            && actor.getType() == ESM::REC_NPC_4)
+        {
+            auto& stats = actor.getClass().getCreatureStats(actor);
+            if (stats.getDrawState() == DrawState::Weapon && !mWorld.getOblivionAlerted(live.mState.mActor)
+                && !mWorld.hasOblivionCombatController(live.mState.mActor).value_or(false))
+                stats.setDrawState(DrawState::Nothing);
+        }
         if (isPackageWaiting(current->mFormKey))
         {
             stopMovement(actor);
@@ -7033,6 +7200,8 @@ namespace MWMechanics
 
         if (live.mState.mPhase == ESM4::PackagePhase::Select)
         {
+            if (current->mPackageType == ESM4::AIPackageType::Ambush)
+                live.mPendingArmorEquip = true;
             transitionPackage(actor, live, { duration, true, true, false, false, true, false, false, false, false,
                 false, true });
             return true;
@@ -7158,7 +7327,9 @@ namespace MWMechanics
         if (live.mState.mPhase == ESM4::PackagePhase::Arrive)
         {
             if (returnsToEditorLocation(*current) && actor.getCellRef().hasContentFile())
-                faceEditorHeading(mWorld, actor);
+                faceHeading(mWorld, actor, actor.getCellRef().getPosition().rot[2]);
+            else if (const auto heading = travelMarkerHeading(mWorld.mStore, *current))
+                faceHeading(mWorld, actor, *heading);
             transitionPackage(actor, live,
                 { duration, true, true, true, false, true, false, false, false,
                     live.mState.mPackageType == ESM4::AIPackageType::CastMagic, false, true });
@@ -7166,6 +7337,15 @@ namespace MWMechanics
         }
         if (live.mState.mPhase == ESM4::PackagePhase::Act)
         {
+            if (useIdleAtLocation(*current))
+            {
+                if (!highProcess) return false;
+                if (auto* scripts = mWorld.getOblivionScriptManager())
+                    scripts->playSelectedIdle(actor, std::max(1, current->mTargetData.mDistance));
+                transitionPackage(actor, live, { duration, true, true, true, false, true, false,
+                    false, true, false, false, true });
+                return true;
+            }
             // A Find package targeting a native NPC owns a conversation action.
             // Leave Act persisted until the callback-safe commit pass consumes it.
             if (live.mState.mPackageType == ESM4::AIPackageType::Find
@@ -7306,6 +7486,16 @@ namespace MWMechanics
         LiveActor& live = ensure(actor);
         const float elapsed = std::clamp(duration, 0.f, 5.f);
 
+        if (highProcess && live.mPendingArmorEquip && actor.getType() == ESM::REC_NPC_4)
+        {
+            const auto* selected = package(live.mState.mPackage);
+            if (selected && selected->mPackageType != ESM4::AIPackageType::Sleep
+                && !selected->mPackageFlags.has(ESM4::PackageFlag::ArmourUnequipped))
+            {
+                live.mPendingArmorEquip = false;
+                MWWorld::OblivionProfileServices::equipNativeApparel(actor.getClass().getInventoryStore(actor), mWorld.mStore, true);
+            }
+        }
         if (!highProcess)
         {
             // Low process is an abstract, fixed 250 ms clock.  It advances
@@ -7357,7 +7547,18 @@ namespace MWMechanics
                                 << live.mState.mActor.serialize();
             live.mFixedRemainder = std::fmod(live.mFixedRemainder, sFixedStep);
         }
-        static_cast<void>(simulated);
+        // Scripted Look and voiced SayTo refer to actors across exterior grid seams.
+        // Locomotion owns heading while walking. A stationary participant can turn to face the speaker.
+        if (simulated > 0 && (live.mState.mPhase == ESM4::PackagePhase::Complete
+                || live.mState.mPhase == ESM4::PackagePhase::Wait || live.mState.mPhase == ESM4::PackagePhase::ReadyForDialogue
+                || live.mState.mPhase == ESM4::PackagePhase::ReadyForM15Combat)
+            && !live.mState.mRestrained && !mWorld.hasOblivionCombatController(live.mState.mActor).value_or(false))
+            if (const auto* scripts = mWorld.getOblivionScriptManager())
+                if (const auto target = scripts->scriptedLookTarget(actor); target && !target->isEmpty())
+                {
+                    const auto delta = target->getRefData().getPosition().asVec3() - actor.getRefData().getPosition().asVec3();
+                    static_cast<void>(zTurn(actor, std::atan2(delta.x(), delta.y()), osg::DegreesToRadians(3.f)));
+                }
     }
 
     void OblivionAiService::commitPendingTransitions()
@@ -7806,11 +8007,14 @@ namespace MWMechanics
         dispatchPendingPackageDone();
     }
 
-    void OblivionAiService::questStageChanged()
+    void OblivionAiService::questStageChanged(const ESM::FormKey& quest)
     {
+        const auto bases = mQuestPackageBases.find(quest);
         for (auto& [key, live] : mActors)
-            if (live.mState.mPackageType == ESM4::AIPackageType::Travel)
-                live.mCheckTravelAfterStage = true;
+            if (live.mState.mPackageType == ESM4::AIPackageType::Travel
+                || (live.mState.mPhase == ESM4::PackagePhase::Wait && bases != mQuestPackageBases.end()
+                    && bases->second.contains(live.mState.mBase)))
+                live.mCheckPackageAfterStage = true;
     }
 
     bool OblivionAiService::evaluatePackage(const MWWorld::Ptr& actor)
@@ -8510,6 +8714,26 @@ namespace MWMechanics
                 state.mMounts.push_back({ live.mLastRiddenHorse, actorKeyValue, owner,
                     live.mLastRiddenHorse, false });
         }
+        // Reference extension fields preserve in-flight speech in older save formats.
+        for (auto& ref : state.mReferences)
+        {
+            const auto actor = mActors.find(ref.mKey);
+            if (actor == mActors.end()) continue;
+            auto& custom = ref.mCustomState;
+            if (actor->second.mPendingArmorEquip) custom["native.package.pending_armor_equip"] = true;
+            else custom.erase("native.package.pending_armor_equip");
+            if (const auto& cursor = actor->second.mConversation)
+            {
+                custom["native.package.dialogue_info"] = cursor->mInfo.serialize();
+                custom["native.package.dialogue_target_speaking"] = cursor->mTargetSpeaking;
+                custom["native.package.dialogue_turns"] = static_cast<std::int64_t>(cursor->mTurns);
+            }
+            else if (custom.erase("native.package.dialogue_info"))
+            {
+                custom.erase("native.package.dialogue_target_speaking");
+                custom.erase("native.package.dialogue_turns");
+            }
+        }
         state.mPathPoints.clear();
         for (const ESM4::PathgridNodeKey& node : mWorld.mStore.getOblivionPathgridService().disabledNodes())
             state.mPathPoints.push_back({ node.mPathgrid, node.mNode, false });
@@ -8591,8 +8815,24 @@ namespace MWMechanics
         const ESM4::CalendarInstant restoredNow{
             state.mClock.mYear, state.mClock.mMonth, state.mClock.mDay, state.mClock.mHour};
         std::map<ESM::FormKey, ESM::FormKey> referenceBases;
+        std::map<ESM::FormKey, LiveActor::Conversation> conversations;
+        std::set<ESM::FormKey> dressing;
         for (const auto& reference : state.mReferences)
+        {
             referenceBases.emplace(reference.mKey, reference.mBase);
+            const auto& custom = reference.mCustomState;
+            if (auto entry = custom.find("native.package.pending_armor_equip"); entry != custom.end() && std::get<bool>(entry->second))
+                dressing.insert(reference.mKey);
+            if (auto entry = custom.find("native.package.dialogue_info"); entry != custom.end())
+            {
+                const auto info = ESM::FormKey::deserialize(std::get<std::string>(entry->second));
+                const auto turns = std::get<std::int64_t>(custom.at("native.package.dialogue_turns"));
+                if (turns < 1 || turns > 64 || !mWorld.mStore.search<ESM4::DialogInfo>(info))
+                    throw std::invalid_argument("Invalid TES4 package dialogue cursor");
+                conversations.emplace(reference.mKey, LiveActor::Conversation{ info,
+                    std::get<bool>(custom.at("native.package.dialogue_target_speaking")), static_cast<unsigned>(turns) });
+            }
+        }
         const auto restoredBase = [&](const ESM::FormKey& key) {
             if (key == state.mPlayer.mReference)
                 return ESM::FormKey::dynamic("player-base", 1);
@@ -8644,6 +8884,16 @@ namespace MWMechanics
                 throw std::invalid_argument("TES4 restored AI package type disagrees with winning PACK");
             LiveActor live;
             live.mState = saved;
+            live.mPendingArmorEquip = dressing.contains(saved.mActor);
+            live.mCheckPackageAfterStage = saved.mPackageType == ESM4::AIPackageType::Travel
+                || (saved.mPhase == ESM4::PackagePhase::Wait && std::ranges::any_of(state.mQuests,
+                    [&](const auto& quest) {
+                        const auto bases = mQuestPackageBases.find(quest.mQuest);
+                        return bases != mQuestPackageBases.end() && bases->second.contains(saved.mBase);
+                    }));
+            if (const auto cursor = conversations.find(saved.mActor); cursor != conversations.end()
+                && saved.mPhase == ESM4::PackagePhase::ReadyForDialogue && saved.mPackageType == ESM4::AIPackageType::Ambush)
+                live.mConversation = cursor->second;
             // Actors saved before their first update still owe an initial
             // selection. The transient flag is not serialized; recover it
             // from the untouched selection identity, including older saves

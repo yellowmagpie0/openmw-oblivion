@@ -236,6 +236,8 @@ namespace ObScript
             case ValueType::Reference:
                 if (std::holds_alternative<ReferenceValue>(value))
                     return value;
+                if (isNumeric(value) && asNumber(value) == 0)
+                    return ReferenceValue{};
                 return ReferenceValue{ {}, valueString(value) };
             case ValueType::Void:
             case ValueType::Unknown:

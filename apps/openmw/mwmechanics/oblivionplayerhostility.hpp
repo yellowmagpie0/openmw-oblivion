@@ -10,8 +10,9 @@ namespace MWMechanics
 {
     // Shared read-only native fight policy for Player encounters and authored
     // force greetings. A missing disposition/process is not a friendly result.
-    std::optional<std::int32_t> oblivionPlayerFightScore(
-        MWWorld::World& world, const MWWorld::Ptr& actor);
+    std::optional<std::int32_t> oblivionFightScore(MWWorld::World& world, const MWWorld::Ptr& actor,
+        const MWWorld::Ptr& target, std::optional<std::int32_t> friendDisposition = std::nullopt);
+    std::optional<std::int32_t> oblivionPlayerFightScore(MWWorld::World& world, const MWWorld::Ptr& actor);
 }
 
 #endif

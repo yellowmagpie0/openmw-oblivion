@@ -69,7 +69,7 @@ namespace MWWorld
         // inventory.  This is deliberately separate from InventoryStore's
         // TES3 auto-equip heuristic: TES4 slot conflicts and ring choice are
         // resolved from the native item definition.
-        static void equipNativeApparel(InventoryStore& inventory, const ESMStore& store);
+        static void equipNativeApparel(InventoryStore& inventory, const ESMStore& store, bool armorOnly = false);
     };
 }
 

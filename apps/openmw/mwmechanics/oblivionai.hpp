@@ -94,7 +94,7 @@ namespace MWMechanics
         void fastForward(float gameHours);
 
         bool evaluatePackage(const MWWorld::Ptr& actor);
-        void questStageChanged();
+        void questStageChanged(const ESM::FormKey& quest);
         bool addScriptPackage(const MWWorld::Ptr& actor, const ESM::FormKey& package);
         bool removeScriptPackage(const MWWorld::Ptr& actor);
         bool setPackageWaiting(const MWWorld::Ptr& actor, const ESM::FormKey& package, bool waiting);
@@ -189,10 +189,18 @@ namespace MWMechanics
         };
         struct LiveActor
         {
+            struct Conversation
+            {
+                ESM::FormKey mInfo;
+                bool mTargetSpeaking = false;
+                unsigned mTurns = 0;
+            };
+            std::optional<Conversation> mConversation;
             ObstacleCheck mFollowObstacle;
             ESM::FormId mPlacedActorId;
             std::optional<bool> mRootEnabledByDefault;
             TargetRoute mCombatRoute;
+            TargetRoute mGreetingRoute;
             // Combat cleanup must not erase the peaceful recipient's cursor.
             TargetRoute mEscortRoute;
             std::map<ESM::FormKey, ESM4::CalendarInstant> mCompletedDailyPackages;
@@ -241,12 +249,13 @@ namespace MWMechanics
             float mFixedRemainder = 0.0f;
             float mSelectionCheckTimer = 0.0f;
             bool mPendingDoor = false;
+            bool mPendingArmorEquip = false;
             ESM::FormKey mIgnoredPhysicalDoor;
             bool mPhysicalDoorOpened = false;
             bool mPendingRealization = false;
             bool mNeedsSelection = false;
-            // A restored travel assignment may predate the quest's current stage.
-            bool mCheckTravelAfterStage = true;
+            // A restored assignment may predate the quest's current stage.
+            bool mCheckPackageAfterStage = true;
             // Low-process movement advances the persisted last-valid position
             // while the resident actor remains at its old render position.
             // This bit makes that abstract position authoritative until the
@@ -287,6 +296,8 @@ namespace MWMechanics
         OblivionPackageDoneQueue mPendingPackageDone;
         std::vector<UnloadedLocation> mUnloadedLocations;
         std::map<ESM::FormKey, std::size_t> mUnloadedLocationByReference;
+        std::vector<std::size_t> mNamedMapMarkers;
+        std::map<ESM::FormKey, std::set<ESM::FormKey>> mQuestPackageBases;
         std::map<ESM::FormKey, std::vector<std::size_t>> mUnloadedLocationsByBase;
         std::map<std::uint32_t, std::vector<std::size_t>> mUnloadedLocationsByType;
         std::map<ESM::FormKey, std::vector<std::size_t>> mBedsByCell;
@@ -373,11 +384,13 @@ namespace MWMechanics
             const ESM4::AIPackage& package, const LiveActor& live, bool highProcess) const;
         bool prepareRoute(const MWWorld::Ptr& actor, LiveActor& live, const osg::Vec3f& destination,
             const ESM::FormKey& destinationCell);
+        bool requestBlockingDoor(const MWWorld::Ptr& actor, LiveActor& live, const osg::Vec3f& target);
         bool advanceMovement(const MWWorld::Ptr& actor, LiveActor& live, float duration, bool highProcess,
             bool& reached);
         bool reconcileAbstractPosition(const MWWorld::Ptr& actor, LiveActor& live, bool allowCellChange = false);
         bool updateMountedAttachment(const MWWorld::Ptr& rider, LiveActor& live, bool highProcess);
         bool updateDialogueApproach(const MWWorld::Ptr& actor, LiveActor& live);
+        bool updateNpcGreeting(const MWWorld::Ptr& actor, LiveActor& live, float duration);
         bool executeFixedStep(const MWWorld::Ptr& actor, LiveActor& live, float duration, bool highProcess);
         std::optional<ESM::FormKey> doorForEdge(const ESM4::PathgridNodeKey& source,
             const ESM4::PathgridNodeKey& destination) const;

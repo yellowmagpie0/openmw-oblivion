@@ -399,7 +399,7 @@ namespace MWGui
                 const auto& destination = objective->mDestinations.front();
                 mQuestBearingMarker = destination.mNearby;
                 if (!destination.mLabel.empty())
-                    caption += " - " + destination.mLabel;
+                    caption = destination.mLabel;
             }
             const int viewWidth = mMainWidget->getWidth();
             if (mQuestObjectiveText->getCaption() != caption || mQuestViewWidth != viewWidth)

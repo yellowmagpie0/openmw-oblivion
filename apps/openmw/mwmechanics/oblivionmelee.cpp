@@ -428,9 +428,9 @@ namespace MWMechanics
         return result && *result == target;
     }
 
-    static std::optional<std::int32_t> oblivionFightScore(
+    std::optional<std::int32_t> oblivionFightScore(
         MWWorld::World& world, const MWWorld::Ptr& actor, const MWWorld::Ptr& target,
-        std::optional<std::int32_t> friendDisposition = std::nullopt)
+        std::optional<std::int32_t> friendDisposition)
     {
         auto* combat = world.getOblivionCombatService();
         if (world.getGameProfile() != ESM::GameProfile::Oblivion || !combat

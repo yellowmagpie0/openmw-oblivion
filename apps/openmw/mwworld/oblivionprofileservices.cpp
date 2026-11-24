@@ -1104,7 +1104,7 @@ namespace MWWorld
         return result;
     }
 
-    void OblivionProfileServices::equipNativeApparel(InventoryStore& inventory, const ESMStore& store)
+    void OblivionProfileServices::equipNativeApparel(InventoryStore& inventory, const ESMStore& store, bool armorOnly)
     {
         struct Candidate
         {
@@ -1113,6 +1113,7 @@ namespace MWWorld
             std::uint32_t mNativeSlots = 0;
             std::int32_t mValue = 0;
             bool mChooseOneSlot = false;
+            std::uint16_t mArmorRating = 0;
         };
 
         std::vector<Candidate> candidates;
@@ -1127,14 +1128,19 @@ namespace MWWorld
                                    && definition->mType != ESM4::InventoryItemType::Clothing)
                 || definition->mSlots == 0)
                 continue;
+            const auto* armor = store.get<ESM4::Armor>().search(nativeId);
+            if (armorOnly && !armor) continue;
+            if (armor && armor->mData.health && item.getCellRef().getItemCondition(armor->mData.health) <= 0)
+                continue;
             const auto sharedSlots = item.getClass().getEquipmentSlots(item).first;
             if (sharedSlots.empty())
                 continue;
             candidates.push_back({ item.getCellRef().getRefId(), sharedSlots, definition->mSlots,
-                definition->mValue, definition->mChooseOneSlot });
+                definition->mValue, definition->mChooseOneSlot, static_cast<std::uint16_t>(armor ? armor->mData.armor : 0) });
         }
 
         std::sort(candidates.begin(), candidates.end(), [](const Candidate& left, const Candidate& right) {
+            if (left.mArmorRating != right.mArmorRating) return left.mArmorRating > right.mArmorRating;
             if (left.mValue != right.mValue)
                 return left.mValue > right.mValue;
             return left.mSharedId < right.mSharedId;
@@ -1167,6 +1173,27 @@ namespace MWWorld
             else if ((candidate.mNativeSlots & occupied) != 0)
                 continue;
 
+            if (armorOnly)
+            {
+                // An old save may have selected a shirt for its sale price over a uniform.
+                // Retain equipped armour and replace only clothing covering the same native slots.
+                std::vector<int> clothes;
+                bool protectedSlot = false;
+                for (int slot = 0; slot < InventoryStore::Slots; ++slot)
+                {
+                    const auto worn = inventory.getSlot(slot);
+                    if (worn == inventory.end()) continue;
+                    const auto id = nativeItemId(store, worn->getCellRef().getRefId());
+                    const auto* clothing = store.get<ESM4::Clothing>().search(id);
+                    if (clothing && (clothing->mClothingFlags & selectedNativeSlots))
+                        clothes.push_back(slot);
+                    if (const auto* armor = store.get<ESM4::Armor>().search(id);
+                        armor && (armor->mArmorFlags & selectedNativeSlots))
+                        protectedSlot = true;
+                }
+                if (protectedSlot) continue;
+                for (int slot : clothes) inventory.unequipSlot(slot);
+            }
             ContainerStoreIterator item = inventory.end();
             for (ContainerStoreIterator iterator = inventory.begin(); iterator != inventory.end(); ++iterator)
             {

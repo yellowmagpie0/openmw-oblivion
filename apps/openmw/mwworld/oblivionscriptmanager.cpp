@@ -1,4 +1,6 @@
 #include "oblivionscriptmanager.hpp"
+
+#include "../mwmechanics/oblivionmelee.hpp"
 #include "oblivionquestguidance.hpp"
 
 #include <components/esm4/cellcondition.hpp>
@@ -613,6 +615,102 @@ namespace MWWorld
         }
     }
 
+    std::optional<ESM::FormKey> OblivionScriptManager::nextConversationInfo(const ESM::FormKey& previous,
+        Ptr& speaker, Ptr& listener) const
+    {
+        const auto* info = mStore.search<ESM4::DialogInfo>(previous);
+        if (!info || (info->mInfoFlags & ESM4::INFO_Goodbye) || info->mNextSpeaker > 2)
+            return std::nullopt;
+        for (const auto& link : info->mChoiceTopics)
+        {
+            if (info->mNextSpeaker != 1)
+                if (auto next = selectNativeDialogueInfo(link, listener, speaker))
+                {
+                    std::swap(speaker, listener);
+                    return next;
+                }
+            if (info->mNextSpeaker != 0)
+                if (auto next = selectNativeDialogueInfo(link, speaker, listener))
+                    return next;
+        }
+        return std::nullopt;
+    }
+
+    bool OblivionScriptManager::playSelectedIdle(const Ptr& actor, std::optional<unsigned> packageUses)
+    {
+        auto* ai = mWorld.getOblivionAiService();
+        if (actor.isEmpty() || !actor.getClass().isActor() || !ai || !mWorld.mRendering
+            || !mWorld.mRendering->getAnimation(actor)) return false;
+        const auto& store = mStore.get<ESM4::IdleAnimation>();
+        if (!mIdleTree)
+        {
+            std::vector<const ESM4::IdleAnimation*> records;
+            records.reserve(store.getSize());
+            for (const auto& idle : store) records.push_back(&idle);
+            mIdleTree = std::make_unique<ESM4::IdleTree>(ESM4::rootedIdleAnimations(records));
+        }
+        const std::string skeleton = actor.getClass().getCorrectedModel(actor);
+        const auto player = mWorld.getPlayerPtr();
+        const auto* selected = mIdleTree->select([&](const ESM4::IdleAnimation& idle) {
+            return ai->evaluateDialogueConditions(actor, player, idle.mConditions) == ESM4::ConditionResult::True;
+        }, [&](const ESM4::IdleAnimation& idle) {
+            return MWMechanics::oblivionPickIdleAnimationGroup(idle, skeleton).has_value();
+        });
+        const auto group = selected ? MWMechanics::oblivionPickIdleAnimationGroup(*selected, skeleton) : std::nullopt;
+        auto mechanics = MWBase::Environment::get().getMechanicsManager();
+        bool played = false;
+        if (group && packageUses)
+        {
+            // A package owns a finite full-body gesture. Release the animation queue
+            // after the last use, including KFs without explicit loop keys.
+            played = mechanics->playAnimationGroupLua(actor, *group, *packageUses - 1, 1.f, "start", "stop", true);
+        }
+        else if (group)
+        {
+            played = mechanics->playAnimationGroup(actor, *group, 0, 1, false);
+            persistAnimationState(keyFor(actor), *group, 0, played, false);
+        }
+        const auto id = selected ? store.findFormKey(ESM::RefId(selected->mId)) : std::nullopt;
+        trace("pickidle actor=" + keyFor(actor).serialize() + " idle=" + (id ? id->serialize() : "null")
+            + " group=" + group.value_or("") + " played=" + (played ? "true" : "false"));
+        return played;
+    }
+
+    double OblivionScriptManager::playNativeVoiceFiles(const Ptr& speaker, const std::vector<std::string>& files, const Ptr& listener)
+    {
+        if (files.empty()) return 0;
+        auto manager = MWBase::Environment::get().getSoundManager();
+        NativeSpeech speech;
+        if (!listener.isEmpty()) speech.mListener = keyFor(listener);
+        double duration = 0;
+        for (const auto& file : files)
+        {
+            const double seconds = manager->getSoundFileDuration(VFS::Path::Normalized(file));
+            if (!std::isfinite(seconds) || seconds <= 0)
+                throw std::runtime_error("Native dialogue response has no valid duration: " + file);
+            speech.mResponses.emplace_back(file, seconds);
+            duration += seconds;
+        }
+        speech.mRemaining = speech.mResponses.front().second;
+        const VFS::Path::Normalized path(files.front());
+        if (!speaker.isEmpty() && (speaker.getType() == ESM::REC_NPC_4 || speaker.getType() == ESM::REC_CREA4))
+            manager->say(speaker, path);
+        else
+            manager->say(path);
+        mNativeSpeech.insert_or_assign(keyFor(speaker), std::move(speech));
+        return duration;
+    }
+
+    double OblivionScriptManager::playPackageDialogue(const ESM::FormKey& info, const Ptr& speaker, const Ptr& listener)
+    {
+        const auto files = menuVoiceFiles(info, speaker);
+        const double seconds = playNativeVoiceFiles(speaker, files, listener);
+        trace("package-conversation info=" + info.serialize() + " ref=" + keyFor(speaker).serialize()
+            + " voice=" + (files.empty() ? std::string("missing") : files.front()) + " duration=" + std::to_string(seconds));
+        dispatchDialogueResponseResult(info, speaker);
+        return seconds;
+    }
+
     void OblivionScriptManager::dispatchAutomaticDialogueResponse(
         const ESM::FormKey& topic, const Ptr& actor, const Ptr& target)
     {
@@ -1074,16 +1172,20 @@ namespace MWWorld
 
     std::optional<Ptr> OblivionScriptManager::scriptedLookTarget(const Ptr& actor) const
     {
-        const ESM4::RuntimeReferenceState* state = referenceState(keyFor(actor));
-        if (state == nullptr)
-            return std::nullopt;
-        const auto found = state->mCustomState.find("obscript.look_target");
-        if (found == state->mCustomState.end())
-            return std::nullopt;
-        const auto* saved = std::get_if<std::string>(&found->second);
-        if (saved == nullptr)
-            return Ptr{};
-        const ESM::FormKey key = ESM::FormKey::deserialize(*saved);
+        const auto actorKey = keyFor(actor);
+        ESM::FormKey key;
+        if (const auto speech = mNativeSpeech.find(actorKey); speech != mNativeSpeech.end())
+            key = speech->second.mListener;
+        if (key.isNull())
+        {
+            const auto* state = referenceState(actorKey);
+            if (!state) return std::nullopt;
+            const auto found = state->mCustomState.find("obscript.look_target");
+            if (found == state->mCustomState.end()) return std::nullopt;
+            const auto* saved = std::get_if<std::string>(&found->second);
+            if (!saved) return Ptr{};
+            key = ESM::FormKey::deserialize(*saved);
+        }
         Ptr target;
         if (key == ESM::FormKey::dynamic("player", 1))
             target = mWorld.getPlayerPtr();
@@ -1535,7 +1637,7 @@ namespace MWWorld
         {
             state.mCompletedStages.insert(insert, stage);
             if (auto* ai = mWorld.getOblivionAiService())
-                ai->questStageChanged();
+                ai->questStageChanged(quest);
         }
         trace("setstage quest=" + quest.serialize() + " stage=" + std::to_string(stage));
         const auto* definition = mStore.search<ESM4::Quest>(quest);
@@ -2281,47 +2383,11 @@ namespace MWWorld
         }
         if (name == "pickidle")
         {
-            const Ptr actor = objectPtr();
-            MWMechanics::OblivionAiService* ai = oblivionAi();
-            MWRender::Animation* animation
-                = actor.isEmpty() ? nullptr : mWorld.mRendering->getAnimation(actor);
-            if (actor.isEmpty() || !actor.getClass().isActor() || ai == nullptr || animation == nullptr)
+            const auto actor = objectPtr();
+            if (actor.isEmpty() || !actor.getClass().isActor() || !oblivionAi() || !mWorld.mRendering
+                || !mWorld.mRendering->getAnimation(actor))
                 throw ObScript::RuntimeError("OBSV110", "PickIdle requires a loaded native actor", name);
-
-            const std::string skeleton = actor.getClass().getCorrectedModel(actor);
-            const auto& store = mWorld.mStore.get<ESM4::IdleAnimation>();
-            std::vector<const ESM4::IdleAnimation*> records;
-            records.reserve(store.getSize());
-            for (const ESM4::IdleAnimation& idle : store)
-                records.push_back(&idle);
-            const auto rooted = ESM4::rootedIdleAnimations(records);
-            const ESM4::IdleTree tree(rooted);
-            const Ptr player = mWorld.getPlayerPtr();
-            const ESM4::IdleAnimation* selected = tree.select(
-                [&](const ESM4::IdleAnimation& idle) {
-                    return ai->evaluateDialogueConditions(actor, player, idle.mConditions)
-                        == ESM4::ConditionResult::True;
-                },
-                [&](const ESM4::IdleAnimation& idle) {
-                    return MWMechanics::oblivionPickIdleAnimationGroup(idle, skeleton).has_value();
-                });
-
-            bool played = false;
-            std::string group;
-            std::string idleKey = "null";
-            if (selected != nullptr)
-            {
-                if (const auto key = store.findFormKey(ESM::RefId(selected->mId)))
-                    idleKey = key->serialize();
-                if (const auto selectedGroup = MWMechanics::oblivionPickIdleAnimationGroup(*selected, skeleton))
-                {
-                    group = *selectedGroup;
-                    played = playAnimation(actor, group, 0, false);
-                }
-            }
-            trace("pickidle actor=" + objectKey().serialize() + " idle=" + idleKey + " group=" + group
-                + " played=" + (played ? "true" : "false"));
-            return std::int64_t(played);
+            return std::int64_t(playSelectedIdle(actor, std::nullopt));
         }
         if (name == "isanimplaying")
         {
@@ -2797,6 +2863,40 @@ namespace MWWorld
             if (value < std::numeric_limits<std::int32_t>::min() || value > std::numeric_limits<std::int32_t>::max())
                 throw ObScript::RuntimeError("OBSV117", "SetAlert requires an int32 value", name);
             const bool applied = mWorld.setOblivionAlerted(key, static_cast<std::int32_t>(value));
+            const auto id = mResolver.toFormId(key);
+            const auto actor = id ? mWorld.mWorldModel.getPtr(*id) : Ptr{};
+            if (applied && !actor.isEmpty() && actor.getType() == ESM::REC_NPC_4 && actor != mWorld.getPlayerPtr()
+                && actor.getRefData().getBaseNode() && !mWorld.hasOblivionCombatController(key).value_or(false))
+            {
+                auto& stats = actor.getClass().getCreatureStats(actor);
+                if (value > 0 && stats.getDrawState() == MWMechanics::DrawState::Nothing
+                    && !stats.isDead() && !stats.getKnockedDown() && !stats.isParalyzed())
+                {
+                    auto& inv = actor.getClass().getInventoryStore(actor);
+                    if (inv.getSlot(InventoryStore::Slot_CarriedRight) == inv.end())
+                    {
+                        const auto weapon = MWMechanics::selectOblivionDisarmReplacement(mWorld, actor, {});
+                        if (!weapon.isEmpty())
+                        {
+                            const auto native = OblivionProfileServices::nativeItemId(mStore, weapon.getCellRef().getRefId());
+                            if (const auto* form = native.getIf<ESM::FormId>())
+                                mWorld.oblivionEquipActorItem(actor, mResolver.toFormKey(*form), true);
+                        }
+                    }
+                    if (inv.getSlot(InventoryStore::Slot_CarriedRight) != inv.end())
+                    {
+                        referenceState(key)->mCustomState["obscript.alert_drew_weapon"] = true;
+                        stats.setDrawState(MWMechanics::DrawState::Weapon);
+                    }
+                }
+                else if (value <= 0)
+                {
+                    if (auto* state = mWorld.findOblivionSavedReference(key);
+                        state && state->mCustomState.erase("obscript.alert_drew_weapon")
+                        && stats.getDrawState() == MWMechanics::DrawState::Weapon)
+                        stats.setDrawState(MWMechanics::DrawState::Nothing);
+                }
+            }
             trace("setalert ref=" + key.serialize() + " value=" + std::to_string(value)
                 + " applied=" + (applied ? "true" : "false"));
             return std::int64_t(0);
@@ -3774,32 +3874,12 @@ namespace MWWorld
                 const auto* info = mStore.search<ESM4::DialogInfo>(*selected);
                 if (!info || info->mDialType != 1
                     || !visited.emplace(*selected, keyFor(speaker)).second) break;
-                // Copy across result callbacks: scripts can reevaluate packages,
-                // move actors or change which linked responses are eligible.
-                const auto links = info->mChoiceTopics;
-                const auto nextSpeaker = info->mNextSpeaker;
-                const bool goodbye = (info->mInfoFlags & ESM4::INFO_Goodbye) != 0;
                 trace("conversation-response info=" + selected->serialize()
                     + " ref=" + keyFor(speaker).serialize() + " target=" + keyFor(listener).serialize());
                 dispatchDialogueResponseResult(*selected, speaker);
                 ++responses;
-                selected.reset();
-                if (goodbye || nextSpeaker > 2 || !available(speaker) || !available(listener)) break;
-                // TES4 Next Speaker: 0 Target, 1 Self, 2 Either. Try links
-                // in record order; Either prefers the other participant.
-                for (const auto& link : links)
-                {
-                    if (nextSpeaker != 1)
-                    {
-                        selected = selectNativeDialogueInfo(link, listener, speaker);
-                        if (selected) { std::swap(speaker, listener); break; }
-                    }
-                    if (nextSpeaker != 0)
-                    {
-                        selected = selectNativeDialogueInfo(link, speaker, listener);
-                        if (selected) break;
-                    }
-                }
+                if (!available(speaker) || !available(listener)) break;
+                selected = nextConversationInfo(*selected, speaker, listener);
             }
             return responses;
         }
@@ -3843,26 +3923,7 @@ namespace MWWorld
                     + " responses=0 voice=missing duration=0");
                 return double(0);
             }
-            MWBase::SoundManager* manager = MWBase::Environment::get().getSoundManager();
-            NativeSpeech speech;
-            double duration = 0;
-            for (const auto& file : voice.mFiles)
-            {
-                const double responseDuration = manager->getSoundFileDuration(VFS::Path::Normalized(file));
-                if (!std::isfinite(responseDuration) || responseDuration <= 0)
-                    throw std::runtime_error("Native dialogue response has no valid duration: " + file);
-                speech.mResponses.emplace_back(file, responseDuration);
-                duration += responseDuration;
-            }
-            speech.mRemaining = speech.mResponses.front().second;
-            const VFS::Path::Normalized path(voice.mFiles.front());
-            if (!speaker.isEmpty()
-                && (speaker.getClass().getType() == ESM::REC_NPC_4
-                    || speaker.getClass().getType() == ESM::REC_CREA4))
-                manager->say(speaker, path);
-            else
-                manager->say(path);
-            mNativeSpeech.insert_or_assign(keyFor(speaker), std::move(speech));
+            const double duration = playNativeVoiceFiles(speaker, voice.mFiles, targetKey ? listener : Ptr{});
             trace(name + " topic=" + topic->serialize() + " info=" + voice.mInfo.serialize()
                 + " responses=" + std::to_string(voice.mFiles.size()) + " voice=" + voice.mFiles.front()
                 + " duration=" + std::to_string(duration));
@@ -4190,7 +4251,12 @@ namespace MWWorld
                 ObScript::Value value = loadValue(saved.mLocals[i]);
                 // M7 development saves represented null refs as empty strings.
                 if (program->second->mLocals[i].mType == ObScript::VariableType::Reference)
+                {
+                    // Earlier saves stringified Set ref To 0 as an editor ID.
+                    if (auto* name = std::get_if<std::string>(&value); name && *name == "0")
+                        value = ObScript::ReferenceValue{};
                     value = ObScript::convert(std::move(value), ObScript::ValueType::Reference);
+                }
                 else if (std::holds_alternative<std::string>(value)
                     || std::holds_alternative<ObScript::ReferenceValue>(value)
                     || (std::holds_alternative<double>(value) && !std::isfinite(std::get<double>(value))))

@@ -20,6 +20,8 @@
 #include "ptr.hpp"
 #include "oblivionmaptravel.hpp"
 
+namespace ESM4 { class IdleTree; }
+
 namespace MWWorld
 {
     class ESMStore;
@@ -112,6 +114,11 @@ namespace MWWorld
         // response, then run its response result even when audio is missing.
         // The caller owns movement/scene/process eligibility and topic identity.
         void dispatchAutomaticDialogueResponse(const ESM::FormKey& topic, const Ptr& actor, const Ptr& target);
+        // Resolve a linked NPC conversation against the participants' current conditions.
+        std::optional<ESM::FormKey> nextConversationInfo(const ESM::FormKey& previous,
+            Ptr& speaker, Ptr& listener) const;
+        bool playSelectedIdle(const Ptr& actor, std::optional<unsigned> packageUses);
+        double playPackageDialogue(const ESM::FormKey& info, const Ptr& speaker, const Ptr& listener);
         void dispatchDialogueResult(const ESM::FormKey& info, std::uint32_t ordinal, const Ptr& actor = {});
         void dispatchEffect(
             const ESM::FormKey& script, std::string_view event, const Ptr& target, const Ptr& caster = {});
@@ -216,7 +223,10 @@ namespace MWWorld
             std::vector<std::pair<std::string, double>> mResponses;
             std::size_t mIndex = 0;
             double mRemaining = 0;
+            ESM::FormKey mListener;
         };
+        std::unique_ptr<ESM4::IdleTree> mIdleTree;
+        double playNativeVoiceFiles(const Ptr& speaker, const std::vector<std::string>& files, const Ptr& listener);
         // Playback only: result scripts execute when Say starts, never from
         // this queue. Loading cancels audio without repeating quest effects.
         std::map<ESM::FormKey, NativeSpeech> mNativeSpeech;

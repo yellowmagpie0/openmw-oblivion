@@ -4,6 +4,8 @@ Start with the [Weynon House discovery](WEYNON-HOUSE-HANDOFF.md) at MQ04 stage 3
 
 The original MQ04 script advances to stage 35 when Martin is within 1,000 game units of the main gate and Jauffre is within 1,250. That stage unlocks the main gate, Great Hall and both wings. The next chunk begins with the reception at the gate.
 
+Continue with the [gate greeting and courtyard reception](CLOUD-RULER-RECEPTION-HANDOFF.md).
+
 ## Play and verify
 
 Use `build-windows/Play-Weynon-to-Cloud-Ruler.cmd` for the full trip or `build-windows/Play-Cloud-Ruler-Gates.cmd` for the arrival. Both use ordinary player controls, a 1,280 × 720 window, a 30 FPS cap and distant terrain with a viewing distance of 14,336 game units. The house save in `sigil-amulet-resume/checkpoints` has SHA-256 `782c8ba5f67523f3ce82e62cdf5bfe0078aba98bfd2b9175ad7e8b11b9a9dcd4`.

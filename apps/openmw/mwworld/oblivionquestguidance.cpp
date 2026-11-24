@@ -11,6 +11,7 @@
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadqust.hpp>
+#include <components/esm/util.hpp>
 #include <components/esm4/loadscpt.hpp>
 #include <components/esm4/loadwrld.hpp>
 #include <components/esm4/runtimereferences.hpp>
@@ -83,6 +84,30 @@ namespace MWMechanics
         }
         if (result.mLabel.empty())
             result.mLabel = targetCell->mFullName;
+        // A quest can target an unnamed XMarker in the persistent exterior
+        // cell. Give that point its nearby named landmark on the compass.
+        if (result.mLabel.empty() && targetCell->isExterior())
+        {
+            const float radius = static_cast<float>(ESM::getCellSize(targetCell->mParent));
+            float nearest = radius * radius;
+            for (const auto index : mNamedMapMarkers)
+            {
+                const auto& landmark = mUnloadedLocations[index];
+                const auto delta = landmark.mPosition - position;
+                const float distance = delta.x() * delta.x() + delta.y() * delta.y();
+                if (distance >= nearest)
+                    continue;
+                const auto* cell = store.search<ESM4::Cell>(landmark.mCell);
+                if (!cell || !cell->isExterior() || cell->mParent != targetCell->mParent
+                    || !mWorld.getOblivionReferenceEnabled(landmark.mReference).value_or(false))
+                    continue;
+                if (const auto* marker = store.search<ESM4::Reference>(landmark.mReference))
+                {
+                    nearest = distance;
+                    result.mLabel = marker->mFullName;
+                }
+            }
+        }
 
         const auto* playerCell = player.getCell()->getCell();
         const ESM::RefId playerSpace = playerCell->getWorldSpace();

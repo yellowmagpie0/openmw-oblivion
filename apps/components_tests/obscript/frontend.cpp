@@ -556,6 +556,16 @@ end
         EXPECT_EQ(ObScript::asInteger(host.mExternal.at("observed")), 1);
     }
 
+    TEST(ObScriptVm, clearingSpeakerWithZeroRemovesItsIdentity)
+    {
+        for (const ObScript::Value& zero : {ObScript::Value{std::int64_t(0)}, ObScript::Value{0.0}})
+        {
+            const auto cleared = ObScript::convert(zero, ObScript::ValueType::Reference);
+            EXPECT_EQ(cleared, ObScript::Value{ObScript::ReferenceValue{}});
+            EXPECT_FALSE(ObScript::asBoolean(cleared));
+        }
+    }
+
     TEST(ObScriptVm, nestedExecutionCompletesBeforeCallerResumes)
     {
         const auto parentUnit = makeUnit(8, "begin gamemode\nnested\nset observed to shared\nend");
