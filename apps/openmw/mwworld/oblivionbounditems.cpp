@@ -12,6 +12,7 @@
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <algorithm>
+#include <cmath>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadspel.hpp>
 #include <components/esm4/magiceffectid.hpp>
@@ -33,11 +34,27 @@ namespace MWWorld
             return code == ESM4::EFI_MYTH || code == ESM4::EFI_MYHL || boundWeaponEffect(code);
         }
 
-        std::vector<ESM4::BoundEquipmentGrant> grantsFor(const ESMStore& store, const ESM::FormKey& base)
+        constexpr char remainingKey[] = "native.bound_power.remaining_seconds";
+
+        // Select an independently castable, self-only equipment set. Mixed or competing
+        // spells require a spell-selection policy beyond this combat opener.
+        bool isBoundPower(const ESM4::Spell& spell)
+        {
+            return spell.mData && spell.mData->mType == 3 && spell.mData->mCost == 0
+                && (spell.mData->mFlags & 1) && !(spell.mFlags & ESM4::Rec_Deleted) && !spell.mEffects.empty()
+                && std::all_of(spell.mEffects.begin(), spell.mEffects.end(), [&](const auto& effect) {
+                    return admittedBoundEffect(effect.mId) && !effect.mRange && !effect.mArea && !effect.mScriptEffect
+                        && effect.mDuration && effect.mDuration == spell.mEffects.front().mDuration;
+                });
+        }
+
+        std::vector<ESM4::BoundEquipmentGrant> grantsFor(const ESMStore& store, const ESM::FormKey& base,
+            bool includePower = false, unsigned int* duration = nullptr)
         {
             std::vector<ESM4::BoundEquipmentGrant> grants;
-            for (const auto& ability : resolveOblivionNpcBoundAbilityInputs(store, base))
+            for (const auto& ability : resolveOblivionNpcBoundAbilityInputs(store, base, includePower))
             {
+                if (duration && ability.mDuration) *duration = ability.mDuration;
                 ESM4::BoundEquipmentGrant grant{ability.mSpell, {}};
                 for (const auto& effect : ability.mEffects) grant.mItems.push_back(effect.mItem);
                 grants.push_back(std::move(grant));
@@ -47,7 +64,7 @@ namespace MWWorld
     }
 
     std::vector<OblivionBoundAbilityInput> resolveOblivionNpcBoundAbilityInputs(
-        const ESMStore& store, const ESM::FormKey& base)
+        const ESMStore& store, const ESM::FormKey& base, bool includeCombatPower)
     {
         const auto* npc = store.get<ESM4::Npc>().search(base);
         if (!npc || !npc->mIsTES4) return {};
@@ -55,11 +72,22 @@ namespace MWWorld
         std::set<ESM::FormKey> seen;
         std::uint32_t occupiedSlots = 0;
         std::optional<ESM::FormId> weaponSpell;
+        std::optional<ESM::FormId> combatPower;
+        bool competing = false;
         // Bound weapons share one equipped slot. Keep the last authored
         // weapon ability, without discarding armor from earlier abilities.
         for (const auto id : npc->mSpell)
         {
             const auto* spell = store.get<ESM4::Spell>().search(id);
+            if (includeCombatPower && spell && isBoundPower(*spell))
+            {
+                if (combatPower && *combatPower != id) competing = true;
+                combatPower = id;
+            }
+            if (includeCombatPower && spell && spell->mData && spell->mData->mType == 4
+                && std::any_of(spell->mEffects.begin(), spell->mEffects.end(),
+                    [](const auto& effect) { return admittedBoundEffect(effect.mId); }))
+                competing = true;
             if (spell && spell->mData && spell->mData->mType == 4
                 && std::any_of(spell->mEffects.begin(), spell->mEffects.end(),
                     [](const auto& effect) { return boundWeaponEffect(effect.mId); }))
@@ -68,7 +96,8 @@ namespace MWWorld
         for (const auto id : npc->mSpell)
         {
             const auto* spell = store.get<ESM4::Spell>().search(id);
-            if (!spell || !spell->mData || spell->mData->mType != 4) continue;
+            const bool timed = !competing && combatPower == id;
+            if (!spell || !spell->mData || (spell->mData->mType != 4 && !timed)) continue;
             if (std::none_of(spell->mEffects.begin(), spell->mEffects.end(),
                 [](const auto& effect) { return admittedBoundEffect(effect.mId); })) continue;
             const auto key = store.get<ESM4::Spell>().findFormKey(ESM::RefId(id));
@@ -76,6 +105,7 @@ namespace MWWorld
                 throw std::invalid_argument("native bound ability requires a winning SPEL identity");
             if (!seen.insert(*key).second) continue;
             OblivionBoundAbilityInput ability{*key,{}};
+            if (timed) ability.mDuration = spell->mEffects.front().mDuration;
             for (std::size_t index = 0; index < spell->mEffects.size(); ++index)
             {
                 const auto& effect = spell->mEffects[index];
@@ -131,6 +161,9 @@ namespace MWWorld
     void validateOblivionBoundEquipment(const ESM4::RuntimeState& state, const ESMStore& store,
         const ESM::FormKeyResolver& resolver, const ESMStore* incoming)
     {
+        for (const auto& ref : state.mReferences)
+            if (ref.mCustomState.contains(remainingKey) && !state.mNativeBoundAbilities.contains(ref.mKey))
+                throw std::invalid_argument("timed bound equipment has no owner");
         for (const auto& [actor, abilities] : state.mNativeBoundAbilities)
         {
             const auto reference = std::find_if(state.mReferences.begin(), state.mReferences.end(),
@@ -140,7 +173,15 @@ namespace MWWorld
             const auto* npc = store.get<ESM4::Npc>().searchStatic(reference->mBase);
             if (!npc || !npc->mIsTES4 || (npc->mFlags & ESM4::Rec_Deleted))
                 throw std::invalid_argument("native bound equipment owner is not a winning TES4 NPC");
-            const auto grants = grantsFor(store, reference->mBase);
+            const auto timer = reference->mCustomState.find(remainingKey);
+            unsigned int duration = 0;
+            const auto grants = grantsFor(store, reference->mBase, timer != reference->mCustomState.end(), &duration);
+            if (timer != reference->mCustomState.end())
+            {
+                const auto* remaining = std::get_if<double>(&timer->second);
+                if (!remaining || !std::isfinite(*remaining) || *remaining <= 0 || *remaining > duration)
+                    throw std::invalid_argument("invalid native bound power lifetime");
+            }
             for (const auto& ability : abilities)
             {
                 if (std::none_of(grants.begin(), grants.end(), [&](const auto& grant) {
@@ -155,15 +196,14 @@ namespace MWWorld
         }
     }
 
-    void World::updateOblivionBoundEquipment(const Ptr& actor)
+    void World::updateOblivionBoundEquipment(const Ptr& actor, bool castPower, bool expirePower)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || actor.isEmpty()
             || actor.getType() != ESM::REC_NPC_4 || mUpdatingOblivionBoundEquipment
             || mPendingOblivionRuntimeState)
             return;
-        // Initial cell insertion precedes Player placement. Grants publish a
-        // validated whole-world snapshot, so defer them until that snapshot
-        // can include the Player cell. startNewGame retries loaded actors.
+        // Initial cell insertion precedes Player placement. The first owner
+        // may need a world snapshot. startNewGame retries loaded actors.
         const auto player = getPlayerPtr();
         if (player.isEmpty() || !player.isInCell()) return;
         const auto key = actor.getCellRef().getFormKey();
@@ -171,7 +211,11 @@ namespace MWWorld
         if (!life) return;
         const ESM::FormKeyResolver resolver(mContentFiles);
         const auto base = resolver.toFormKey(actor.get<ESM4::Npc>()->mBase->mId);
-        const auto grants = grantsFor(mStore, base);
+        const auto* saved = findOblivionSavedReference(key);
+        const bool activePower = saved && saved->mCustomState.contains(remainingKey);
+        unsigned int duration = 0;
+        const auto grants = grantsFor(mStore, base, castPower || (activePower && !expirePower), &duration);
+        if (castPower && (!duration || activePower)) return;
         std::vector<ESM4::RuntimeBoundAbility> owners;
         if (mOblivionRuntimeState)
             if (const auto found = mOblivionRuntimeState->mNativeBoundAbilities.find(key);
@@ -197,18 +241,26 @@ namespace MWWorld
         // actor views; the guard prevents recursive grant publication there.
         auto contents = OblivionProfileServices::stageActorInventory(
             OblivionProfileServices::prepareActorInventory(mStore, resolver, update.mInventory));
-        // The cached state owns persistent maps, but its actor/reference rows
-        // can predate later registrations and dialogue writes. A transaction
-        // that validates the whole world must merge the live authorities too.
-        auto state = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
-        auto reference = std::find_if(state->mReferences.begin(), state->mReferences.end(),
-            [&](const auto& ref) { return ref.mKey == key; });
-        if (reference == state->mReferences.end())
-            throw std::invalid_argument("bound equipment actor is absent from world capture");
-        reference->mInventory = update.mInventory;
-        if (update.mAbilities.empty()) state->mNativeBoundAbilities.erase(key);
-        else state->mNativeBoundAbilities.insert_or_assign(key, std::move(update.mAbilities));
-        state->validate();
+        // Most actors already have a reference row. Stage only the validated
+        // inventory and its owners so equipping an item does not resnapshot
+        // every actor and cell in the middle of a combat frame.
+        std::unique_ptr<ESM4::RuntimeState> initial;
+        auto* reference = findOblivionSavedReference(key);
+        if (!reference)
+        {
+            initial = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
+            auto it = std::ranges::find(initial->mReferences, key, &ESM4::RuntimeReferenceState::mKey);
+            if (it == initial->mReferences.end())
+                throw std::invalid_argument("bound equipment actor is absent from world capture");
+            reference = &*it;
+        }
+        auto& state = initial ? *initial : *mOblivionRuntimeState;
+        auto abilities = state.mNativeBoundAbilities;
+        if (update.mAbilities.empty()) abilities.erase(key);
+        else abilities.insert_or_assign(key, std::move(update.mAbilities));
+        auto custom = reference->mCustomState;
+        if (dead || expirePower) custom.erase(remainingKey);
+        else if (duration && !activePower) custom[remainingKey] = double(duration);
 
         auto& target = actor.getClass().getInventoryStore(actor);
         std::vector<Ptr> removed, inserted;
@@ -225,38 +277,49 @@ namespace MWWorld
         registry.commit();
         target.swapPreparedContents(*contents);
         target.setPtr(actor);
-        mOblivionRuntimeState.swap(state);
+        reference->mInventory.swap(update.mInventory);
+        reference->mCustomState.swap(custom);
+        state.mNativeBoundAbilities.swap(abilities);
+        if (initial) mOblivionRuntimeState.swap(initial);
         MWClass::ESM4Npc::refreshNativeEquipment(actor);
         target.notifyPreparedEquipmentChange();
     }
 
-    void World::removeOblivionDeadBoundEquipment()
+    void World::advanceOblivionBoundEquipment(double seconds)
     {
         if (!mOblivionRuntimeState || !mOblivionCombat) return;
-        std::vector<ESM::FormKey> dead;
+        std::vector<ESM::FormKey> remove;
         for (const auto& [actor, abilities] : mOblivionRuntimeState->mNativeBoundAbilities)
+        {
             if (const auto* life = mOblivionCombat->findActorLife(actor);
-                life && life->mPhase == ESM4::ActorLifePhase::Dead) dead.push_back(actor);
-        for (const auto& key : dead)
+                life && life->mPhase == ESM4::ActorLifePhase::Dead)
+                remove.push_back(actor);
+            else if (seconds > 0)
+                if (auto* reference = findOblivionSavedReference(actor))
+                    if (const auto timer = reference->mCustomState.find(remainingKey); timer != reference->mCustomState.end())
+                    {
+                        auto& remaining = std::get<double>(timer->second);
+                        if (seconds >= remaining) remove.push_back(actor);
+                        else remaining -= seconds;
+                    }
+        }
+        for (const auto& key : remove)
         {
             const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key);
             const Ptr actor = key.isDynamic() ? mWorldModel.getDynamicNativePtr(key)
                 : id ? mWorldModel.getPtr(*id) : Ptr{};
             if (!actor.isEmpty())
             {
-                updateOblivionBoundEquipment(actor);
+                updateOblivionBoundEquipment(actor, false, true);
                 continue;
             }
-            auto state = std::make_unique<ESM4::RuntimeState>(*mOblivionRuntimeState);
-            auto reference = std::find_if(state->mReferences.begin(), state->mReferences.end(),
-                [&](const auto& ref) { return ref.mKey == key; });
-            if (reference == state->mReferences.end())
-                throw std::invalid_argument("dead bound equipment owner has no saved reference");
+            auto* reference = findOblivionSavedReference(key);
+            if (!reference) throw std::invalid_argument("bound equipment owner has no saved reference");
             auto update = ESM4::prepareBoundEquipmentUpdate(
-                reference->mInventory, state->mNativeBoundAbilities.at(key), {}, true);
+                reference->mInventory, mOblivionRuntimeState->mNativeBoundAbilities.at(key), {}, true);
             reference->mInventory = std::move(update.mInventory);
-            state->mNativeBoundAbilities.erase(key);
-            mOblivionRuntimeState.swap(state);
+            reference->mCustomState.erase(remainingKey);
+            mOblivionRuntimeState->mNativeBoundAbilities.erase(key);
         }
     }
 }

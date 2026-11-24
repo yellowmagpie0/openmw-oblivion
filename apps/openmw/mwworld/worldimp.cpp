@@ -3091,6 +3091,8 @@ namespace MWWorld
         }
         if (initial) mOblivionRuntimeState.swap(initial);
         mOblivionRuntimeState->mCombatControllers.swap(controllers);
+        if (!current && admitted && !player)
+            updateOblivionBoundEquipment(actor, true);
         return true;
     }
 
@@ -7982,7 +7984,7 @@ namespace MWWorld
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionScriptManager)
             return;
-        removeOblivionDeadBoundEquipment();
+        advanceOblivionBoundEquipment(secondsPassed);
         mOblivionScriptManager->update(secondsPassed);
         if (mDispatchingOblivionDeathEvents)
             return;
@@ -7991,7 +7993,7 @@ namespace MWWorld
         {
             while (mOblivionCombat && mOblivionScriptManager)
             {
-                removeOblivionDeadBoundEquipment();
+                advanceOblivionBoundEquipment(0);
                 const auto event = mOblivionCombat->takeNextDeathEvent();
                 if (!event)
                     break;
@@ -8987,6 +8989,8 @@ namespace MWWorld
                 duration /= timeScaleFactor;
 
             rechargeItems(duration, false);
+            if (mGameProfile == ESM::GameProfile::Oblivion)
+                advanceOblivionBoundEquipment(duration);
         }
 
         mWeatherManager->advanceTime(hours, incremental);

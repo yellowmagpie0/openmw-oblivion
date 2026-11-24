@@ -20,6 +20,7 @@ namespace MWWorld
     {
         ESM::FormKey mSpell;
         std::vector<OblivionBoundItemInput> mEffects;
+        unsigned int mDuration = 0; // Constant abilities have no timer.
         friend bool operator==(const OblivionBoundAbilityInput&, const OblivionBoundAbilityInput&) = default;
     };
 
@@ -28,7 +29,7 @@ namespace MWWorld
     // that these associated-item effects are passive actor-value modifiers.
     // Ability4 lifetime is independent of EFIT duration (original68E670).
     std::vector<OblivionBoundAbilityInput> resolveOblivionNpcBoundAbilityInputs(
-        const ESMStore& store, const ESM::FormKey& base);
+        const ESMStore& store, const ESM::FormKey& base, bool includeCombatPower = false);
 
     void validateOblivionBoundEquipment(const ESM4::RuntimeState& state, const ESMStore& store,
         const ESM::FormKeyResolver& resolver, const ESMStore* incoming = nullptr);

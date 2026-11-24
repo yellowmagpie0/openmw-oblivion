@@ -20,4 +20,4 @@ At 1280 × 720 with a 30 FPS cap, the final 50 seconds inside the inn averaged 2
 
 The game executable SHA-256 is `1cd5cd449b59f1b1b54fd28b73ffaf6fed8891eafa71796fa639db2e140b9d41`. Regression coverage includes repeated scripted greetings, explicit dialogue topics, arrival at a raised chair and the saved quest book. The full engine and component inventories cover 2,348 and 3,324 tests. The Python runtime-state suite covers 205. The integration log at `build-windows/surveillance-integration.log` identifies the inventory, XML and source-fingerprint directory.
 
-The next playable objective is to follow Astav through the basement door and witness his encounter with Baurus.
+Continue with [Astav’s basement ambush and Baurus’s lead](LUTHER-BROADS-BASEMENT-HANDOFF.md).

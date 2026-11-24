@@ -68,6 +68,7 @@ namespace MWWorld
         bool dispatchObjectEvent(const ESM::FormKey& self, std::string_view event,
             const ESM::FormKey& actionReference = {});
         bool dispatchActivation(const Ptr& self, const Ptr& actionReference);
+        Ptr dispatchLootedItem(const Ptr& source, const Ptr& item);
         bool dispatchInventoryEquip(const Ptr& actor, const Ptr& item);
         bool hasInventoryAddEvent(const ESM::FormKey& base) const;
         bool hasStatelessInventoryEvents(const ESM::FormKey& base) const;
@@ -275,7 +276,7 @@ namespace MWWorld
         std::shared_ptr<const ObScript::Program> scriptFor(const ESM::FormKey& key);
         bool dispatchBaseEvent(const ESM::FormKey& base, std::string_view event,
             const ESM::FormKey& actionReference);
-        bool dispatchInventoryEvent(const Ptr& actor, const Ptr& item, std::string_view event);
+        bool dispatchInventoryEvent(const Ptr& actor, const Ptr& item, std::string_view event, const Ptr& actionReference);
         Ptr ptrFor(const ESM::FormKey& key);
         ESM::FormKey keyFor(const Ptr& ptr) const;
         std::optional<ESM::FormKey> keyFromValue(const ObScript::Value& value) const;

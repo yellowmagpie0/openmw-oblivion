@@ -54,6 +54,13 @@ namespace MWGui
                     break;
                 }
             }
+            // A transfer callback may consume the item before a drag widget exists.
+            if (newIndex < 0)
+            {
+                if (sourceView)
+                    sourceView->update();
+                return;
+            }
             mItem = playerModel->getItem(newIndex);
             mSourceModel = playerModel;
 

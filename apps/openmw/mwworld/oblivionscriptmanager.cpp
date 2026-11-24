@@ -1341,7 +1341,7 @@ namespace MWWorld
         requireMutableRuntime();
         if (actor.isEmpty() || actor != mWorld.getPlayerPtr() || item.isEmpty()
             || !actor.getClass().getInventoryStore(actor).isEquipped(item)) return false;
-        return dispatchInventoryEvent(actor, item, "onequip");
+        return dispatchInventoryEvent(actor, item, "onequip", actor);
     }
 
     bool OblivionScriptManager::hasInventoryAddEvent(const ESM::FormKey& base) const
@@ -1370,10 +1370,25 @@ namespace MWWorld
         // The publisher assigns identity before insertion so separately acquired
         // scripted ingredients cannot merge and share their persistent locals.
         if (item.isEmpty() || item.getCellRef().getNativeScriptOwner().isNull()) return false;
-        return dispatchInventoryEvent(actor, item, "onadd");
+        return dispatchInventoryEvent(actor, item, "onadd", actor);
     }
 
-    bool OblivionScriptManager::dispatchInventoryEvent(const Ptr& actor, const Ptr& item, std::string_view event)
+    Ptr OblivionScriptManager::dispatchLootedItem(const Ptr& source, const Ptr& item)
+    {
+        requireMutableRuntime();
+        const Ptr player = mWorld.getPlayerPtr();
+        if (player.isEmpty() || source == player || item.getContainerStore() != &player.getClass().getInventoryStore(player))
+            return item;
+        // OnDrop filters against the previous container. The committed Player
+        // stack owns both callbacks and their locals, including across a save.
+        const SafePtr transferred(item);
+        dispatchInventoryEvent(player, item, "ondrop", source);
+        dispatchInventoryEvent(player, transferred.ptrOrEmpty(), "onadd", player);
+        return transferred.ptrOrEmpty();
+    }
+
+    bool OblivionScriptManager::dispatchInventoryEvent(const Ptr& actor, const Ptr& item,
+        std::string_view event, const Ptr& actionReference)
     {
         requireMutableRuntime();
         // An exact Player-owned singleton. Its identity is neither the item
@@ -1402,12 +1417,12 @@ namespace MWWorld
             item.getCellRef().setNativeScriptOwner(key);
             ++mWorld.mNextOblivionDynamicSerial;
         }
-        Log(Debug::Info) << "M7 inventory " << (event == "onequip" ? "equip" : "add")
+        Log(Debug::Info) << "M7 inventory " << event.substr(2)
             << " event: item=" << base.serialize()
             << " self=" << key.serialize() << " container=" << keyFor(actor).serialize();
         // execute/instanceFor retain locals by the actual item identity. Script
         // callbacks may unequip the item; no borrowed slot iterator survives.
-        return execute(program, key, key, event, keyFor(actor));
+        return execute(program, key, key, event, keyFor(actionReference));
     }
 
     void OblivionScriptManager::retireConsumedInventoryOwner(const ESM::FormKey& owner) noexcept

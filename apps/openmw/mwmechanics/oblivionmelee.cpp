@@ -729,13 +729,13 @@ namespace MWMechanics
             }
             reach = ESM4::weaponMeleeReach(weapon->mData.reach, scale.z(), reachSettings);
         }
-        if (!stationary)
+        const bool reachable = canReachOblivionMeleeTarget(world, actor, target, reach);
+        if (!stationary && reachable)
         {
             const auto delta = target.getRefData().getPosition().asVec3()
                 - actor.getRefData().getPosition().asVec3();
             static_cast<void>(zTurn(actor, std::atan2(delta.x(), delta.y())));
         }
-        const bool reachable = canReachOblivionMeleeTarget(world, actor, target, reach);
         if (!stationary && !reachable)
             ai->approachCombatTarget(actor, target, duration);
         else

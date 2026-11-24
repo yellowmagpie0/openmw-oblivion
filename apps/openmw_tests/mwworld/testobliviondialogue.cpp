@@ -3208,6 +3208,36 @@ TEST(OblivionBoundItems, AbilityDefinitionsResolveItemsAndSlotsWithoutVmodOrDura
     }
 }
 
+TEST(OblivionBoundItems, CombatPowerStartsOnceAndExpiresWithItsSavedLifetime)
+{
+    LiveBoundFixture f(false);
+    auto& world = f.mFixture.mWorld;
+    auto& store = world.getStore();
+    auto spell = *store.get<ESM4::Spell>().searchStatic(key(0xe00));
+    spell.mData->mType = 3;
+    spell.mData->mCost = 0;
+    spell.mData->mFlags = 1;
+    for (auto& effect : spell.mEffects) effect.mDuration = 10;
+    store.getWritable<ESM4::Spell>().insertStatic(spell, key(0xe00));
+    world.updateOblivionBoundEquipment(f.mActor);
+    const auto ordinary = world.captureOblivionInventory(f.mActor);
+    world.updateOblivionBoundEquipment(f.mActor, true);
+    ASSERT_EQ(world.captureOblivionInventory(f.mActor).size(), ordinary.size() + 3);
+    world.advanceOblivionBoundEquipment(6);
+    const auto saved = world.captureOblivionRuntimeState();
+    const auto actor = f.mActor.getCellRef().getFormKey();
+    const auto ref = std::find_if(saved.mReferences.begin(), saved.mReferences.end(),
+        [&](const auto& row) { return row.mKey == actor; });
+    ASSERT_NE(ref, saved.mReferences.end());
+    EXPECT_EQ(std::get<double>(ref->mCustomState.at("native.bound_power.remaining_seconds")), 4.);
+    EXPECT_NO_THROW(MWWorld::validateOblivionBoundEquipment(
+        saved, store, ESM::FormKeyResolver(world.getContentFiles())));
+    world.updateOblivionBoundEquipment(f.mActor, true);
+    world.advanceOblivionBoundEquipment(4);
+    EXPECT_EQ(world.captureOblivionInventory(f.mActor), ordinary);
+    EXPECT_FALSE(world.captureOblivionRuntimeState().mNativeBoundAbilities.contains(actor));
+}
+
 TEST(OblivionBoundItems, MalformedOrUnsupportedAssociatedItemDefinitionsReject)
 {
     for (unsigned scenario=0;scenario<6;++scenario)
@@ -3339,7 +3369,7 @@ TEST(OblivionBoundItems, TerminalDeathRemovesGearButEssentialKnockoutRetainsIt)
         const auto before = world.captureOblivionInventory(f.mActor);
         ASSERT_EQ(before.size(), 4u);
         ASSERT_TRUE(combat.killNonPlayer(f.mActor, ESM::FormKey::dynamic("player", 1), essential, {}));
-        world.removeOblivionDeadBoundEquipment();
+        world.advanceOblivionBoundEquipment(0);
         const auto after = world.captureOblivionInventory(f.mActor);
         if (essential)
         {
@@ -3395,7 +3425,7 @@ TEST(OblivionBoundItems, DeathCleanupIncludesDispositionActorsRegisteredAfterThe
         const auto before = world.captureOblivionRuntimeState();
         EXPECT_NO_THROW(before.serializeBinary());
         ASSERT_TRUE(world.getOblivionCombatService()->killNonPlayer(f.mActor, lateKey, false, {}));
-        ASSERT_NO_THROW(world.removeOblivionDeadBoundEquipment());
+        ASSERT_NO_THROW(world.advanceOblivionBoundEquipment(0));
         const auto after = world.captureOblivionRuntimeState();
         EXPECT_TRUE(after.mNativeBoundAbilities.empty());
         EXPECT_EQ(after.mDispositionModifiers, before.mDispositionModifiers);

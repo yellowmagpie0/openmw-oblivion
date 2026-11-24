@@ -4,6 +4,8 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/containerstore.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
+#include "../mwworld/oblivionscriptmanager.hpp"
+#include "../mwworld/worldimp.hpp"
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
@@ -83,11 +85,19 @@ namespace MWGui
             if (auto moved = world->tryMoveNativeInventoryItem(
                     MWBase::Environment::get().getWorld()->getPlayerPtr(), item, count))
                 return *moved;
+        const auto* sourceStore = item.mBase.getContainerStore();
+        const auto source = sourceStore ? sourceStore->getPtr() : MWWorld::Ptr{};
         removeItem(item, count);
-        // If we removed the entire stack we can transfer it instead of creating a copy with a different RefNum
-        if (item.mBase.getCellRef().getCount() == 0)
-            return otherModel->addItem(item, count, allowAutoEquip);
-        return otherModel->copyItem(item, count, allowAutoEquip);
+        // Preserve the RefNum when the whole stack moves.
+        const auto added = item.mBase.getCellRef().getCount() == 0
+            ? otherModel->addItem(item, count, allowAutoEquip)
+            : otherModel->copyItem(item, count, allowAutoEquip);
+        if (!source.isEmpty() && !added.isEmpty() && added.getContainerStore() && added.getContainerStore() != sourceStore)
+            if (auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull());
+                world && world->getGameProfile() == ESM::GameProfile::Oblivion)
+                if (auto* scripts = world->getOblivionScriptManager())
+                    return scripts->dispatchLootedItem(source, added);
+        return added;
     }
 
     bool ItemModel::allowedToUseItems() const

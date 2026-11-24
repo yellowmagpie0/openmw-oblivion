@@ -186,6 +186,7 @@ namespace MWMechanics
             ESM::FormKey mCell;
             osg::Vec3f mDestination;
             float mRepath = 0.f;
+            ObstacleCheck mObstacle;
         };
         struct LiveActor
         {

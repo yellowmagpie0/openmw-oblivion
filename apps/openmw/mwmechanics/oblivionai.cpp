@@ -195,10 +195,15 @@ namespace MWMechanics
                 && !package->mPackageFlags.has(ESM4::PackageFlag::MustComplete);
         }
 
+        bool waitingForPackageAction(ESM4::PackagePhase phase)
+        {
+            return phase == ESM4::PackagePhase::Wait || phase == ESM4::PackagePhase::WaitingForM16Action;
+        }
+
         bool canReevaluateAfterStage(const ESM4::RuntimeActorAiState& state, const ESM4::AIPackage* package)
         {
             return package && !package->mPackageFlags.has(ESM4::PackageFlag::MustComplete)
-                && (state.mPhase == ESM4::PackagePhase::Wait
+                && (waitingForPackageAction(state.mPhase)
                     || (state.mPackageType == ESM4::AIPackageType::Travel
                         && !package->mPackageFlags.has(ESM4::PackageFlag::MustReachLocation)));
         }
@@ -6623,8 +6628,17 @@ namespace MWMechanics
         }
         if (const auto next = oblivionResidentTargetStep(navigation.mPoints, navigation.mCursor,
                 position, destination, packageFlags, visibleBelow))
+        {
             faceAndMove(actor, *next, true);
-
+            if (!escort && !greeting && actor.getType() == ESM::REC_NPC_4)
+            {
+                navigation.mObstacle.update(actor, *next, duration, MWWorld::MovementDirectionFlag_Forward
+                    | MWWorld::MovementDirectionFlag_Right | MWWorld::MovementDirectionFlag_Left
+                    | MWWorld::MovementDirectionFlag_Back);
+                if (navigation.mObstacle.isEvading())
+                    navigation.mObstacle.takeEvasiveAction(actor.getClass().getMovementSettings(actor));
+            }
+        }
     }
 
     void OblivionAiService::faceAndMove(const MWWorld::Ptr& actor, const osg::Vec3f& destination, bool run, bool sneak) const
@@ -8050,7 +8064,7 @@ namespace MWMechanics
         const auto bases = mQuestPackageBases.find(quest);
         for (auto& [key, live] : mActors)
             if (live.mState.mPackageType == ESM4::AIPackageType::Travel
-                || (live.mState.mPhase == ESM4::PackagePhase::Wait && bases != mQuestPackageBases.end()
+                || (waitingForPackageAction(live.mState.mPhase) && bases != mQuestPackageBases.end()
                     && bases->second.contains(live.mState.mBase)))
                 live.mCheckPackageAfterStage = true;
     }
@@ -8924,7 +8938,7 @@ namespace MWMechanics
             live.mState = saved;
             live.mPendingArmorEquip = dressing.contains(saved.mActor);
             live.mCheckPackageAfterStage = saved.mPackageType == ESM4::AIPackageType::Travel
-                || (saved.mPhase == ESM4::PackagePhase::Wait && std::ranges::any_of(state.mQuests,
+                || (waitingForPackageAction(saved.mPhase) && std::ranges::any_of(state.mQuests,
                     [&](const auto& quest) {
                         const auto bases = mQuestPackageBases.find(quest.mQuest);
                         return bases != mQuestPackageBases.end() && bases->second.contains(saved.mBase);

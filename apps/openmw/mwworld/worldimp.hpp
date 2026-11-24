@@ -678,8 +678,8 @@ namespace MWWorld
         int oblivionAddNativeInventoryItem(const Ptr& actor, const ESM::FormKey& key, int count);
         int oblivionRemoveNativeInventoryItem(const Ptr& actor, const ESM::FormKey& key, int count);
         std::vector<ESM4::RuntimeInventoryItem> captureOblivionInventory(const Ptr& actor) const;
-        void updateOblivionBoundEquipment(const Ptr& actor);
-        void removeOblivionDeadBoundEquipment();
+        void updateOblivionBoundEquipment(const Ptr& actor, bool castPower = false, bool expirePower = false);
+        void advanceOblivionBoundEquipment(double seconds);
         std::unique_ptr<InventoryStore> prepareOblivionSavedActorInventory(const Ptr& actor) const;
         std::unique_ptr<InventoryStore> prepareOblivionContainerInventory(const Ptr& container);
         bool oblivionActorItemEquipped(const Ptr& actor, const ESM::FormKey& key) const;

@@ -210,7 +210,9 @@ namespace MWMechanics
                 const auto step = first ? *first : doorMarker(door, playerSpace);
                 if (destination->isExterior())
                 {
-                    if (mapSpace(*destination) == result.mWorldMap->mSpace)
+                    const auto& worlds = store.get<ESM4::World>();
+                    if (MWWorld::resolveWorldspaceInheritance(worlds, mapSpace(*destination), ESM4::World::UseFlag_Map)
+                        == MWWorld::resolveWorldspaceInheritance(worlds, result.mWorldMap->mSpace, ESM4::World::UseFlag_Map))
                     {
                         result.mNearby = step;
                         return result;
@@ -631,7 +633,9 @@ namespace MWWorld
                 if (!eligible(target.mConditions))
                     continue;
                 auto destination = ai->questDestination(target.mReference, player);
-                if (destination.mNearby || destination.mWorldMap)
+                // Keep a known target while its NPC is behind a locked door. The
+                // label and quest stay active even when there is no usable route.
+                if (!destination.mLabel.empty() || destination.mNearby || destination.mWorldMap)
                     candidate.mDestinations.push_back(std::move(destination));
             }
             if (manual)

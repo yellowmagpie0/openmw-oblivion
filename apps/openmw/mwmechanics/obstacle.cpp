@@ -202,6 +202,7 @@ namespace MWMechanics
                 if ((evadeDirections[newEvadeDirectionIndex].mRequiredAnimation & supportedMovementDirection) != 0)
                     break;
             } while (mEvadeDirectionIndex != newEvadeDirectionIndex);
+            mEvadeDirectionIndex = newEvadeDirectionIndex;
             return;
         }
 
