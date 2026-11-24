@@ -57,7 +57,7 @@ namespace MWMechanics
         // zero-radius marker specifies a standing place, unlike route nodes.
         // Keep the vertical allowance for authored markers below the settled
         // actor's feet, without allowing an actor to occupy a neighbour's slot.
-        if (type == ESM4::AIPackageType::Travel)
+        if (type == ESM4::AIPackageType::Travel || (type == ESM4::AIPackageType::UseItemAt && travelRadius > 0.f))
         {
             const osg::Vec3f delta = position - destination;
             const float horizontal = travelRadius > 0.f ? travelRadius : std::min(16.f, tolerance);

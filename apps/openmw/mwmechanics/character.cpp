@@ -4462,7 +4462,14 @@ namespace MWMechanics
                 cancelOblivionCombatInput();
                 resetCurrentHitState(); resetCurrentIdleState(); resetCurrentMovementState();
             }
-            const bool active = nativeWorld->updateOblivionPlayerFurniture(*mAnimation, mPtr, duration, nativeRecovery);
+            const bool active = mPtr == nativeWorld->getPlayerPtr()
+                ? nativeWorld->updateOblivionPlayerFurniture(*mAnimation, mPtr, duration, nativeRecovery)
+                : nativeWorld->updateOblivionNpcFurniture(*mAnimation, mPtr, duration, nativeRecovery);
+            if (active && !mOblivionFurnitureActive && !furniture)
+            {
+                cancelOblivionCombatInput();
+                resetCurrentHitState(); resetCurrentIdleState(); resetCurrentMovementState();
+            }
             if (active)
             {
                 auto& input = cls.getMovementSettings(mPtr);

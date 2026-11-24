@@ -170,6 +170,18 @@ namespace
         EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1), destination, key(1), destination, -1.f));
     }
 
+    TEST(OblivionAiTest, ReadingChairCanBeReachedFromTheFloorBesideItsRaisedOrigin)
+    {
+        const osg::Vec3f chair(-322.53f, -144.99f, -176.80f);
+        const osg::Vec3f floor(-270.46f, -156.51f, -219.93f);
+        const auto use = ESM4::AIPackageType::UseItemAt;
+        EXPECT_TRUE(MWMechanics::oblivionDestinationReached(key(1), floor, key(1), chair, 64.f, use, 64.f));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(2), floor, key(1), chair, 64.f, use, 64.f));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1), floor, key(1), chair, 64.f, use));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(
+            key(1), chair + osg::Vec3f(0, 0, 80), key(1), chair, 64.f, use, 64.f));
+    }
+
     TEST(OblivionAiTest, PathgridCornerRequiresHorizontalArrivalDespiteAuthoredHeightOffset)
     {
         // Original tutorial PGRD entry0; the saved Emperor had already

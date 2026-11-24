@@ -22,6 +22,7 @@
 #include "../mwbase/soundmanager.hpp"
 #include "../mwbase/windowmanager.hpp"
 #include "../mwbase/world.hpp"
+#include "../mwworld/worldimp.hpp"
 
 #include "../mwdialogue/keywordsearch.hpp"
 #include "../mwrender/camera.hpp"
@@ -565,8 +566,14 @@ namespace MWGui
                 {
                     const float yaw = static_cast<float>(std::atan2(offset.x(), offset.y()));
                     const float pitch = -static_cast<float>(std::atan2(offset.z(), distance));
-                    world->rotateObject(world->getPlayerPtr(), { pitch, 0.f, yaw });
-                    camera->setYaw(-yaw);
+                    const auto player = world->getPlayerPtr();
+                    auto* native = dynamic_cast<MWWorld::World*>(static_cast<MWBase::World*>(world));
+                    // A chair owns body rotation. Turn the seated look offset toward
+                    // the speaker so the next furniture sample keeps the same view.
+                    const float bodyYaw = native && native->rotateOblivionFurnitureView(yaw, true)
+                        ? player.getRefData().getPosition().rot[2] : yaw;
+                    world->rotateObject(player, { pitch, 0.f, bodyYaw });
+                    camera->setYaw(-bodyYaw);
                     camera->setPitch(-pitch);
                 }
             }

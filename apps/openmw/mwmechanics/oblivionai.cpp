@@ -140,6 +140,15 @@ namespace MWMechanics
                 && package.mTargetData.isObjectType() && package.mTargetData.mObjectType == 0;
         }
 
+        bool packageCanUseItem(const MWWorld::ESMStore& store, const ESM4::AIPackage& pack,
+            const ESM::RefId& id, const ESM4::InventoryItemDefinition& item)
+        {
+            if (pack.mTargetData.isObjectType() && !ESM4::packageObjectTypeMatches(
+                    pack.mTargetData.mObjectType, static_cast<ESM::RecNameInts>(store.find(id))))
+                return false;
+            return item.mConsumable || item.mType == ESM4::InventoryItemType::Book;
+        }
+
         bool returnsToEditorLocation(const ESM4::AIPackage& package)
         {
             return package.mPackageType == ESM4::AIPackageType::Travel
@@ -1901,9 +1910,8 @@ namespace MWMechanics
                     return value(!controller && ai != nullptr && !parameterKey.isNull() && ai->mPackage == parameterKey ? 1.0 : 0.0);
                 if (function == "GetRestrained")
                     return value(ai != nullptr && ai->mRestrained ? 1.0 : 0.0);
-                if (function == "GetSitting" && subjectKey == ESM::FormKey::dynamic("player", 1)
-                    && mWorld.getOblivionPlayerSitting())
-                    return value(mWorld.getOblivionPlayerSitting());
+                if (function == "GetSitting")
+                    return value(mWorld.getOblivionSitting(subjectKey, loadedPtrFor(subjectKey)));
                 const bool sleeping = ai != nullptr && ai->mPackageType == ESM4::AIPackageType::Sleep
                     && (ai->mPhase == ESM4::PackagePhase::Act || ai->mPhase == ESM4::PackagePhase::Wait);
                 return value(function == "IsRidingHorse" ? ai != nullptr && !ai->mMount.isNull()
@@ -2990,8 +2998,7 @@ namespace MWMechanics
             if (function == "GetIsPlayableRace")
                 return value(playableRace(subjectPtr, baseKey(subjectPtr)) ? 1.0 : 0.0);
             if (function == "GetSitting")
-                return value(subjectPtr == mWorld.getPlayerPtr() && mWorld.getOblivionPlayerSitting()
-                    ? mWorld.getOblivionPlayerSitting() : (sleeping() ? 1.0 : 0.0));
+                return value(mWorld.getOblivionSitting(actorKey(subjectPtr), subjectPtr));
             if (function == "GetGlobalValue")
             {
                 const auto global = resolveGlobal(parameterKey);
@@ -4607,11 +4614,21 @@ namespace MWMechanics
 
     float OblivionAiService::travelArrivalRadius(const LiveActor& live) const
     {
-        if (live.mState.mPackageType != ESM4::AIPackageType::Travel)
+        if (live.mState.mPackageType != ESM4::AIPackageType::Travel
+            && live.mState.mPackageType != ESM4::AIPackageType::UseItemAt)
             return 0.f;
         const ESM4::AIPackage* current = package(live.mState.mPackage);
         if (current == nullptr && live.mTransientPackage && live.mTransientPackage->mFormKey == live.mState.mPackage)
             current = &*live.mTransientPackage;
+        if (live.mState.mPackageType == ESM4::AIPackageType::UseItemAt)
+        {
+            // A chair origin can be above the floor and inside its collision mesh.
+            // Let the chair's entry animation take over from within activation range.
+            const auto* ref = current && current->mLocationData.mKind == ESM4::PackageLocationKind::NearReference
+                && current->mLocationData.mRadius == 0 ? mWorld.mStore.search<ESM4::Reference>(current->mLocationData.mReferenceKey) : nullptr;
+            const auto* chair = ref ? mWorld.mStore.search<ESM4::Furniture>(ref->mBaseKey) : nullptr;
+            return chair && (chair->mActiveMarkerFlags & 0x40000000u) ? sArrivalTolerance : 0.f;
+        }
         return current == nullptr ? 0.f : static_cast<float>(current->mLocationData.mRadius);
     }
 
@@ -4667,7 +4684,8 @@ namespace MWMechanics
 
         const float radius = travelArrivalRadius(live);
         if ((live.mState.mPackageType == ESM4::AIPackageType::Travel
-                || live.mState.mPackageType == ESM4::AIPackageType::Follow)
+                || live.mState.mPackageType == ESM4::AIPackageType::Follow
+                || (live.mState.mPackageType == ESM4::AIPackageType::UseItemAt && radius > 0.f))
             && oblivionDestinationReached(live.mState.mCell, live.mState.mLastValidPosition.asVec3(),
                 live.mDestinationCell, *live.mDestination, sArrivalTolerance, live.mState.mPackageType, radius))
         {
@@ -5119,7 +5137,7 @@ namespace MWMechanics
                             if (!definition || (live.mState.mPackageType == ESM4::AIPackageType::Eat
                                     && definition->mType != ESM4::InventoryItemType::Ingredient && !definition->mFood)
                                 || (live.mState.mPackageType == ESM4::AIPackageType::UseItemAt
-                                    && !definition->mConsumable))
+                                    && !packageCanUseItem(mWorld.mStore, *current, ESM::RefId(ESM::FormId::fromUint32(item.item)), *definition)))
                                 continue;
                             return itemKey;
                         }
@@ -5825,7 +5843,7 @@ namespace MWMechanics
                 continue;
             if (eat && definition->mType != ESM4::InventoryItemType::Ingredient && !definition->mFood)
                 continue;
-            if (use && !definition->mConsumable)
+            if (use && !packageCanUseItem(mWorld.mStore, record, nativeId, *definition))
                 continue;
             if (item.getCellRef().getCount() <= 0)
                 continue;
@@ -5864,6 +5882,13 @@ namespace MWMechanics
             if (removed != 1)
                 return false;
             logEvent("action-commit", live, "eat=" + itemKey.serialize());
+            live.mState.mActionItem = {};
+            return true;
+        }
+        const auto definition = MWWorld::OblivionProfileServices::itemDefinition(mWorld.mStore, ESM::RefId(*nativeId));
+        if (definition && definition->mType == ESM4::InventoryItemType::Book)
+        {
+            // NPC reading leaves the book in its stack and does not open the Player's book menu.
             live.mState.mActionItem = {};
             return true;
         }
@@ -6216,7 +6241,8 @@ namespace MWMechanics
         };
         const float radius = travelArrivalRadius(live);
         if ((live.mState.mPackageType == ESM4::AIPackageType::Travel
-                || live.mState.mPackageType == ESM4::AIPackageType::Follow)
+                || live.mState.mPackageType == ESM4::AIPackageType::Follow
+                || (live.mState.mPackageType == ESM4::AIPackageType::UseItemAt && radius > 0.f))
             && oblivionDestinationReached(live.mState.mCell, position,
                 live.mDestinationCell.isNull() ? live.mState.mCell : live.mDestinationCell,
                 destination, sArrivalTolerance, live.mState.mPackageType, radius))
@@ -7137,8 +7163,9 @@ namespace MWMechanics
             && (live.mState.mInterruptionReason == "action-target-unresolved"
                 || live.mState.mInterruptionReason == "interrupted")
             && interruptedPackage && interruptedPackage->mPackageType == ESM4::AIPackageType::UseItemAt
-            && interruptedPackage->mTargetData.hasReference()
-            && canActivatePlacedObject(mWorld, actor, loadedPtrFor(interruptedPackage->mTargetData.mReferenceKey));
+            && ((interruptedPackage->mTargetData.hasReference()
+                    && canActivatePlacedObject(mWorld, actor, loadedPtrFor(interruptedPackage->mTargetData.mReferenceKey)))
+                || (interruptedPackage->mTargetData.isObjectType() && reserveAction(actor, live, *interruptedPackage)));
         if (followContextChanged || (live.mSelectionCheckTimer <= 0.f
             && (live.mState.mPhase == ESM4::PackagePhase::Interrupted || live.mState.mPhase == ESM4::PackagePhase::Complete
                 || (live.mCheckPackageAfterStage && canReevaluateAfterStage(live.mState, waitingPackage))

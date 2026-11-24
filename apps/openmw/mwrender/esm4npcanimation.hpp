@@ -18,6 +18,12 @@ namespace ESM4
     struct Race;
 }
 
+namespace MWWorld
+{
+    class World;
+    struct OblivionPackageSeat;
+}
+
 namespace MWRender
 {
     // Shared native carried-weapon identity, attachment and drop preparation.
@@ -122,6 +128,10 @@ namespace MWRender
         void refreshEquipment() override;
 
     private:
+        friend class MWWorld::World;
+        std::shared_ptr<MWWorld::OblivionPackageSeat> mPackageSeat;
+        ESM::FormKey mUnsupportedPackageSeat;
+        float mPackageSeatRetry = 0.f;
         std::size_t applyRagdollPose();
         void insertHeadParts(const std::vector<ESM::FormId>& partIds, std::set<uint32_t>& usedHeadPartTypes);
         void updateParts();

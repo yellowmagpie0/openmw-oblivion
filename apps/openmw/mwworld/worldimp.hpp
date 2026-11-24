@@ -109,6 +109,7 @@ namespace MWMechanics
 
 namespace MWWorld
 {
+    struct OblivionFurnitureResources;
     enum class OblivionInteractionKind;
     class DateTimeManager;
     class InventoryStore;
@@ -229,7 +230,8 @@ namespace MWWorld
         // Immutable retained projection also identifies the cache version to
         // detached scene admissions across reentrant callbacks.
         std::shared_ptr<const NativeLooseWeaponStates> mOblivionLooseWeaponStates;
-        struct OblivionFurnitureResources;
+        std::shared_ptr<const OblivionFurnitureResources> chooseOblivionChairMarker(
+            const Ptr& furniture, const Ptr& actor, std::string_view actorModel, bool& occupied) const;
         std::shared_ptr<const OblivionFurnitureResources> mOblivionFurnitureResources;
         std::shared_ptr<const OblivionFurnitureResources> prepareOblivionFurnitureResources(
             const ESM4::RuntimePlayerFurniture& seat, bool verifyHashes) const;
@@ -534,7 +536,9 @@ namespace MWWorld
         std::size_t updateOblivionPendingGetUpLoads(SceneUtil::WorkQueue& queue);
         bool advanceOblivionGetUpPlayback(MWRender::Animation& animation, const Ptr& actor, float duration);
         unsigned getOblivionPlayerSitting() const;
-        bool rotateOblivionFurnitureView(float yaw);
+        unsigned getOblivionSitting(const ESM::FormKey& actor, const Ptr& resident) const;
+        bool updateOblivionNpcFurniture(MWRender::Animation& animation, const Ptr& actor, float duration, bool interrupted);
+        bool rotateOblivionFurnitureView(float yaw, bool absolute = false);
         bool activateOblivionFurniture(const Ptr& furniture, const Ptr& actor);
         bool requestOblivionFurnitureExit();
         bool updateOblivionPlayerFurniture(MWRender::Animation& animation, const Ptr& actor, float duration,

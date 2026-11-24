@@ -1471,6 +1471,7 @@ TEST(OblivionDialogueMenu, ScriptedPlayerConversationUsesGreetingResultsAndActor
     {
         std::function<void(const MWWorld::Ptr&)> mOpen;
         unsigned mCalls = 0;
+        bool containsMode(MWGui::GuiMode mode) const override { return mode == MWGui::GM_Dialogue && mCalls > 0; }
         void pushGuiMode(MWGui::GuiMode mode, const MWWorld::Ptr& actor) override
         {
             EXPECT_EQ(mode, MWGui::GM_Dialogue);
@@ -1496,6 +1497,8 @@ TEST(OblivionDialogueMenu, ScriptedPlayerConversationUsesGreetingResultsAndActor
         const ObScript::Value player = ObScript::ReferenceValue{ESM::FormKey::dynamic("player", 1), {}};
         EXPECT_EQ(ObScript::asInteger(scripts.call("GetTalkedToPC", {}, {}, context, {})), 0);
         EXPECT_EQ(ObScript::asInteger(scripts.call("StartConversation", {}, {player}, context, {})), 1);
+        // Repeating the seated quest trigger must leave the first greeting and choices intact.
+        EXPECT_EQ(ObScript::asInteger(scripts.call("StartConversation", {}, {player}, context, {})), 0);
         EXPECT_EQ(windows.mCalls, 1u);
         EXPECT_EQ(callback.mResponses, (std::vector<std::string>{"First response", "Second response"}));
         EXPECT_EQ(f.stage(), 20);

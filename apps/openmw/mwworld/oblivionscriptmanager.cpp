@@ -2271,9 +2271,7 @@ namespace MWWorld
             const auto key = ESM4::runtimeReferenceKey(objectKey());
             if (key == ESM::FormKey::dynamic("player", 1))
                 return std::int64_t(mWorld.getOblivionPlayerSitting());
-            const auto* ai = oblivionAi() ? oblivionAi()->state(key) : nullptr;
-            return std::int64_t(ai && ai->mPackageType == ESM4::AIPackageType::Sleep
-                && (ai->mPhase == ESM4::PackagePhase::Act || ai->mPhase == ESM4::PackagePhase::Wait));
+            return std::int64_t(mWorld.getOblivionSitting(key, objectPtr()));
         }
         if (name == "setactorfullname" || name == "setlevel")
         {
@@ -3915,7 +3913,11 @@ namespace MWWorld
                         + " topic=" + topic->serialize());
                     return std::int64_t(1);
                 }
-                MWBase::Environment::get().getWindowManager()->pushGuiMode(MWGui::GM_Dialogue, speaker);
+                auto windows = MWBase::Environment::get().getWindowManager();
+                // A GameMode script may repeat StartConversation while its seated
+                // trigger is true. Preserve the active INFO, voice and choices.
+                if (windows->containsMode(MWGui::GM_Dialogue)) return std::int64_t(0);
+                windows->pushGuiMode(MWGui::GM_Dialogue, speaker);
                 trace("conversation-player ref=" + keyFor(speaker).serialize());
                 return std::int64_t(1);
             }

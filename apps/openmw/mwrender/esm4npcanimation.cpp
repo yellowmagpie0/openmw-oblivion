@@ -1064,6 +1064,8 @@ namespace MWRender
     {
         // Preserve special poses (sleep, furniture, scripted idles) and only replace a
         // standing movement or weapon pose. The original playback stays underneath.
+        if (mPackageSeat)
+            return false;
         if (mDialogueIdle)
             return true;
         if (!hasAnimation("dialoguestandingidle"))

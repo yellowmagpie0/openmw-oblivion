@@ -18,4 +18,4 @@ Launch `build-windows/Continue-After-Jauffres-Briefing.cmd` to resume at the tem
 
 The game executable has SHA-256 `3e4e7f7b5099153f546d96bbb52586d3e5263887f4f210c446cc158d1a9ed7dc`. All 2,347 engine tests, 3,324 component tests and 205 runtime-state Python tests passed. The C++ inventories, XML and source fingerprint are in `build-windows/checks-141d80eb8d484fa190d6d891a028adb4`.
 
-Baurus was standing at the counter with his sword drawn during inspection. The next chunk is his seated meeting, the player chair trigger and the encounter with his tail in the basement.
+Baurus was standing at the counter with his sword drawn during this inspection. The [boarding-house handoff](LUTHER-BROADS-SURVEILLANCE-HANDOFF.md) covers his seated meeting and the instruction to follow his watcher.
