@@ -2266,6 +2266,63 @@ namespace MWWorld
             trace("setinchargen enabled=" + std::string(enabled ? "true" : "false"));
             return std::int64_t(0);
         }
+        if (name == "getsitting")
+        {
+            const auto key = ESM4::runtimeReferenceKey(objectKey());
+            if (key == ESM::FormKey::dynamic("player", 1))
+                return std::int64_t(mWorld.getOblivionPlayerSitting());
+            const auto* ai = oblivionAi() ? oblivionAi()->state(key) : nullptr;
+            return std::int64_t(ai && ai->mPackageType == ESM4::AIPackageType::Sleep
+                && (ai->mPhase == ESM4::PackagePhase::Act || ai->mPhase == ESM4::PackagePhase::Wait));
+        }
+        if (name == "setactorfullname" || name == "setlevel")
+        {
+            const auto base = mWorld.getOblivionReferenceBaseKey(objectKey());
+            auto* combat = mWorld.getOblivionCombatService();
+            if (!base || !combat || arguments.empty())
+                return std::int64_t(0);
+            const auto* npc = mStore.search<ESM4::Npc>(*base);
+            const auto* creature = mStore.search<ESM4::Creature>(*base);
+            if (!npc && !creature)
+                return std::int64_t(0);
+            const auto kind = npc ? ESM4::ActorBaseKind::Npc : ESM4::ActorBaseKind::Creature;
+            if (name == "setactorfullname")
+                combat->setActorFullName(*base, kind, ObScript::valueString(argument(0)));
+            else
+            {
+                const auto& config = npc ? npc->mBaseConfig.tes4 : creature->mBaseConfig.tes4;
+                ESM4::RuntimeActorLevel level{config.levelOrOffset,
+                    (config.flags & ESM4::Npc::TES4_PCLevelOffset) != 0, config.calcMin, config.calcMax};
+                if (const auto* saved = combat->findActorBase(*base); saved && saved->mLevel)
+                    level = *saved->mLevel;
+                level.mLevelOrOffset = static_cast<std::int16_t>(ObScript::asInteger(argument(0)));
+                if (arguments.size() >= 2 && ObScript::asInteger(argument(1)) != 0)
+                    level.mScaled = true;
+                if (arguments.size() >= 3 && ObScript::asInteger(argument(2)) != -1)
+                {
+                    level.mScaled = true;
+                    level.mMinimum = static_cast<std::uint16_t>(ObScript::asInteger(argument(2)));
+                }
+                if (arguments.size() >= 4 && ObScript::asInteger(argument(3)) != -1)
+                {
+                    level.mScaled = true;
+                    level.mMaximum = static_cast<std::uint16_t>(ObScript::asInteger(argument(3)));
+                }
+                const Ptr player = mWorld.getPlayerPtr();
+                const int playerLevel = player.getClass().getCreatureStats(player).getLevel();
+                if (playerLevel < 1 || playerLevel > std::numeric_limits<std::uint16_t>::max())
+                    throw ObScript::RuntimeError("OBSV117", "SetLevel requires a valid native player level", name);
+                if (ESM4::runtimeReferenceKey(objectKey()) == ESM::FormKey::dynamic("player", 1))
+                {
+                    const auto updated = oblivionActorLevelConfig(config, &level);
+                    player.getClass().getCreatureStats(player).setLevel(ESM4::resolveActorLevel(updated, playerLevel));
+                    return std::int64_t(0);
+                }
+                combat->setActorLevel(*base, kind, level, mStore, static_cast<std::uint16_t>(playerLevel),
+                    mWorld.mWorldModel.getResidentPtrs());
+            }
+            return std::int64_t(0);
+        }
         if (name == "setignorefriendlyhits")
         {
             const auto key = objectKey();
@@ -2667,8 +2724,8 @@ namespace MWWorld
             if (!ptr.isEmpty() && !marker.isEmpty())
             {
                 const ESM::Position& position = marker.getRefData().getPosition();
-                mWorld.moveObject(ptr, marker.getCell(), position.asVec3(), true, true);
-                mWorld.rotateObject(ptr, osg::Vec3f(position.rot[0], position.rot[1], position.rot[2]));
+                const Ptr moved = mWorld.moveObject(ptr, marker.getCell(), position.asVec3(), true, true);
+                mWorld.rotateObject(moved, osg::Vec3f(position.rot[0], position.rot[1], position.rot[2]));
                 trace("moveto ref=" + objectKey().serialize() + " marker=" + markerKey->serialize());
             }
             return std::int64_t(0);

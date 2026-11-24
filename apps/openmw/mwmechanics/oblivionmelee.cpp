@@ -1550,7 +1550,9 @@ namespace MWMechanics
         if (!record)
             throw std::invalid_argument("native natural contact lacks its winning Creature form");
         std::optional<std::uint16_t> playerLevel;
-        if (record->mBaseConfig.tes4.flags & ESM4::Creature::TES4_PCLevelOffset)
+        const auto* savedBase = service->findActorBase(values.mBase);
+        const auto* levelOverride = savedBase && savedBase->mLevel ? &*savedBase->mLevel : nullptr;
+        if (MWWorld::oblivionActorLevelConfig(record->mBaseConfig.tes4, levelOverride).flags & ESM4::Creature::TES4_PCLevelOffset)
         {
             const auto player = world.getPlayerPtr();
             if (player.isEmpty())
@@ -1560,7 +1562,7 @@ namespace MWMechanics
                 throw std::invalid_argument("scaled natural contact has invalid Player level");
             playerLevel = static_cast<std::uint16_t>(level);
         }
-        const auto base = MWWorld::resolveOblivionActorBaseStats(world.getStore(), values.mBase, playerLevel);
+        const auto base = MWWorld::resolveOblivionActorBaseStats(world.getStore(), values.mBase, playerLevel, levelOverride);
         if (!base.mNaturalDamage)
             throw std::invalid_argument("native Creature lacks its damage word");
         std::vector<const ESM4::GameSetting*> settings;

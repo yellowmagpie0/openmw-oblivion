@@ -509,7 +509,7 @@ namespace MWClass
         const ESM4::Npc* const baseData = getCustomData(ptr).mBaseData;
         if (baseData == nullptr)
             return {};
-        return baseData->mFullName;
+        return MWWorld::oblivionActorName(baseData->mFormKey, baseData->mFullName);
     }
 
     void ESM4Npc::adjustScale(const MWWorld::ConstPtr& ptr, osg::Vec3f& scale, bool rendering) const

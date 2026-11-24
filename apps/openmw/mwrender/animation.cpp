@@ -786,6 +786,9 @@ namespace MWRender
         alias("sneakback", "sneakbackward");
         // Creature files use Block where the held-input controller requests
         // BlockIdle. Preserve explicit canonical files and the original names.
+        // A paused conversation can present a neutral pose while retaining the locomotion or
+        // weapon animation to resume when the player closes the menu.
+        alias("dialoguestandingidle", "idle");
         alias("blockidle", "block");
         alias("onehandblockidle", "onehandblock");
         alias("twohandblockidle", "twohandblock");

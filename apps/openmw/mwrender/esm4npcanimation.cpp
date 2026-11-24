@@ -1,4 +1,6 @@
 #include "esm4npcanimation.hpp"
+
+#include "../mwmechanics/character.hpp"
 #include "tes4hair.hpp"
 #include "oblivionattachment.hpp"
 
@@ -1058,9 +1060,51 @@ namespace MWRender
         }
     }
 
+    bool ESM4NpcAnimation::beginStandingDialogue()
+    {
+        // Preserve special poses (sleep, furniture, scripted idles) and only replace a
+        // standing movement or weapon pose. The original playback stays underneath.
+        if (mDialogueIdle)
+            return true;
+        if (!hasAnimation("dialoguestandingidle"))
+            return false;
+        constexpr std::array standingGroups{ "idle", "onehandidle", "twohandidle", "handtohandidle",
+            "walkforward", "runforward", "walkback", "runback", "walkleft", "walkright" };
+        const auto lowerBody = getActiveGroup(BoneGroup_LowerBody);
+        if (std::find(standingGroups.begin(), standingGroups.end(), lowerBody) == standingGroups.end())
+            return false;
+        play("dialoguestandingidle", MWMechanics::Priority_Dialogue, BlendMask_All, false, 1.f,
+            "start", "stop", 0.f, std::numeric_limits<std::uint32_t>::max(), true);
+        mDialogueIdle = isPlaying("dialoguestandingidle");
+        if (!mDialogueIdle)
+            return false;
+        mRestoreDialogueWeapon = mShowWeapon;
+        if (mShowWeapon)
+            showWeapons(false);
+        return true;
+    }
+
+    void ESM4NpcAnimation::endStandingDialogue()
+    {
+        if (!mDialogueIdle)
+            return;
+        disable("dialoguestandingidle");
+        mDialogueIdle = false;
+        if (mRestoreDialogueWeapon)
+            showWeapons(true);
+        mRestoreDialogueWeapon = false;
+    }
+
     osg::Vec3f ESM4NpcAnimation::runAnimation(float timepassed)
     {
         const osg::Vec3f movement = Animation::runAnimation(timepassed);
+        updateFace(timepassed);
+        applyRagdollPose();
+        return movement;
+    }
+
+    void ESM4NpcAnimation::updateFace(float timepassed)
+    {
         mFaceAnimationTime += timepassed;
         MWBase::SoundManager* soundManager = MWBase::Environment::get().getSoundManager();
         const float loudness = soundManager->getSaySoundLoudness(mPtr);
@@ -1096,8 +1140,6 @@ namespace MWRender
         const float speechTime = speaking ? soundManager->getSaySoundOffset(mPtr) : mFaceAnimationTime;
         animateTes4FaceGen(
             mFaceMorphs, mFaceAnimationTime, speaking, mHasLipCompanion, loudness, speechTime);
-        applyRagdollPose();
-        return movement;
     }
 
     namespace

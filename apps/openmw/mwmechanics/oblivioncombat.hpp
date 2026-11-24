@@ -489,7 +489,6 @@ namespace MWMechanics
             std::deque<ESM4::RuntimeActorDeathEvent> mEvents;
             std::map<ESM::FormKey, std::uint16_t> mCounts;
         };
-        const ESM4::RuntimeActorBaseOverride* findActorBase(const ESM::FormKey& base) const;
         std::optional<PreparedLifeTransition> prepareLifeTransition(
             const ESM4::RuntimeActorLife& life, bool afterRevival = false) const;
         bool enterNonPlayerDeath(const MWWorld::Ptr& actor, const ESM::FormKey& killer, bool essential,
@@ -971,6 +970,10 @@ namespace MWMechanics
         std::optional<bool> getBaseEssential(const ESM::FormKey& base) const;
         const std::vector<ESM4::RuntimeActorFaction>* getBaseFactions(const ESM::FormKey& base) const;
         void setBaseEssential(const ESM::FormKey& base, ESM4::ActorBaseKind kind, bool essential);
+        const ESM4::RuntimeActorBaseOverride* findActorBase(const ESM::FormKey& base) const;
+        void setActorFullName(const ESM::FormKey& base, ESM4::ActorBaseKind kind, std::string name);
+        void setActorLevel(const ESM::FormKey& base, ESM4::ActorBaseKind kind, ESM4::RuntimeActorLevel level,
+            const MWWorld::ESMStore& store, std::uint16_t playerLevel, std::span<const MWWorld::Ptr> residents);
         void setBaseFactions(const ESM::FormKey& base, ESM4::ActorBaseKind kind,
             std::vector<ESM4::RuntimeActorFaction> factions);
         void setNonPlayerBaseValue(const MWWorld::Ptr& actor, std::uint8_t value,

@@ -280,7 +280,8 @@ namespace MWClass
 
     std::string_view ESM4Creature::getName(const MWWorld::ConstPtr& ptr) const
     {
-        return ptr.get<ESM4::Creature>()->mBase->mFullName;
+        const auto* base = ptr.get<ESM4::Creature>()->mBase;
+        return MWWorld::oblivionActorName(base->mFormKey, base->mFullName);
     }
 
     MWGui::ToolTipInfo ESM4Creature::getToolTipInfo(const MWWorld::ConstPtr& ptr, int count) const

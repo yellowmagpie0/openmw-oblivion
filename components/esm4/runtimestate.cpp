@@ -1240,7 +1240,7 @@ namespace ESM4
 
     void RuntimeActorBaseOverride::validate() const
     {
-        if (mBase.isNull() || (mValues.empty() && !mEssential && !mFactions) || mValues.size() > 72
+        if (mBase.isNull() || (mValues.empty() && !mEssential && !mFactions && !mFullName && !mLevel) || mValues.size() > 72
             || (mKind != ActorBaseKind::Npc && mKind != ActorBaseKind::Creature))
             throw std::runtime_error("Invalid TES4 native actor base override");
         std::set<std::uint8_t> seen;
@@ -2136,6 +2136,8 @@ namespace ESM4
             base.validate();
             if (mVersion < 84 && base.mEssential)
                 throw std::runtime_error("Essential base overrides require runtime-state version84");
+            if (mVersion < 108 && (base.mFullName || base.mLevel))
+                throw std::runtime_error("Actor name and level overrides require runtime-state version 108");
             if (mVersion < 90 && base.mFactions)
                 throw std::runtime_error("Faction base overrides require runtime-state version90");
             if (!overriddenBases.insert(base.mBase).second)
@@ -3758,6 +3760,19 @@ namespace ESM4
                         }
                     }
                 }
+                if (mVersion >= 108)
+                {
+                    writer.integer<std::uint8_t>(base.mFullName.has_value());
+                    if (base.mFullName) writer.string(*base.mFullName);
+                    writer.integer<std::uint8_t>(base.mLevel.has_value());
+                    if (base.mLevel)
+                    {
+                        writer.integer(base.mLevel->mLevelOrOffset);
+                        writer.integer<std::uint8_t>(base.mLevel->mScaled);
+                        writer.integer(base.mLevel->mMinimum);
+                        writer.integer(base.mLevel->mMaximum);
+                    }
+                }
             }
         }
         if (mVersion >= 12)
@@ -5087,6 +5102,17 @@ namespace ESM4
                             base.mFactions->push_back({faction, reader.integer<std::int8_t>()});
                         }
                     }
+                }
+                if (result.mVersion >= 108)
+                {
+                    const auto flag = [&]() {
+                        const auto raw = reader.integer<std::uint8_t>();
+                        if (raw > 1) throw std::runtime_error("Invalid actor base flag");
+                        return raw != 0;
+                    };
+                    if (flag()) base.mFullName = reader.string();
+                    if (flag()) base.mLevel = RuntimeActorLevel{reader.integer<std::int16_t>(), flag(),
+                        reader.integer<std::uint16_t>(), reader.integer<std::uint16_t>()};
                 }
                 result.mNativeActorBases.push_back(std::move(base));
             }
@@ -6767,6 +6793,12 @@ namespace ESM4
                         stream << ']';
                     }
                 }
+                if (mVersion >= 108 && base.mFullName)
+                    stream << ",\"full_name\":\"" << escapeJson(*base.mFullName) << '\"';
+                if (mVersion >= 108 && base.mLevel)
+                    stream << ",\"level\":[" << base.mLevel->mLevelOrOffset << ','
+                           << (base.mLevel->mScaled ? "true" : "false") << ',' << base.mLevel->mMinimum
+                           << ',' << base.mLevel->mMaximum << ']';
                 stream << '}';
             }
             stream << ']';

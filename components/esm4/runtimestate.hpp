@@ -79,7 +79,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 107;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 108;
 
     // v106: one Player-owned forward chair lifecycle. Clip clocks are independent
     // of actor locomotion; cold loading never replays entry or marker selection.
@@ -495,6 +495,15 @@ namespace ESM4
         friend bool operator==(const RuntimeActorFaction&, const RuntimeActorFaction&) = default;
     };
 
+    struct RuntimeActorLevel
+    {
+        std::int16_t mLevelOrOffset = 1;
+        bool mScaled = false;
+        std::uint16_t mMinimum = 0;
+        std::uint16_t mMaximum = 0;
+        friend bool operator==(const RuntimeActorLevel&, const RuntimeActorLevel&) = default;
+    };
+
     struct RuntimeActorBaseOverride
     {
         ESM::FormKey mBase;
@@ -505,6 +514,8 @@ namespace ESM4
         // v90: ordered shared-base membership replacement. Empty differs from
         // absent (use authored content). Stable identities survive load order.
         std::optional<std::vector<RuntimeActorFaction>> mFactions = std::nullopt;
+        std::optional<std::string> mFullName;
+        std::optional<RuntimeActorLevel> mLevel;
 
         void validate() const;
         friend bool operator==(const RuntimeActorBaseOverride&, const RuntimeActorBaseOverride&) = default;

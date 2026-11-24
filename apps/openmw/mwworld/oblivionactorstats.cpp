@@ -6,6 +6,7 @@
 #include "esmstore.hpp"
 #include "class.hpp"
 #include "player.hpp"
+#include "worldimp.hpp"
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/world.hpp"
@@ -28,6 +29,27 @@
 
 namespace MWWorld
 {
+    ESM4::ACBS_TES4 oblivionActorLevelConfig(ESM4::ACBS_TES4 config, const ESM4::RuntimeActorLevel* levelOverride)
+    {
+        if (levelOverride)
+        {
+            config.levelOrOffset = levelOverride->mLevelOrOffset;
+            if (levelOverride->mScaled) config.flags |= ESM4::Npc::TES4_PCLevelOffset;
+            else config.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+            config.calcMin = levelOverride->mMinimum;
+            config.calcMax = levelOverride->mMaximum;
+        }
+        return config;
+    }
+
+    std::string_view oblivionActorName(const ESM::FormKey& base, std::string_view authoredName)
+    {
+        const auto* world = dynamic_cast<const World*>(MWBase::Environment::get().getWorldOrNull());
+        const auto* combat = world ? world->getOblivionCombatService() : nullptr;
+        const auto* saved = combat ? combat->findActorBase(base) : nullptr;
+        return saved && saved->mFullName ? std::string_view(*saved->mFullName) : authoredName;
+    }
+
     const std::array<ESM::RefId, 21>& oblivionSkillIds()
     {
         // ESM::Skill IDs are dynamically initialized in loadskil.cpp.
@@ -51,8 +73,12 @@ namespace MWWorld
             key = store.get<ESM4::Creature>().findFormKey(ESM::RefId(actorBase));
         if (!key)
             throw std::runtime_error("Native actor construction lacks a stable base identity");
+        const auto* world = dynamic_cast<const World*>(MWBase::Environment::get().getWorldOrNull());
+        const auto* combat = world ? world->getOblivionCombatService() : nullptr;
+        const auto* base = combat ? combat->findActorBase(*key) : nullptr;
+        const auto* levelOverride = base && base->mLevel ? &*base->mLevel : nullptr;
         std::optional<std::uint16_t> playerLevel;
-        if (scaled)
+        if (levelOverride ? levelOverride->mScaled : scaled)
         {
             const auto player = MWBase::Environment::get().getWorld()->getPlayerPtr();
             if (player.isEmpty())
@@ -62,7 +88,7 @@ namespace MWWorld
                 throw std::runtime_error("Native actor construction has invalid player base level");
             playerLevel = static_cast<std::uint16_t>(level);
         }
-        return resolveOblivionActorBaseStats(store, *key, playerLevel);
+        return resolveOblivionActorBaseStats(store, *key, playerLevel, levelOverride);
     }
 
     namespace
@@ -93,12 +119,12 @@ namespace MWWorld
         }
 
         OblivionActorBaseStats npcStats(const ESMStore& store, const ESM4::Npc& npc,
-            std::optional<std::uint16_t> playerLevel)
+            std::optional<std::uint16_t> playerLevel, const ESM4::RuntimeActorLevel* levelOverride = nullptr)
         {
             if (!npc.mIsTES4)
                 throw std::invalid_argument("actor is not a TES4 NPC");
             OblivionActorBaseStats result{};
-            result.mLevel = level(npc.mBaseConfig.tes4, playerLevel);
+            result.mLevel = level(oblivionActorLevelConfig(npc.mBaseConfig.tes4, levelOverride), playerLevel);
             result.mAttributes = attributes(npc.mData.attribs);
             const auto& s = npc.mData.skills;
             result.mSkills = {s.armorer, s.athletics, s.blade, s.block, s.blunt, s.handToHand,
@@ -225,7 +251,7 @@ namespace MWWorld
 
     ESM4::RuntimeActorValues resolveOblivionInitialNonPlayerValues(const ESMStore& store,
         const ESM::FormKey& actor, const ESM::FormKey& actorBase,
-        std::optional<std::uint16_t> playerLevel, ESM4::ActorValueProcess process)
+        std::optional<std::uint16_t> playerLevel, ESM4::ActorValueProcess process, const ESM4::RuntimeActorLevel* levelOverride)
     {
         if (actor.isNull() || ESM4::runtimeReferenceKey(actor) == ESM::FormKey::dynamic("player", 1))
             throw std::invalid_argument("native nonplayer construction requires a nonplayer actor identity");
@@ -237,7 +263,7 @@ namespace MWWorld
             || (npc && (!npc->mIsTES4 || npc->mFormKey != actorBase))
             || (creature && (!creature->mAttackReach || creature->mFormKey != actorBase)))
             throw std::invalid_argument("native actor construction has a missing or mismatched winning base");
-        const auto stats = resolveOblivionActorBaseStats(store, actorBase, playerLevel);
+        const auto stats = resolveOblivionActorBaseStats(store, actorBase, playerLevel, levelOverride);
         const auto& ai = npc ? npc->mAIData : creature->mAIData;
         ESM4::RuntimeActorValues result;
         result.mActor = actor;
@@ -691,7 +717,7 @@ namespace MWWorld
     }
 
     OblivionActorBaseStats resolveOblivionActorBaseStats(const ESMStore& store,
-        const ESM::FormKey& actorBase, std::optional<std::uint16_t> playerLevel)
+        const ESM::FormKey& actorBase, std::optional<std::uint16_t> playerLevel, const ESM4::RuntimeActorLevel* levelOverride)
     {
         try
         {
@@ -700,14 +726,15 @@ namespace MWWorld
             if (actorBase == ESM::FormKey::content("Oblivion.esm", 7))
                 throw std::invalid_argument("player base requires the native player-stat path");
             if (const auto* npc = store.search<ESM4::Npc>(actorBase))
-                return npcStats(store, *npc, playerLevel);
+                return npcStats(store, *npc, playerLevel, levelOverride);
             const auto* creature = store.search<ESM4::Creature>(actorBase);
             if (!creature || !creature->mAttackReach)
                 throw std::invalid_argument("missing or unsupported native actor base");
             OblivionActorBaseStats result{};
-            result.mLevel = level(creature->mBaseConfig.tes4, playerLevel);
+            const auto config = oblivionActorLevelConfig(creature->mBaseConfig.tes4, levelOverride);
+            result.mLevel = level(config, playerLevel);
             result.mAttributes = attributes(creature->mData.attribs);
-            const bool scaled = creature->mBaseConfig.tes4.flags & ESM4::Creature::TES4_PCLevelOffset;
+            const bool scaled = config.flags & ESM4::Creature::TES4_PCLevelOffset;
             const auto settings = scaled ? ESM4::buildCreatureBaseStatsSettings(winningRecords<ESM4::GameSetting>(store))
                                          : ESM4::buildCreatureBaseStatsSettings({});
             const auto values = ESM4::calculateCreatureBaseStats({scaled, result.mLevel,

@@ -25,6 +25,8 @@
 
 #include "../mwdialogue/keywordsearch.hpp"
 #include "../mwrender/camera.hpp"
+#include "../mwrender/esm4npcanimation.hpp"
+#include "../mwworld/datetimemanager.hpp"
 
 #include "../mwworld/class.hpp"
 #include "../mwworld/containerstore.hpp"
@@ -381,6 +383,7 @@ namespace MWGui
         }
         else
         {
+            endStandingDialogue();
             resetReference();
             MWBase::Environment::get().getDialogueManager()->goodbyeSelected();
             mTopicsList->scrollToTop();
@@ -504,6 +507,7 @@ namespace MWGui
         bool sameActor = (mPtr == actor);
         if (!sameActor)
         {
+            endStandingDialogue();
             setVoiceFiles({});
             // The history is not reset here
             mKeywords.clear();
@@ -532,6 +536,20 @@ namespace MWGui
         auto world = MWBase::Environment::get().getWorld();
         if (world->getGameProfile() == ESM::GameProfile::Oblivion && actor.getType() == ESM::REC_NPC_4)
         {
+            const auto& position = actor.getRefData().getPosition();
+            const auto toPlayer = world->getPlayerPtr().getRefData().getPosition().asVec3() - position.asVec3();
+            // The dialogue menu pauses locomotion, including a walking speaker's turn.
+            const auto& stats = actor.getClass().getCreatureStats(actor);
+            auto* animation = dynamic_cast<MWRender::ESM4NpcAnimation*>(world->getAnimation(actor));
+            if (animation && std::hypot(toPlayer.x(), toPlayer.y()) > 0.01f
+                && !stats.getKnockedDown() && !stats.isParalyzed() && !stats.getAiSequence().isInCombat()
+                && !world->isSwimming(actor) && animation->beginStandingDialogue())
+            {
+                world->rotateObject(actor, { position.rot[0], position.rot[1], std::atan2(toPlayer.x(), toPlayer.y()) });
+                animation->setHeadYaw(0.f);
+                animation->setHeadPitch(0.f);
+                animation->runAnimation(0.f);
+            }
             auto* camera = world->getCamera();
             if (camera && camera->getMode() == MWRender::Camera::Mode::FirstPerson)
             {
@@ -601,10 +619,19 @@ namespace MWGui
         mDeleteLater.clear();
     }
 
+    void DialogueWindow::endStandingDialogue()
+    {
+        if (!mPtr.isEmpty())
+            if (auto* animation = dynamic_cast<MWRender::ESM4NpcAnimation*>(
+                    MWBase::Environment::get().getWorld()->getAnimation(mPtr)))
+                animation->endStandingDialogue();
+    }
+
     void DialogueWindow::onClose()
     {
         if (MWBase::Environment::get().getWindowManager()->containsMode(GM_Dialogue))
             return;
+        endStandingDialogue();
         setVoiceFiles({});
         // Reset history
         mHistoryContents.clear();
@@ -612,6 +639,7 @@ namespace MWGui
 
     void DialogueWindow::clear()
     {
+        endStandingDialogue();
         setVoiceFiles({});
         resetReference();
     }
@@ -738,6 +766,8 @@ namespace MWGui
 
     void DialogueWindow::updateHistory(bool scrollbar)
     {
+        if (!mPtr.isEmpty())
+            setTitle(mPtr.getClass().getName(mPtr));
         if (!scrollbar && mScrollBar->getVisible())
         {
             mHistory->setSize(mHistory->getSize() + MyGUI::IntSize(mScrollBar->getWidth(), 0));
@@ -934,6 +964,10 @@ namespace MWGui
             return;
 
         updateVoice();
+        auto world = MWBase::Environment::get().getWorld();
+        if (mPtr.getType() == ESM::REC_NPC_4 && world->getTimeManager()->isPaused())
+            if (auto* animation = dynamic_cast<MWRender::ESM4NpcAnimation*>(world->getAnimation(mPtr)))
+                animation->updateFace(dt);
         updateDisposition();
         deleteLater();
 

@@ -194,6 +194,7 @@ namespace MWGui
         void restock();
         void deleteLater();
         void redrawTopicsList();
+        void endStandingDialogue();
         void updateVoice();
         std::vector<std::string> mVoiceFiles;
         std::size_t mNextVoiceFile = 0;

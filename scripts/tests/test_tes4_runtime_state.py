@@ -5502,6 +5502,24 @@ class QuestJournalStateTests(unittest.TestCase):
         self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["quests"], [quest])
 
 
+class ActorBaseNameAndLevelTests(unittest.TestCase):
+    def test_independent_overrides_and_legacy_format(self):
+        for fields in ({"full_name": "Martin"}, {"level": [1, True, 1, 0]},
+                       {"full_name": "", "level": [-2, True, 3, 150]}):
+            with self.subTest(fields=fields):
+                state = make_state()
+                state.update(schema_version=108, ai_rng_state=1)
+                state["native_actor_bases"] = [{"base": "content:oblivion.esm:023f2a", "kind": 0,
+                    "values": [], "essential": None, "factions": None, **fields}]
+                payload = state_io.encode_payload(state)
+                restored = state_io.decode_payload(payload)
+                self.assertEqual(restored["native_actor_bases"], state["native_actor_bases"])
+                self.assertEqual(state_io.encode_payload(restored), payload)
+                state["schema_version"] = 107
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.encode_payload(state)
+
+
 class PlayerFurnitureStateTests(unittest.TestCase):
     def make_seated(self):
         state = make_state(); state["schema_version"] = 106; state["ai_rng_state"] = 1

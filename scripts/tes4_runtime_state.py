@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 107
+CURRENT_VERSION = 108
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -985,7 +985,15 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                         or type(rank) is not int or not -128 <= rank <= 127):
                     raise RuntimeStateError("Invalid or duplicate actor base faction")
                 seen_factions.add(faction)
-        if len(values) > 72 or (not values and essential is None and factions is None):
+        full_name = base_override.get("full_name")
+        level = base_override.get("level")
+        if full_name is not None and (version < 108 or not isinstance(full_name, str)):
+            raise RuntimeStateError("Invalid actor full name override")
+        if level is not None and (version < 108 or not isinstance(level, list) or len(level) != 4
+                or type(level[0]) is not int or not -32768 <= level[0] <= 32767 or type(level[1]) is not bool
+                or any(type(v) is not int or not 0 <= v <= 65535 for v in level[2:])):
+            raise RuntimeStateError("Invalid actor level override")
+        if len(values) > 72 or (not values and essential is None and factions is None and full_name is None and level is None):
             raise RuntimeStateError("Invalid TES4 native actor base value count")
         seen_values: set[int] = set()
         for entry in values:
@@ -3333,6 +3341,16 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 if present > 1:
                     raise RuntimeStateError("Invalid base faction presence")
                 base["factions"] = [[reader.string(), reader.unpack("<b")] for _ in range(reader.count())] if present else None
+            if version >= 108:
+                def flag():
+                    raw = reader.unpack("<B")
+                    if raw > 1:
+                        raise RuntimeStateError("Invalid actor base flag")
+                    return bool(raw)
+                if flag():
+                    base["full_name"] = reader.string()
+                if flag():
+                    base["level"] = [reader.unpack("<h"), flag(), reader.unpack("<H"), reader.unpack("<H")]
             result["native_actor_bases"].append(base)
     if version >= 12:
         result["native_actor_life"] = [
@@ -4269,6 +4287,15 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     for faction, rank in factions:
                         writer.string(faction)
                         writer.pack("<b", rank)
+            if version >= 108:
+                full_name, level = base.get("full_name"), base.get("level")
+                writer.pack("<B", full_name is not None)
+                if full_name is not None:
+                    writer.string(full_name)
+                writer.pack("<B", level is not None)
+                if level is not None:
+                    for fmt, value in zip(("<h", "<B", "<H", "<H"), level):
+                        writer.pack(fmt, value)
     if version >= 12:
         lives = sorted(state.get("native_actor_life", []), key=lambda life: life["actor"])
         writer.pack("<I", len(lives))

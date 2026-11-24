@@ -1,5 +1,7 @@
 # Cloud Ruler Temple reception
 
+The [Path of Dawn briefing](PATH-OF-DAWN-BRIEFING-HANDOFF.md) continues from the courtyard save through Jauffre’s lead on Baurus.
+
 Start at the [earned gate checkpoint](CLOUD-RULER-GATES-HANDOFF.md). Walk up to the gate with Martin and Jauffre. Cyrus comes down to speak to Jauffre and welcome Martin. Go through the gate and follow them up the stairs. The stopping point is MQ04 stage 45, after Jauffre dismisses the Blades. The next interaction is Martin’s conversation with the player about the Amulet of Kings.
 
 ## Original scene

@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <optional>
 #include <span>
+#include <string_view>
 #include <vector>
 
 namespace MWMechanics
@@ -29,6 +30,7 @@ namespace ESM
 namespace ESM4
 {
     struct RuntimeActorValues;
+    struct RuntimeActorLevel;
     struct RuntimePassiveAbility;
     struct LevelledSpell;
 }
@@ -49,6 +51,8 @@ namespace MWWorld
         std::optional<std::uint16_t> mNaturalDamage;
     };
 
+    ESM4::ACBS_TES4 oblivionActorLevelConfig(ESM4::ACBS_TES4 config, const ESM4::RuntimeActorLevel* levelOverride);
+    std::string_view oblivionActorName(const ESM::FormKey& base, std::string_view authoredName);
     const std::array<ESM::RefId, 21>& oblivionSkillIds();
     // Resolve native winning GMSTs at the publication boundary. Shared TES3
     // aliases and previously cached settings cannot supply player formulas.
@@ -67,14 +71,14 @@ namespace MWWorld
     // Read-only construction inputs from native winning records. Runtime
     // modifiers/current values and persisted changes belong to actor authority.
     OblivionActorBaseStats resolveOblivionActorBaseStats(const ESMStore& store,
-        const ESM::FormKey& actorBase, std::optional<std::uint16_t> playerLevel);
+        const ESM::FormKey& actorBase, std::optional<std::uint16_t> playerLevel, const ESM4::RuntimeActorLevel* levelOverride = nullptr);
 
     // Fresh native values only. Callers must prefer restored authority and
     // select the actual process before publishing these construction inputs.
     // This resolves winning forms, not abilities, effects or lifecycle events.
     ESM4::RuntimeActorValues resolveOblivionInitialNonPlayerValues(const ESMStore& store,
         const ESM::FormKey& actor, const ESM::FormKey& actorBase,
-        std::optional<std::uint16_t> playerLevel, ESM4::ActorValueProcess process);
+        std::optional<std::uint16_t> playerLevel, ESM4::ActorValueProcess process, const ESM4::RuntimeActorLevel* levelOverride = nullptr);
 
     // Native Player form calculation from the selected winning race/class,
     // original ordered signed bonuses, SKILs and GMSTs. No facade or ability

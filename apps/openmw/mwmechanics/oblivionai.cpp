@@ -80,6 +80,7 @@
 #include "../mwworld/containerstore.hpp"
 #include "../mwworld/datetimemanager.hpp"
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/oblivionactorstats.hpp"
 #include "../mwworld/globalvariablename.hpp"
 #include "../mwworld/action.hpp"
 #include "../mwworld/actionteleport.hpp"
@@ -1691,11 +1692,21 @@ namespace MWMechanics
             {
                 if (function == "GetActorValue")
                     return actorValue();
-                if (const ESM4::Npc* levelNpc = mWorld.mStore.search<ESM4::Npc>(subjectLocation->mBase))
-                    return value(std::max(1, static_cast<int>(levelNpc->mBaseConfig.tes4.levelOrOffset)));
-                if (const ESM4::Creature* levelCreature = mWorld.mStore.search<ESM4::Creature>(subjectLocation->mBase))
-                    return value(std::max(1, static_cast<int>(levelCreature->mBaseConfig.tes4.levelOrOffset)));
-                return value(1.0);
+                if (!npc && !creature)
+                    return value(1.0);
+                const auto* combat = mWorld.getOblivionCombatService();
+                const auto* base = combat ? combat->findActorBase(subjectLocation->mBase) : nullptr;
+                const auto config = MWWorld::oblivionActorLevelConfig(npc ? npc->mBaseConfig.tes4 : creature->mBaseConfig.tes4,
+                    base && base->mLevel ? &*base->mLevel : nullptr);
+                std::optional<std::uint16_t> playerLevel;
+                if (config.flags & ESM4::Npc::TES4_PCLevelOffset)
+                {
+                    const auto player = mWorld.getPlayerPtr();
+                    if (player.isEmpty())
+                        return ESM4::ConditionValue::missing();
+                    playerLevel = player.getClass().getCreatureStats(player).getLevel();
+                }
+                return value(std::max<int>(1, ESM4::resolveActorLevel(config, playerLevel)));
             }
             if (function == "GetLocked")
             {

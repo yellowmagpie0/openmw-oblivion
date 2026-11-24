@@ -4319,10 +4319,11 @@ namespace MWMechanics
         const auto key = actor.getCellRef().getFormKey();
         const auto* oldValues = findActorValues(key);
         const bool resetPhysicalHit = activate && oldValues && oldValues->mProcess != process;
-        auto values = oldValues ? *oldValues : MWWorld::resolveOblivionInitialNonPlayerValues(
-            store, key, baseKey, playerLevel, process);
-        validateNonPlayerIdentity(actor, values);
         const auto* base = findActorBase(baseKey);
+        const auto* level = base && base->mLevel ? &*base->mLevel : nullptr;
+        auto values = oldValues ? *oldValues : MWWorld::resolveOblivionInitialNonPlayerValues(
+            store, key, baseKey, playerLevel, process, level);
+        validateNonPlayerIdentity(actor, values);
         if (base && (base->mKind == ESM4::ActorBaseKind::Creature) != (actor.getType() == ESM::REC_CREA4))
             throw std::invalid_argument("native actor base override kind mismatch");
         applyActorBase(values, base);
@@ -4457,6 +4458,9 @@ namespace MWMechanics
             if (const auto graph = mGetUpPlayback.find(key); graph != mGetUpPlayback.end())
                 graph->second.mPhysicalHit.reset();
         view.commit();
+        if (level)
+            actor.getClass().getCreatureStats(actor).setLevel(
+                ESM4::resolveActorLevel(MWWorld::oblivionActorLevelConfig({}, level), playerLevel));
     }
 
     const ESM4::RuntimeActorBaseOverride* OblivionCombatService::findActorBase(const ESM::FormKey& base) const
@@ -4485,6 +4489,60 @@ namespace MWMechanics
         candidate.mEssential = essential;
         candidate.validate();
         mActorBases.insert_or_assign(base, std::move(candidate));
+    }
+
+    void OblivionCombatService::setActorFullName(const ESM::FormKey& base, ESM4::ActorBaseKind kind, std::string name)
+    {
+        auto candidate = findActorBase(base) ? *findActorBase(base) : ESM4::RuntimeActorBaseOverride{base, kind, {}};
+        if (candidate.mKind != kind)
+            throw std::invalid_argument("native actor name base kind mismatch");
+        candidate.mFullName = std::move(name);
+        candidate.validate();
+        mActorBases.insert_or_assign(base, std::move(candidate));
+    }
+
+    void OblivionCombatService::setActorLevel(const ESM::FormKey& base, ESM4::ActorBaseKind kind,
+        ESM4::RuntimeActorLevel level, const MWWorld::ESMStore& store, std::uint16_t playerLevel,
+        std::span<const MWWorld::Ptr> residents)
+    {
+        const auto calculated = MWWorld::resolveOblivionActorBaseStats(store, base, playerLevel, &level);
+        auto replacement = findActorBase(base) ? *findActorBase(base) : ESM4::RuntimeActorBaseOverride{base, kind, {}};
+        if (replacement.mKind != kind)
+            throw std::invalid_argument("native actor level base kind mismatch");
+        replacement.mLevel = level;
+        replacement.validate();
+        std::map<ESM::FormKey, ESM4::RuntimeActorValues> changes;
+        for (const auto& [key, old] : mActorValues)
+        {
+            if (old.mBase != base || old.mOwner != ESM4::ActorValueOwner::NonPlayer)
+                continue;
+            auto& values = changes.emplace(key, old).first->second;
+            for (std::size_t i = 0; i < calculated.mAttributes.size(); ++i)
+                values.mValues[i].mBase = calculated.mAttributes[i];
+            for (std::size_t i = 0; i < calculated.mSkills.size(); ++i)
+                values.mValues[12 + i].mBase = calculated.mSkills[i];
+            values.mNonPlayerFormHealth = std::bit_cast<std::int32_t>(calculated.mHealth);
+            values.mValues[8].mBase = static_cast<float>(*values.mNonPlayerFormHealth);
+            values.mValues[9].mBase = calculated.mMagicka;
+            values.mValues[10].mBase = calculated.mFatigue;
+            applyActorBase(values, &replacement);
+            values.validate();
+        }
+        std::list<PreparedNonPlayerView> views;
+        std::vector<MWMechanics::CreatureStats*> levelTargets;
+        for (const auto& ptr : residents)
+            if (const auto it = changes.find(ptr.getCellRef().getFormKey()); it != changes.end())
+            {
+                views.emplace_back(ptr, it->second, &replacement, findActorLife(it->first));
+                levelTargets.push_back(&ptr.getClass().getCreatureStats(ptr));
+            }
+        mActorBases.insert_or_assign(base, std::move(replacement));
+        for (auto& [key, values] : changes)
+            std::swap(mActorValues.at(key), values);
+        for (auto& view : views)
+            view.commit();
+        for (auto* stats : levelTargets)
+            stats->setLevel(calculated.mLevel);
     }
 
     void OblivionCombatService::setBaseFactions(const ESM::FormKey& base, ESM4::ActorBaseKind kind,

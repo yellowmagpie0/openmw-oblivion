@@ -4640,11 +4640,13 @@ namespace MWWorld
         if (!mOblivionCombat || actor.isEmpty())
             return false;
         bool scaled;
+        ESM::FormKey actorBase;
         if (actor.getType() == ESM::REC_NPC_4)
         {
             const auto* base = actor.get<ESM4::Npc>()->mBase;
             if (!base || !base->mIsTES4)
                 return false;
+            actorBase = base->mFormKey;
             scaled = (base->mBaseConfig.tes4.flags & ESM4::Npc::TES4_PCLevelOffset) != 0;
         }
         else if (actor.getType() == ESM::REC_CREA4)
@@ -4652,13 +4654,18 @@ namespace MWWorld
             const auto* base = actor.get<ESM4::Creature>()->mBase;
             if (!base || !base->mAttackReach)
                 return false;
+            actorBase = base->mFormKey;
             scaled = (base->mBaseConfig.tes4.flags & ESM4::Creature::TES4_PCLevelOffset) != 0;
         }
         else
             return false;
         const auto key = actor.getCellRef().getFormKey();
         std::optional<std::uint16_t> playerLevel;
-        if (scaled && !mOblivionCombat->findActorValues(key))
+        const auto* baseOverride = mOblivionCombat->findActorBase(actorBase);
+        const bool levelOverride = baseOverride && baseOverride->mLevel;
+        if (levelOverride)
+            scaled = baseOverride->mLevel->mScaled;
+        if (scaled && (levelOverride || !mOblivionCombat->findActorValues(key)))
         {
             const auto player = getPlayerPtr();
             if (player.isEmpty())

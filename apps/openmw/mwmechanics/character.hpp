@@ -41,6 +41,7 @@ namespace MWMechanics
         Priority_Storm,
         Priority_Death,
         Priority_Scripted,
+        Priority_Dialogue,
 
         Num_Priorities
     };

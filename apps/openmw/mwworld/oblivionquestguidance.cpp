@@ -1,4 +1,5 @@
 #include "oblivionquestguidance.hpp"
+#include "oblivionactorstats.hpp"
 
 #include <algorithm>
 #include <deque>
@@ -78,7 +79,7 @@ namespace MWMechanics
         if (result.mLabel.empty())
         {
             if (const auto* npc = store.search<ESM4::Npc>(location.mBase))
-                result.mLabel = npc->mFullName;
+                result.mLabel = MWWorld::oblivionActorName(location.mBase, npc->mFullName);
             else if (const auto* placed = store.search<ESM4::Reference>(reference))
                 result.mLabel = placed->mFullName;
         }
