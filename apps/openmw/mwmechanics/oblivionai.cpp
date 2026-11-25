@@ -207,15 +207,17 @@ namespace MWMechanics
                 && !package->mPackageFlags.has(ESM4::PackageFlag::MustComplete);
         }
 
-        bool waitingForPackageAction(ESM4::PackagePhase phase)
+        bool waitingForPackageAction(const ESM4::RuntimeActorAiState& state)
         {
-            return phase == ESM4::PackagePhase::Wait || phase == ESM4::PackagePhase::WaitingForM16Action;
+            return state.mPhase == ESM4::PackagePhase::Wait || state.mPhase == ESM4::PackagePhase::WaitingForM16Action
+                || (state.mPhase == ESM4::PackagePhase::ReadyForDialogue
+                    && state.mPackageType == ESM4::AIPackageType::Wander);
         }
 
         bool canReevaluateAfterStage(const ESM4::RuntimeActorAiState& state, const ESM4::AIPackage* package)
         {
             return package && !package->mPackageFlags.has(ESM4::PackageFlag::MustComplete)
-                && (waitingForPackageAction(state.mPhase)
+                && (waitingForPackageAction(state)
                     || (state.mPackageType == ESM4::AIPackageType::Travel
                         && !package->mPackageFlags.has(ESM4::PackageFlag::MustReachLocation)));
         }
@@ -4367,63 +4369,48 @@ namespace MWMechanics
             return hasContinuousRoute || ((destinationCell.isNull() || destinationCell == live.mState.mCell)
                 && distanceSquared(actor.getRefData().getPosition().asVec3(), destination) <= sArrivalTolerance
                     * sArrivalTolerance);
-        if (!destinationNode)
-        {
-            if (!sameCell && prepareDoorRoute(live, *start, destinationCell, &actor))
+        const auto prepareResidentDoorRoute = [&]() {
+            if (!prepareDoorRoute(live, *start, targetGraphCell, &actor))
+                return false;
+
+            // A district pathgrid can take the scenic route or double back through
+            // a crowd. Once the exit is known, walk the mesh to its approach.
+            const auto exit = actor.getCell()->isExterior() ? loadedPtrFor(*live.mRouteDoor) : MWWorld::Ptr{};
+            const bool localExterior = !exit.isEmpty() && exit.isInCell() && exit.getCell()->isExterior()
+                && exit.getCell()->getCell()->getWorldSpace() == actor.getCell()->getCell()->getWorldSpace();
+            hasContinuousRoute = localExterior && prepareContinuousRoute(live.mRouteDoorPosition, {});
+            if (!hasContinuousRoute)
             {
                 std::vector<osg::Vec3f> checkpoints;
-                checkpoints.reserve(live.mRoute.size());
                 for (std::size_t index = live.mRouteCursor; index < live.mRoute.size(); ++index)
                 {
-                    const ESM4::PathgridGraph* routeGraph = service.graph(live.mRoute[index].mPathgrid);
-                    if (routeGraph == nullptr || routeGraph->cellKey() != live.mState.mCell)
+                    const auto* routeGraph = service.graph(live.mRoute[index].mPathgrid);
+                    if (!routeGraph || routeGraph->cellKey() != live.mState.mCell)
                         break;
-                    const ESM4::PathgridPoint point = routeGraph->worldPoint(live.mRoute[index].mNode);
+                    const auto point = routeGraph->worldPoint(live.mRoute[index].mNode);
                     checkpoints.emplace_back(point.mX, point.mY, point.mZ);
                 }
                 hasContinuousRoute = prepareContinuousRoute(live.mRouteDoorPosition, checkpoints);
-                if (hasContinuousRoute)
-                    live.mContinuousRouteEndCursor = live.mRoute.size();
-                std::ostringstream routeEvent;
-                routeEvent << "generation=" << live.mState.mRouteGeneration << " nodes=" << live.mRoute.size()
-                           << " destination_cell=" << destinationCell.serialize()
-                           << " door=" << live.mState.mDoor.serialize()
-                           << " continuous=" << (hasContinuousRoute ? "true" : "false");
-                logEvent("route", live, routeEvent.str());
-                return true;
             }
-            return hasContinuousRoute || (sameCell
+            if (hasContinuousRoute)
+                live.mContinuousRouteEndCursor = live.mRoute.size();
+            if (mEventStream.is_open())
+            {
+                std::ostringstream detail;
+                detail << "generation=" << live.mState.mRouteGeneration << " nodes=" << live.mRoute.size()
+                       << " destination_cell=" << targetGraphCell.serialize() << " door=" << live.mState.mDoor.serialize()
+                       << " continuous=" << (hasContinuousRoute ? "true" : "false");
+                logEvent("route", live, detail.str());
+            }
+            return true;
+        };
+        if (!destinationNode)
+            return (!sameCell && prepareResidentDoorRoute()) || hasContinuousRoute || (sameCell
                 && distanceSquared(actor.getRefData().getPosition().asVec3(), destination)
                     <= sArrivalTolerance * sArrivalTolerance);
-        }
         const ESM4::PathgridRouteResult route = service.route(*start, *destinationNode);
         if (!route)
-        {
-            if (!hasContinuousRoute && prepareDoorRoute(live, *start, targetGraphCell, &actor))
-            {
-                std::vector<osg::Vec3f> checkpoints;
-                checkpoints.reserve(live.mRoute.size());
-                for (std::size_t index = live.mRouteCursor; index < live.mRoute.size(); ++index)
-                {
-                    const ESM4::PathgridGraph* routeGraph = service.graph(live.mRoute[index].mPathgrid);
-                    if (routeGraph == nullptr || routeGraph->cellKey() != live.mState.mCell)
-                        break;
-                    const ESM4::PathgridPoint point = routeGraph->worldPoint(live.mRoute[index].mNode);
-                    checkpoints.emplace_back(point.mX, point.mY, point.mZ);
-                }
-                hasContinuousRoute = prepareContinuousRoute(live.mRouteDoorPosition, checkpoints);
-                if (hasContinuousRoute)
-                    live.mContinuousRouteEndCursor = live.mRoute.size();
-                std::ostringstream routeEvent;
-                routeEvent << "generation=" << live.mState.mRouteGeneration << " nodes=" << live.mRoute.size()
-                           << " destination_cell=" << destinationCell.serialize()
-                           << " door=" << live.mState.mDoor.serialize()
-                           << " continuous=" << (hasContinuousRoute ? "true" : "false");
-                logEvent("route", live, routeEvent.str());
-                return true;
-            }
-            return hasContinuousRoute;
-        }
+            return hasContinuousRoute || prepareResidentDoorRoute();
         live.mRoute = route.mRoute->mNodes;
         // A nearby entry node can still be across a narrow corner. Let
         // collision-driven movement reach it before following its next edge.
@@ -4684,6 +4671,40 @@ namespace MWMechanics
         const float speed = static_cast<float>(attributes.speed);
         return running ? ESM4::playerRunSpeed(speed, encumbrance, capacity)
                        : ESM4::playerWalkSpeed(speed, encumbrance, capacity, sneaking);
+    }
+
+    bool OblivionAiService::waitsForEscortedPlayer(const LiveActor& live,
+        const ESM4::AIPackage& current, const osg::Vec3f& position) const
+    {
+        if (current.mPackageType != ESM4::AIPackageType::Escort
+            || ESM4::runtimeReferenceKey(live.mState.mTarget) != ESM::FormKey::dynamic("player", 1))
+            return false;
+        const auto player = mWorld.getPlayerPtr();
+        if (player.isEmpty() || !player.isInCell())
+            return false;
+        const auto playerCell = cellKey(player);
+        const auto sameSpace = [&](const ESM::FormKey& left, const ESM::FormKey& right) {
+            if (left == right)
+                return true;
+            const auto* a = mWorld.mStore.search<ESM4::Cell>(left);
+            const auto* b = mWorld.mStore.search<ESM4::Cell>(right);
+            return a && b && a->isExterior() && b->isExterior()
+                && !a->mParentKey.isNull() && a->mParentKey == b->mParentKey;
+        };
+        if (sameSpace(live.mState.mCell, playerCell))
+        {
+            const float range = std::max(64.f, float(current.mTargetData.mDistance));
+            return distanceSquared(position, player.getRefData().getPosition().asVec3()) > range * range;
+        }
+        // Stop just inside a load door when the player is still on its source
+        // side. A player who crossed first can still be followed through it.
+        const auto from = mUnloadedLocationByReference.find(live.mState.mLastTransitionDoor);
+        if (from == mUnloadedLocationByReference.end())
+            return false;
+        const auto& door = mUnloadedLocations[from->second];
+        const auto to = mUnloadedLocationByReference.find(door.mTeleportDoor);
+        return to != mUnloadedLocationByReference.end() && sameSpace(door.mCell, playerCell)
+            && sameSpace(mUnloadedLocations[to->second].mCell, live.mState.mCell);
     }
 
     bool OblivionAiService::advanceUnloadedMovement(
@@ -5001,6 +5022,8 @@ namespace MWMechanics
         }
         if (live.mState.mPhase == ESM4::PackagePhase::Path)
         {
+            if (waitsForEscortedPlayer(live, *current, live.mState.mLastValidPosition.asVec3()))
+                return;
             refreshMovingTargetRoute(live, *current);
             if (live.mRoute.empty() && live.mDestination)
                 static_cast<void>(prepareUnloadedRoute(live));
@@ -6254,6 +6277,28 @@ namespace MWMechanics
             reached = true;
             return true;
         };
+        const auto steer = [&](const osg::Vec3f& point, bool mesh = false) {
+            faceAndMove(actor, point, run, sneak);
+            const bool escort = live.mState.mPackageType == ESM4::AIPackageType::Escort;
+            const bool outdoorFollow = mesh && live.mState.mPackageType == ESM4::AIPackageType::Follow
+                && actor.getCell()->isExterior();
+            if ((!escort && !outdoorFollow) || !live.mIgnoredPhysicalDoor.isNull()
+                || (!live.mState.mDoor.isNull() && (!escort || live.mRouteDoor != live.mState.mDoor)))
+                return;
+            // A crowd or the player standing at a load-door landing can block
+            // either a mesh corridor or an authored pathgrid segment.
+            const bool wasEvading = live.mFollowObstacle.isEvading();
+            live.mFollowObstacle.update(actor, point, duration, MWWorld::MovementDirectionFlag_Forward);
+            if (live.mFollowObstacle.isEvading())
+                live.mFollowObstacle.takeEvasiveAction(actor.getClass().getMovementSettings(actor));
+            else if (wasEvading)
+            {
+                live.mRoute.clear();
+                live.mRouteCursor = 0;
+                live.mContinuousRoute.clear();
+                live.mContinuousRouteCursor = 0;
+            }
+        };
         const float radius = travelArrivalRadius(live);
         if ((live.mState.mPackageType == ESM4::AIPackageType::Travel
                 || live.mState.mPackageType == ESM4::AIPackageType::Follow
@@ -6283,27 +6328,7 @@ namespace MWMechanics
 
                 if (useBlockingDoor(point))
                     return true;
-                faceAndMove(actor, point, run, sneak);
-                if (live.mState.mPackageType == ESM4::AIPackageType::Follow && actor.getCell()->isExterior()
-                    && live.mState.mDoor.isNull() && live.mIgnoredPhysicalDoor.isNull())
-                {
-                    // Navmesh clearance around a rock can differ from the
-                    // actor's collision sweep. Sideways motion along its edge
-                    // is not progress toward the next corridor point.
-                    const bool wasEvading = live.mFollowObstacle.isEvading();
-                    live.mFollowObstacle.update(actor, point, duration, MWWorld::MovementDirectionFlag_Forward);
-                    if (live.mFollowObstacle.isEvading())
-                        live.mFollowObstacle.takeEvasiveAction(actor.getClass().getMovementSettings(actor));
-                    else if (wasEvading)
-                    {
-                        // Replan from the cleared side before aiming back at
-                        // the same inaccessible corner.
-                        live.mRoute.clear();
-                        live.mRouteCursor = 0;
-                        live.mContinuousRoute.clear();
-                        live.mContinuousRouteCursor = 0;
-                    }
-                }
+                steer(point, true);
                 return true;
             }
 
@@ -6341,7 +6366,7 @@ namespace MWMechanics
                 {
                     if (useBlockingDoor(destination))
                         return true;
-                    faceAndMove(actor, destination, run, sneak);
+                    steer(destination);
                     return true;
                 }
                 return false;
@@ -6372,7 +6397,7 @@ namespace MWMechanics
                     const float distanceToSource = (sourcePosition - position).length();
                     if (distanceToSource > sArrivalTolerance)
                     {
-                        faceAndMove(actor, sourcePosition, run, sneak);
+                        steer(sourcePosition);
                         return true;
                     }
                     const std::optional<ESM::FormKey> door = doorForEdge(source, node);
@@ -6394,7 +6419,7 @@ namespace MWMechanics
                 // A resident actor must cross the actual cell boundary.  The
                 // scene/physics layer updates the identity; this controller
                 // only keeps steering toward the resolved PGRI endpoint.
-                faceAndMove(actor, foreignPosition, run, sneak);
+                steer(foreignPosition);
                 return true;
             }
             const ESM4::PathgridPoint point = graph->worldPoint(node.mNode);
@@ -6409,7 +6434,7 @@ namespace MWMechanics
         {
             if (distanceSquared(position, live.mRouteDoorPosition) > sArrivalTolerance * sArrivalTolerance)
             {
-                faceAndMove(actor, live.mRouteDoorPosition, run, sneak);
+                steer(live.mRouteDoorPosition);
                 return true;
             }
             live.mState.mDoor = *live.mRouteDoor;
@@ -6452,7 +6477,7 @@ namespace MWMechanics
                     live.mDestinationCell.isNull() ? live.mState.mCell : live.mDestinationCell,
                     *live.mDestination, sArrivalTolerance, live.mState.mPackageType, radius);
                 if (!reached && (live.mDestinationCell.isNull() || live.mDestinationCell == live.mState.mCell))
-                    faceAndMove(actor, *live.mDestination, run, sneak);
+                    steer(*live.mDestination);
             }
             else
             {
@@ -6472,7 +6497,7 @@ namespace MWMechanics
             return true;
         }
 
-        faceAndMove(actor, destination, run, sneak);
+        steer(destination);
         return true;
     }
 
@@ -7025,9 +7050,11 @@ namespace MWMechanics
             {
                 const auto recipient = loadedPtrFor(live.mState.mTarget);
                 const float range = std::max(64.f, float(current->mTargetData.mDistance));
-                if (!recipient.isEmpty() && cellKey(recipient) == cellKey(actor)
-                    && !recipient.getClass().getCreatureStats(recipient).isDead()
-                    && distanceSquared(observedPosition, recipient.getRefData().getPosition().asVec3()) > range * range)
+                if (!recipient.isEmpty() && !recipient.getClass().getCreatureStats(recipient).isDead()
+                    && (recipient == mWorld.getPlayerPtr()
+                        ? waitsForEscortedPlayer(live, *current, observedPosition)
+                        : cellKey(recipient) == cellKey(actor)
+                            && distanceSquared(observedPosition, recipient.getRefData().getPosition().asVec3()) > range * range))
                 {
                     stopMovement(actor);
                     return true; // Wait for the escorted actor before advancing or completing.
@@ -7140,6 +7167,11 @@ namespace MWMechanics
         if (highProcess && live.mState.mPackageType == ESM4::AIPackageType::Ambush
             && updateNpcGreeting(actor, live, duration))
             return true;
+        // A nearby player's greeting otherwise consumes the tick before a
+        // quest-stage change can replace the actor's ordinary wander package.
+        if (live.mState.mPackageType == ESM4::AIPackageType::Wander && live.mCheckPackageAfterStage
+            && live.mSelectionCheckTimer <= 0.f && canReevaluateAfterStage(live.mState, package(live.mState.mPackage)))
+            select(actor, live, false);
         if (updateDialogueApproach(actor, live))
             return true;
 
@@ -7318,6 +7350,8 @@ namespace MWMechanics
 
         if (live.mState.mPhase == ESM4::PackagePhase::Path)
         {
+            if (!highProcess && waitsForEscortedPlayer(live, *current, live.mState.mLastValidPosition.asVec3()))
+                return true;
             // Find's NPC conversation range is the approach endpoint. Walking
             // all the way to the target's feet can pin two moving actors
             // against one another before either package reaches its action.
@@ -8092,7 +8126,7 @@ namespace MWMechanics
         const auto bases = mQuestPackageBases.find(quest);
         for (auto& [key, live] : mActors)
             if (live.mState.mPackageType == ESM4::AIPackageType::Travel
-                || (waitingForPackageAction(live.mState.mPhase) && bases != mQuestPackageBases.end()
+                || (waitingForPackageAction(live.mState) && bases != mQuestPackageBases.end()
                     && bases->second.contains(live.mState.mBase)))
                 live.mCheckPackageAfterStage = true;
     }
@@ -8966,7 +9000,7 @@ namespace MWMechanics
             live.mState = saved;
             live.mPendingArmorEquip = dressing.contains(saved.mActor);
             live.mCheckPackageAfterStage = saved.mPackageType == ESM4::AIPackageType::Travel
-                || (waitingForPackageAction(saved.mPhase) && std::ranges::any_of(state.mQuests,
+                || (waitingForPackageAction(saved) && std::ranges::any_of(state.mQuests,
                     [&](const auto& quest) {
                         const auto bases = mQuestPackageBases.find(quest.mQuest);
                         return bases != mQuestPackageBases.end() && bases->second.contains(saved.mBase);

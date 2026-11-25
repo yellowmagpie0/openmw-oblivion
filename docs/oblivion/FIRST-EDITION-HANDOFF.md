@@ -1,6 +1,6 @@
 # First Edition and the Sponsor’s note
 
-Run `build-windows/Continue-After-Gwinas.cmd` to resume just inside the bookstore facing the exit. The compass points through that door toward Baurus in the Elven Gardens District. Press Activate to leave. The owned lock remains intact and the tooltip shows **Exit permitted**. The next chunk begins with reporting the Sponsor’s meeting to Baurus.
+Run `build-windows/Continue-After-Gwinas.cmd` to resume just inside the bookstore facing the exit. The compass points through that door toward Baurus in the Elven Gardens District. Press Activate to leave. The owned lock remains intact and the tooltip shows **Exit permitted**. The [next checkpoint](ELVEN-GARDEN-SEWER-ESCORT.md) covers reporting the Sponsor’s meeting and following Baurus into the sewers.
 
 ## Played route
 
