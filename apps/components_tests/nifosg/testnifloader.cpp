@@ -22,6 +22,7 @@
 #include <osg/FrameStamp>
 #include <osg/Geometry>
 #include <osg/Geode>
+#include <osg/Material>
 #include <osg/ShapeDrawable>
 #include <osg/Transform>
 #include <algorithm>
@@ -133,6 +134,55 @@ osg::Group {
   }
 }
 )");
+    }
+
+    TEST_F(NifOsgLoaderTest, OblivionZeroGlossMaterialPreservesDiffuseShading)
+    {
+        for (float gloss : { 0.f, 10.f })
+        {
+            SCOPED_TRACE(gloss);
+            Nif::NiMaterialProperty material{};
+            init(material);
+            material.mRecordType = Nif::RC_NiMaterialProperty;
+            material.mSpecular.set(1.f, 1.f, 1.f);
+            material.mDiffuse.set(1.f, 1.f, 1.f);
+            material.mGlossiness = gloss;
+            material.mAlpha = 1.f;
+
+            Nif::NiTriShapeData data{};
+            data.mRecordType = Nif::RC_NiTriShapeData;
+            data.mNumVertices = 3;
+            data.mNumTriangles = 1;
+            data.mVertices = { { 0, 0, 0 }, { 1, 0, 0 }, { 0, 1, 0 } };
+            data.mTriangles = { 0, 1, 2 };
+            Nif::NiTriShape shape{};
+            init(shape);
+            shape.mShaderProperty = nullptr;
+            shape.mAlphaProperty = nullptr;
+            shape.mData = &data;
+            shape.mProperties.emplace_back(&material);
+            Nif::NIFFile file(testNif);
+            file.mVersion = 0x14000004;
+            file.mRoots.push_back(&shape);
+            auto loaded = Loader::load(file, &mImageManager, &mMaterialManager);
+            struct FindMaterial : osg::NodeVisitor
+            {
+                const osg::Material* found = nullptr;
+                FindMaterial() : NodeVisitor(TRAVERSE_ALL_CHILDREN) {}
+                void apply(osg::Node& node) override
+                {
+                    if (auto* state = node.getStateSet())
+                        if (auto* attr = state->getAttribute(osg::StateAttribute::MATERIAL))
+                            found = static_cast<const osg::Material*>(attr);
+                    traverse(node);
+                }
+            } visitor;
+            loaded->accept(visitor);
+            ASSERT_NE(visitor.found, nullptr);
+            EXPECT_EQ(visitor.found->getDiffuse(osg::Material::FRONT), osg::Vec4f(1, 1, 1, 1));
+            const osg::Vec4f expected = gloss == 0.f ? osg::Vec4f(0, 0, 0, 1) : osg::Vec4f(1, 1, 1, 1);
+            EXPECT_EQ(visitor.found->getSpecular(osg::Material::FRONT), expected);
+        }
     }
 
     TEST_F(NifOsgLoaderTest, oblivionScabbardRemainsSeparateFromBladeAfterOptimization)

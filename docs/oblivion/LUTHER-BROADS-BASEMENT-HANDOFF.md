@@ -13,3 +13,5 @@ Run `python scripts/verify_luther_broads_basement.py SAVE --fight-save COMBAT_SA
 The local launchers are `build-windows/Continue-After-Baurus-Warning.cmd` for the start and `build-windows/Continue-After-Baurus-Basement.cmd` for the handoff. The earlier trapped-stair reproduction is in `build-windows/basement-route02`. The stationary replay in `build-windows/basement-stairs07` reaches Astav’s death and Baurus’s search instruction without moving the player.
 
 The frame trace in `build-windows/basement-final08` exposed two pauses while granting and removing the bound equipment. Each operation captured the entire world. The revised transaction stages the affected actor’s inventory and ownership, then publishes both before notifying equipment observers. The repeat course and frame samples are in `build-windows/basement-timed12`. A separate stock-control sample in `build-windows/basement-perf11` showed intermittent mechanics stalls after the conversation. That sample averaged 21.8 FPS over its final 30 seconds at 1280 × 720 with a 30 FPS cap.
+
+Continue with [Tar-Meena’s briefing at the Arcane University](ARCANE-UNIVERSITY-TAR-MEENA-HANDOFF.md).

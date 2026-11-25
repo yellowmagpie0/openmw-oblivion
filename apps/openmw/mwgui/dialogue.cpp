@@ -384,7 +384,7 @@ namespace MWGui
         }
         else
         {
-            endStandingDialogue();
+            endDialoguePresentation();
             resetReference();
             MWBase::Environment::get().getDialogueManager()->goodbyeSelected();
             mTopicsList->scrollToTop();
@@ -508,7 +508,7 @@ namespace MWGui
         bool sameActor = (mPtr == actor);
         if (!sameActor)
         {
-            endStandingDialogue();
+            endDialoguePresentation();
             setVoiceFiles({});
             // The history is not reset here
             mKeywords.clear();
@@ -554,6 +554,8 @@ namespace MWGui
             auto* camera = world->getCamera();
             if (camera && camera->getMode() == MWRender::Camera::Mode::FirstPerson)
             {
+                if (animation && actor.isInCell() && !actor.getCell()->isExterior())
+                    animation->lightDialoguePortrait();
                 // A package can initiate dialogue from behind the player. Frame the speaker
                 // above the response pane, including models without an animated head node.
                 const auto feet = actor.getRefData().getPosition().asVec3();
@@ -575,6 +577,8 @@ namespace MWGui
                     world->rotateObject(player, { pitch, 0.f, bodyYaw });
                     camera->setYaw(-bodyYaw);
                     camera->setPitch(-pitch);
+                    if (native && native->getOblivionSitting(actor.getCellRef().getFormKey(), actor) == 3)
+                        camera->frameSeatedSpeaker(actor, head);
                 }
             }
         }
@@ -626,19 +630,22 @@ namespace MWGui
         mDeleteLater.clear();
     }
 
-    void DialogueWindow::endStandingDialogue()
+    void DialogueWindow::endDialoguePresentation()
     {
-        if (!mPtr.isEmpty())
-            if (auto* animation = dynamic_cast<MWRender::ESM4NpcAnimation*>(
-                    MWBase::Environment::get().getWorld()->getAnimation(mPtr)))
-                animation->endStandingDialogue();
+        if (mPtr.isEmpty())
+            return;
+        const auto world = MWBase::Environment::get().getWorld();
+        if (auto* camera = world->getCamera())
+            camera->clearDialogueView();
+        if (auto* animation = dynamic_cast<MWRender::ESM4NpcAnimation*>(world->getAnimation(mPtr)))
+            animation->endDialoguePresentation();
     }
 
     void DialogueWindow::onClose()
     {
         if (MWBase::Environment::get().getWindowManager()->containsMode(GM_Dialogue))
             return;
-        endStandingDialogue();
+        endDialoguePresentation();
         setVoiceFiles({});
         // Reset history
         mHistoryContents.clear();
@@ -646,7 +653,7 @@ namespace MWGui
 
     void DialogueWindow::clear()
     {
-        endStandingDialogue();
+        endDialoguePresentation();
         setVoiceFiles({});
         resetReference();
     }

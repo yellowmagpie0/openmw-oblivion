@@ -3591,11 +3591,16 @@ namespace NifOsg
                         mat->setEmission(osg::Material::FRONT_AND_BACK, osg::Vec4f(matprop->mEmissive, 1.f));
                         emissiveMult = matprop->mEmissiveMult;
 
-                        mat->setSpecular(osg::Material::FRONT_AND_BACK, osg::Vec4f(matprop->mSpecular, 1.f));
                         // NIFs may provide specular exponents way above OpenGL's limit.
                         // They can't be used properly, but we don't need OSG to constantly harass us about it.
                         float glossiness = std::clamp(matprop->mGlossiness, 0.f, 128.f);
                         mat->setShininess(osg::Material::FRONT_AND_BACK, glossiness);
+                        // Some Oblivion materials (including the Argonian head) have
+                        // white specular and no gloss. A zero exponent otherwise adds
+                        // the full light colour over the entire lit side of the mesh.
+                        const auto specular = usesOblivionMaterials() && glossiness == 0.f
+                            ? osg::Vec3f() : matprop->mSpecular;
+                        mat->setSpecular(osg::Material::FRONT_AND_BACK, osg::Vec4f(specular, 1.f));
 
                         if (!matprop->mController.empty())
                         {

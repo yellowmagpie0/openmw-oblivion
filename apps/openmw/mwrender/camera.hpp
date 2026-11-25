@@ -51,11 +51,14 @@ namespace MWRender
 
         /// Update the view matrix of \a cam
         void updateCamera(osg::Camera* cam);
+        void frameSeatedSpeaker(const MWWorld::Ptr& speaker, const osg::Vec3f& head);
+        void clearDialogueView() { mDialogueView.reset(); }
 
         /// Reset to defaults
         void reset()
         {
             mNativeRecoveryRestoreMode.reset();
+            clearDialogueView();
             mNativeFurnitureYaw = 0;
             setMode(Mode::FirstPerson);
         }
@@ -161,6 +164,7 @@ namespace MWRender
         bool mLockPitch = false, mLockYaw = false;
         osg::Vec3d mPosition;
         osg::Matrixf mViewMatrix;
+        std::optional<osg::Matrixf> mDialogueView;
         osg::Matrixf mProjectionMatrix;
 
         float mCameraDistance, mPreferredCameraDistance;

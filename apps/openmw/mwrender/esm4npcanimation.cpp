@@ -1086,8 +1086,23 @@ namespace MWRender
         return true;
     }
 
-    void ESM4NpcAnimation::endStandingDialogue()
+    void ESM4NpcAnimation::lightDialoguePortrait()
     {
+        auto* state = mInsert->getOrCreateStateSet();
+        if (!state->getUniform("nifEmbeddedLightAmbient"))
+        {
+            mDialogueAmbient = new osg::Uniform("nifEmbeddedLightAmbient", osg::Vec4f(0.65f, 0.61f, 0.57f, 0.f));
+            state->addUniform(mDialogueAmbient, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+        }
+    }
+
+    void ESM4NpcAnimation::endDialoguePresentation()
+    {
+        if (mDialogueAmbient)
+        {
+            mInsert->getOrCreateStateSet()->removeUniform(mDialogueAmbient);
+            mDialogueAmbient = nullptr;
+        }
         if (!mDialogueIdle)
             return;
         disable("dialoguestandingidle");

@@ -609,19 +609,36 @@ namespace MWWorld
             return ESM4::evaluateNativeConditions(conditions, context) == ESM4::ConditionResult::True;
         };
 
-        std::optional<QuestObjective> objective;
-        std::tuple<bool, unsigned> best{};
+        struct Candidate
+        {
+            const ESM4::Quest* mQuest;
+            const ESM4::RuntimeQuestState* mState;
+        };
+        std::vector<Candidate> quests;
         for (const auto& quest : store.get<ESM4::Quest>())
         {
             const auto* state = scripts->findQuestState(quest.mFormKey);
             const bool manual = tracked == quest.mFormKey && !tracked.isNull();
             if (!state || (!manual && !state->mRunning) || quest.mQuestName.empty())
                 continue;
-            const auto bestPossible = std::tuple{ true, unsigned(quest.mData.priority) };
-            if (!manual && objective
-                && (bestPossible < best || (bestPossible == best && !(quest.mFormKey < objective->mQuest))))
-                continue;
+            quests.emplace_back(&quest, state);
+        }
+        // Resolve doors in selection order. A lower-priority quest may need an
+        // entire cross-world route that the compass will never display.
+        std::sort(quests.begin(), quests.end(), [&](const auto& a, const auto& b) {
+            const auto& left = *a.mQuest;
+            const auto& right = *b.mQuest;
+            if ((left.mFormKey == tracked) != (right.mFormKey == tracked))
+                return left.mFormKey == tracked;
+            if (left.mData.priority != right.mData.priority)
+                return left.mData.priority > right.mData.priority;
+            return left.mFormKey < right.mFormKey;
+        });
 
+        std::optional<QuestObjective> textOnly;
+        for (const auto& [record, state] : quests)
+        {
+            const auto& quest = *record;
             auto journal = projectQuest(quest, *state, context);
             if (journal.mFinished)
                 continue;
@@ -638,17 +655,11 @@ namespace MWWorld
                 if (!destination.mLabel.empty() || destination.mNearby || destination.mWorldMap)
                     candidate.mDestinations.push_back(std::move(destination));
             }
-            if (manual)
+            if (quest.mFormKey == tracked || !candidate.mDestinations.empty())
                 return candidate;
-            if (candidate.mText.empty() && candidate.mDestinations.empty())
-                continue;
-            const auto score = std::tuple{ !candidate.mDestinations.empty(), unsigned(quest.mData.priority) };
-            if (!objective || score > best || (score == best && candidate.mQuest < objective->mQuest))
-            {
-                best = score;
-                objective = std::move(candidate);
-            }
+            if (!textOnly && !candidate.mText.empty())
+                textOnly = std::move(candidate);
         }
-        return objective;
+        return textOnly;
     }
 }

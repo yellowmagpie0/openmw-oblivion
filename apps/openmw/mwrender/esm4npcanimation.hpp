@@ -123,7 +123,8 @@ namespace MWRender
             Resource::ResourceSystem* resourceSystem);
         osg::Vec3f runAnimation(float timepassed) override;
         bool beginStandingDialogue();
-        void endStandingDialogue();
+        void lightDialoguePortrait();
+        void endDialoguePresentation();
         void updateFace(float duration);
         void refreshEquipment() override;
 
@@ -139,6 +140,7 @@ namespace MWRender
         void updatePartsTES5(const ESM4::Npc& traits);
         std::vector<Tes4FaceMorph> mFaceMorphs;
         bool mDialogueIdle = false;
+        osg::ref_ptr<osg::Uniform> mDialogueAmbient;
         bool mRestoreDialogueWeapon = false;
         float mFaceAnimationTime = 0.f;
         VFS::Path::Normalized mVoiceFile;

@@ -2902,6 +2902,37 @@ TEST(OblivionQuestGuidance, LoadedQuestDrivesTheTargetAndDoorAfterRestore)
     }
 }
 
+TEST(OblivionQuestGuidance, PrefersTrackedThenDestinationsThenTextAndBreaksPriorityTiesByFormKey)
+{
+    const auto quest = [](unsigned id, char priority, bool hasDestination) {
+        auto data = sub(ESM::fourCC("FULL"), std::string("Delivery\0", 9))
+            + sub(ESM::fourCC("DATA"), std::string{ 0, priority })
+            + sub(ESM::fourCC("INDX"), bytes(std::uint16_t{10}))
+            + sub(ESM::fourCC("QSDT"), std::string(1, '\0'))
+            + sub(ESM::fourCC("CNAM"), std::string("Find the guide.\0", 16));
+        if (hasDestination)
+            data += sub(ESM::fourCC("QSTA"), bytes(0xd03u) + bytes(0u));
+        return record(ESM4::REC_QUST, id, data);
+    };
+    MWClass::ESM4Door::registerSelf();
+    SwitchFixture fixture(false, false, sameCellTeleportRecords(true, true)
+        + quest(0xe10, 90, false) + quest(0xe12, 50, true) + quest(0xe11, 50, true), 11, false);
+    auto& world = fixture.mFixture.mWorld;
+    auto& scripts = *world.getOblivionScriptManager();
+    scripts.setStage(key(0xe10), 10);
+    const auto expectQuest = [&](unsigned id, ESM::FormKey tracked = {}) {
+        auto result = MWWorld::getOblivionQuestObjective(world, tracked);
+        ASSERT_TRUE(result);
+        EXPECT_EQ(result->mQuest, key(id));
+    };
+    expectQuest(0xe10);
+    scripts.setStage(key(0xe12), 10);
+    scripts.setStage(key(0xe11), 10);
+    expectQuest(0xe11);
+    expectQuest(0xe10, key(0xe10));
+    expectQuest(0xe12, key(0xe12));
+}
+
 TEST(OblivionQuestGuidance, RoutesThroughALockedDoorWhenThePlayerHasItsKey)
 {
     MWClass::ESM4Door::registerSelf();

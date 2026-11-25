@@ -1,5 +1,8 @@
 #include "camera.hpp"
 
+#include <algorithm>
+#include <cmath>
+
 #include <osg/Camera>
 
 #include <components/misc/mathutil.hpp>
@@ -149,9 +152,47 @@ namespace MWRender
             osg::Vec3d recalculatedTrackedPosition = calculateTrackedPosition();
             pos = calculateFirstPersonPosition(recalculatedTrackedPosition);
         }
-        cam->setViewMatrixAsLookAt(pos, pos + forward, up);
+        if (mDialogueView && mMode == Mode::FirstPerson)
+            cam->setViewMatrix(*mDialogueView);
+        else
+            cam->setViewMatrixAsLookAt(pos, pos + forward, up);
         mViewMatrix = cam->getViewMatrix();
         mProjectionMatrix = cam->getProjectionMatrix();
+    }
+
+    void Camera::frameSeatedSpeaker(const MWWorld::Ptr& speaker, const osg::Vec3f& head)
+    {
+        clearDialogueView();
+        const auto& position = speaker.getRefData().getPosition();
+        const float yaw = position.rot[2];
+        const osg::Vec3f front(std::sin(yaw), std::cos(yaw), 0.f);
+        osg::Vec3f toPlayer = mPosition - head;
+        toPlayer.z() = 0.f;
+        toPlayer.normalize();
+        if (front * toPlayer > 0.65f)
+            return;
+
+        // A bench fixes the actor's heading. Find room for a view of the face
+        // without moving either participant or rotating the seat.
+        const auto* physics = MWBase::Environment::get().getWorld()->getRayCasting();
+        const float distance = std::clamp((head.z() - position.pos[2]) * 0.95f, 38.f, 60.f);
+        const osg::Vec3f side(front.y(), -front.x(), 0.f);
+        const float nearSide = side * toPlayer >= 0.f ? 1.f : -1.f;
+        for (const float angle : { 0.f, nearSide * 0.65f, -nearSide * 0.65f })
+        {
+            const osg::Vec3f direction = front * std::cos(angle) + side * std::sin(angle);
+            osg::Vec3f eye = head + direction * distance + osg::Vec3f(0.f, 0.f, 5.f);
+            const auto obstacle = physics->castSphere(head, eye, 5.f, mCollisionType);
+            if (obstacle.mHit)
+                eye = obstacle.mHitPos + obstacle.mHitNormal * 5.f;
+            if ((eye - head) * direction < distance * 0.6f
+                || physics->castRay(head, eye, { speaker, mTrackingPtr }, {}, MWPhysics::CollisionType_Actor).mHit)
+                continue;
+            // Leave the lower half of the frame for the response pane.
+            const osg::Vec3f focus = head - osg::Vec3f(0.f, 0.f, (eye - head).length() * 0.30f);
+            mDialogueView = osg::Matrixf::lookAt(eye, focus, osg::Vec3f(0.f, 0.f, 1.f));
+            return;
+        }
     }
 
     void Camera::update(float duration, bool paused)
