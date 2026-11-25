@@ -1,6 +1,6 @@
 # Baurus and the Elven Garden sewer entrance
 
-Run `build-windows/Follow-Baurus-in-the-Sewers.cmd` to resume at the foot of the entrance stairs. Baurus is visible seven metres ahead, the player has a torch equipped, and the compass points to him. Walk toward him to continue to the wheel. The next gameplay check is the wheel and the approach to the Lower Hall.
+Run `build-windows/Follow-Baurus-in-the-Sewers.cmd` to resume at the foot of the entrance stairs. Baurus is visible seven metres ahead, the player has a torch equipped, and the compass points to him. Walk toward him to continue to the wheel. The [Lower Hall handoff](BAURUS-LOWER-HALL.md) covers the next part of the escort.
 
 The route starts at the [First Edition checkpoint](FIRST-EDITION-HANDOFF.md). Leave the shop, walk through the Market District gate into the Elven Gardens, and speak to Baurus about the **Mythic Dawn meeting**. The conversation advances *The Path of Dawn* to stage 75. Baurus then leads the player through the streets and goes down the grate ahead of them.
 

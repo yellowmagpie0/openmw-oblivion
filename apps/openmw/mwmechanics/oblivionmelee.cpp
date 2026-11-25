@@ -1621,7 +1621,7 @@ namespace MWMechanics
             return std::any_of(values->mLeveledContactSpells->begin(), values->mLeveledContactSpells->end(),
                 [&](const auto& selected) {
                     return std::none_of(sources->begin(), sources->end(), [&](const auto& source) {
-                        return source.mList->mEntries[0].mSpellKey == selected;
+                        return source.mList->containsSpell(selected);
                     });
                 });
         }

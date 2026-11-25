@@ -2841,7 +2841,10 @@ namespace MWMechanics
                     if (player) MWBase::Environment::get().getWindowManager()->messageBox("Use an ordinary bow and arrows.");
                     return true;
                 }
-                const auto* metadata = mAnimation->getControllerSequenceMetadata("bowattack");
+                const std::string bowGroup = !mAnimation->hasAnimation("bowattack")
+                        && mPtr.getType() == ESM::REC_CREA4 && mAnimation->hasAnimation("attackbow")
+                    ? "attackbow" : "bowattack";
+                const auto* metadata = mAnimation->getControllerSequenceMetadata(bowGroup);
                 if (!metadata || metadata->mCycleType != 2 || metadata->mFrequency <= 0)
                     throw std::invalid_argument("native bowattack sequence is unavailable");
                 std::vector<ESM4::MeleeTextKey> textKeys;
@@ -2851,7 +2854,7 @@ namespace MWMechanics
                 ESM4::RuntimeBowState prepared;
                 prepared.mBowBase = *bowKey;
                 prepared.mAmmoBase = *ammoKey;
-                prepared.mAnimationGroup = "bowattack";
+                prepared.mAnimationGroup = bowGroup;
                 prepared.mPlaybackRate = definition->mData.speed * metadata->mFrequency;
                 prepared.mKeyTimes = keys.mTimes;
                 prepared.mProgress.mSequenceOffset = keys.mTimes.front() - service->animationClock(actor);

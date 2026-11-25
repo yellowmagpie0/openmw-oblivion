@@ -684,23 +684,28 @@ namespace MWWorld
                     return type == 0 || type == 2 || type == 3;
                 });
             if (castableOnly) continue;
-            if ((*list->mListFlags & ~3u) || list->mEntries.size() != 1
-                || list->mEntries[0].mCount != 1 || list->mEntries[0].mSpellKey.isNull())
+            if ((*list->mListFlags & ~3u) || list->mEntries.empty())
                 return std::nullopt;
-            const auto& key = list->mEntries[0].mSpellKey;
-            const auto* disease = spells.searchStatic(key);
-            if (!disease || (disease->mFlags & ESM4::Rec_Deleted) || !disease->mData
-                || disease->mData->mType != 1 || disease->mEffects.empty()
-                || !std::all_of(disease->mEffects.begin(), disease->mEffects.end(), [](const auto& effect) {
-                    return effect.mId == ESM::fourCC("DRAT") && effect.mActorValue < 8;
-                }))
-                return std::nullopt;
-            if (const auto* winner = store.getFormKeyIndex().winner(key);
-                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_SPEL))
-                return std::nullopt;
+            std::vector<ESM::FormKey> requested;
+            for (const auto& entry : list->mEntries)
+            {
+                const auto& key = entry.mSpellKey;
+                if (entry.mCount != 1 || key.isNull() || entry.mLevel != list->mEntries.front().mLevel)
+                    return std::nullopt;
+                const auto* disease = spells.searchStatic(key);
+                if (!disease || (disease->mFlags & ESM4::Rec_Deleted) || !disease->mData
+                    || disease->mData->mType != 1 || disease->mEffects.empty()
+                    || !std::all_of(disease->mEffects.begin(), disease->mEffects.end(), [](const auto& effect) {
+                        return effect.mId == ESM::fourCC("DRAT") && effect.mActorValue < 8;
+                    }))
+                    return std::nullopt;
+                if (const auto* winner = store.getFormKeyIndex().winner(key);
+                    winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_SPEL))
+                    return std::nullopt;
+                requested.push_back(key);
+            }
             try
             {
-                const std::array requested{key};
                 (void)resolveOblivionPassiveAbilityInputs(store, requested);
             }
             catch (const std::invalid_argument&) { return std::nullopt; }

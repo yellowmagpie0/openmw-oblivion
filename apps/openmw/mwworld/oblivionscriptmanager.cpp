@@ -2154,7 +2154,7 @@ namespace MWWorld
             bool played = false;
             if (!ptr.isEmpty())
                 played = MWBase::Environment::get().getMechanicsManager()->playAnimationGroup(
-                    ptr, group, mode, 1, scripted);
+                    ptr, Misc::StringUtils::lowerCase(group), mode, 1, scripted);
             persistAnimationState(objectKey(), group, mode, played, scripted);
             return played;
         };
@@ -2481,7 +2481,8 @@ namespace MWWorld
             }
             else
                 group = ObScript::valueString(arguments.front());
-            return std::int64_t(MWBase::Environment::get().getMechanicsManager()->checkAnimationPlaying(ptr, group));
+            return std::int64_t(MWBase::Environment::get().getMechanicsManager()->checkAnimationPlaying(
+                ptr, Misc::StringUtils::lowerCase(group)));
         }
         if (name == "message" || name == "messagebox")
         {

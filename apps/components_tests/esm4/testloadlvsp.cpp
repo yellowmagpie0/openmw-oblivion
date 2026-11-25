@@ -177,7 +177,28 @@ TEST(ESM4LevelledSpell, StockDogSelectionMatchesOriginalPerSchoolSkillAndChanceB
     }
 }
 
-TEST(ESM4LevelledSpell, SingleChildSelectionRejectsUnreviewedShapesAndIncompleteRandomInputs)
+TEST(ESM4LevelledSpell, EqualLevelDiseaseListSelectsOneEligibleChild)
+{
+    auto source = load(spellList());
+    source.mChanceNone = 75;
+    auto second = source.mEntries.front();
+    second.mSpellKey = ESM::FormKey::content("fixture.esm", 0x8b77);
+    source.mEntries.push_back(second);
+    std::array<std::int32_t, 6> skills;
+    skills.fill(40);
+    std::array<std::uint16_t, 7> words;
+    words.fill(99);
+    for (unsigned index = 0; index < source.mEntries.size(); ++index)
+    {
+        words[3] = index;
+        const auto selection = ESM4::selectSingleLevelledSpell(source, 2, skills, words);
+        ASSERT_EQ(selection.mSpell, source.mEntries[index].mSpellKey);
+        EXPECT_TRUE(source.containsSpell(*selection.mSpell));
+        EXPECT_EQ(selection.mDraws, 7u);
+    }
+}
+
+TEST(ESM4LevelledSpell, SelectionRejectsUnreviewedShapesAndIncompleteRandomInputs)
 {
     const auto source = load(spellList());
     std::array<std::int32_t, 6> skills; skills.fill(40);
@@ -195,6 +216,7 @@ TEST(ESM4LevelledSpell, SingleChildSelectionRejectsUnreviewedShapesAndIncomplete
     auto unsupported = source; unsupported.mEntries[0].mCount = 2;
     EXPECT_THROW(ESM4::selectSingleLevelledSpell(unsupported, 2, skills, words), std::invalid_argument);
     unsupported = source; unsupported.mEntries.push_back(unsupported.mEntries[0]);
+    ++unsupported.mEntries.back().mLevel;
     EXPECT_THROW(ESM4::selectSingleLevelledSpell(unsupported, 2, skills, words), std::invalid_argument);
     unsupported = source; unsupported.mEntries[0].mSpellKey = {};
     EXPECT_THROW(ESM4::selectSingleLevelledSpell(unsupported, 2, skills, words), std::invalid_argument);

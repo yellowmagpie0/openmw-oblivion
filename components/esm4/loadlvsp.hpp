@@ -26,6 +26,7 @@ namespace ESM4
         std::optional<std::uint8_t> mChanceNone;
         std::optional<std::uint8_t> mListFlags;
         std::vector<LevelledSpellEntry> mEntries;
+        bool containsSpell(const ESM::FormKey& key) const;
         void load(Reader& reader);
     };
 
@@ -34,10 +35,8 @@ namespace ESM4
         std::optional<ESM::FormKey> mSpell;
         unsigned mDraws = 0;
     };
-    // The stock Dog has one direct Disease1 child, count1, flags3. This
-    // bounded selector retains original per-school chance draws, the skill
-    // threshold and the selection draw even with only one eligible child.
-    // Nested/multiple/use-all sources need their own reviewed selection path.
+    // Select one child from a list with a common level and school. Preserve
+    // per-school chance draws and the index draw even for a singleton.
     SingleLevelledSpellSelection selectSingleLevelledSpell(const LevelledSpell& source,
         std::uint32_t childSchool, const std::array<std::int32_t, 6>& magicSkills,
         std::span<const std::uint16_t> randomWords);

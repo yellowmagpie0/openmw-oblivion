@@ -52,11 +52,11 @@ namespace SceneUtil
 
         osg::Matrixf physicalWorldMatrix(const Nif::NiTransform& pose, float placementScale, bool nativeMorphology)
         {
-            // Ordinary body sync consumes NiWorld rotation and position, not
-            // its separate scale slot. Require authored physical bone scale
-            // to remain neighboring-unit relative to the explicit placement.
+            // TES4 animation can scale individual bones. Composition already
+            // applied parent scale to their positions. The rigid body receives
+            // the world rotation and translation, without the drawing scale.
             require(std::isfinite(pose.mScale) && pose.mScale > 0
-                    && std::abs(double(pose.mScale) / placementScale - 1.0) <= 1e-4,
+                    && (nativeMorphology || std::abs(double(pose.mScale) / placementScale - 1.0) <= 1e-4),
                 "unadmitted physical bone world scale");
             auto matrix = pose.mRotation.toOsgMatrix();
             matrix.setTrans(pose.mTranslation);

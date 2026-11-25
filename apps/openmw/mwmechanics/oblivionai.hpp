@@ -371,7 +371,7 @@ namespace MWMechanics
             const MWWorld::Ptr& residentActor = {});
         bool shouldRunPackage(const LiveActor& live, const ESM4::AIPackage* current,
             const osg::Vec3f& position) const;
-        bool waitsForEscortedPlayer(const LiveActor& live, const ESM4::AIPackage& package,
+        bool waitsForEscortedPlayer(const ESM4::RuntimeActorAiState& state, const ESM4::AIPackage& package,
             const osg::Vec3f& position) const;
         bool advanceUnloadedMovement(LiveActor& live, float duration, bool& reached,
             std::optional<float> movementSpeed = std::nullopt);

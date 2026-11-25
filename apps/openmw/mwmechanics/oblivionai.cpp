@@ -74,6 +74,7 @@
 #include "../mwbase/windowmanager.hpp"
 #include "../mwgui/mode.hpp"
 #include "../mwphysics/physicssystem.hpp"
+#include "../mwphysics/object.hpp"
 #include "../mwphysics/movementsolver.hpp"
 #include "../mwworld/cellstore.hpp"
 #include "../mwworld/scene.hpp"
@@ -2364,6 +2365,17 @@ namespace MWMechanics
                             if (!record) return ESM4::ConditionValue::missing();
                             if (record->mRawPKDT.size() != 4 && record->mRawPKDT.size() != 8)
                                 return ESM4::ConditionValue::unsupported();
+                            if (condition.mFunction == 111 && current->mScriptPackage.isNull()
+                                && record->mPackageType == ESM4::AIPackageType::Escort
+                                && ESM4::runtimeReferenceKey(current->mTarget) == ESM::FormKey::dynamic("player", 1))
+                            {
+                                // Combat suspends the escort. Otherwise use the same
+                                // distance and door-side check that stops its movement.
+                                return value(!mWorld.hasOblivionCombatController(current->mActor).value_or(false)
+                                    && (isPackageWaiting(current->mPackage)
+                                        || waitsForEscortedPlayer(*current, *record,
+                                            actor.getRefData().getPosition().asVec3())));
+                            }
                             selected = ESM4::nativeAuthoredPackageQueryView(record->mData.type, record->mData.flags);
                             if (controller)
                             {
@@ -4673,11 +4685,11 @@ namespace MWMechanics
                        : ESM4::playerWalkSpeed(speed, encumbrance, capacity, sneaking);
     }
 
-    bool OblivionAiService::waitsForEscortedPlayer(const LiveActor& live,
+    bool OblivionAiService::waitsForEscortedPlayer(const ESM4::RuntimeActorAiState& state,
         const ESM4::AIPackage& current, const osg::Vec3f& position) const
     {
         if (current.mPackageType != ESM4::AIPackageType::Escort
-            || ESM4::runtimeReferenceKey(live.mState.mTarget) != ESM::FormKey::dynamic("player", 1))
+            || ESM4::runtimeReferenceKey(state.mTarget) != ESM::FormKey::dynamic("player", 1))
             return false;
         const auto player = mWorld.getPlayerPtr();
         if (player.isEmpty() || !player.isInCell())
@@ -4691,20 +4703,20 @@ namespace MWMechanics
             return a && b && a->isExterior() && b->isExterior()
                 && !a->mParentKey.isNull() && a->mParentKey == b->mParentKey;
         };
-        if (sameSpace(live.mState.mCell, playerCell))
+        if (sameSpace(state.mCell, playerCell))
         {
             const float range = std::max(64.f, float(current.mTargetData.mDistance));
             return distanceSquared(position, player.getRefData().getPosition().asVec3()) > range * range;
         }
         // Stop just inside a load door when the player is still on its source
         // side. A player who crossed first can still be followed through it.
-        const auto from = mUnloadedLocationByReference.find(live.mState.mLastTransitionDoor);
+        const auto from = mUnloadedLocationByReference.find(state.mLastTransitionDoor);
         if (from == mUnloadedLocationByReference.end())
             return false;
         const auto& door = mUnloadedLocations[from->second];
         const auto to = mUnloadedLocationByReference.find(door.mTeleportDoor);
         return to != mUnloadedLocationByReference.end() && sameSpace(door.mCell, playerCell)
-            && sameSpace(mUnloadedLocations[to->second].mCell, live.mState.mCell);
+            && sameSpace(mUnloadedLocations[to->second].mCell, state.mCell);
     }
 
     bool OblivionAiService::advanceUnloadedMovement(
@@ -5022,7 +5034,7 @@ namespace MWMechanics
         }
         if (live.mState.mPhase == ESM4::PackagePhase::Path)
         {
-            if (waitsForEscortedPlayer(live, *current, live.mState.mLastValidPosition.asVec3()))
+            if (waitsForEscortedPlayer(live.mState, *current, live.mState.mLastValidPosition.asVec3()))
                 return;
             refreshMovingTargetRoute(live, *current);
             if (live.mRoute.empty() && live.mDestination)
@@ -6281,12 +6293,12 @@ namespace MWMechanics
             faceAndMove(actor, point, run, sneak);
             const bool escort = live.mState.mPackageType == ESM4::AIPackageType::Escort;
             const bool outdoorFollow = mesh && live.mState.mPackageType == ESM4::AIPackageType::Follow
-                && actor.getCell()->isExterior();
-            if ((!escort && !outdoorFollow) || !live.mIgnoredPhysicalDoor.isNull()
+                && actor.getCell()->isExterior() && live.mIgnoredPhysicalDoor.isNull();
+            if ((!escort && !outdoorFollow)
                 || (!live.mState.mDoor.isNull() && (!escort || live.mRouteDoor != live.mState.mDoor)))
                 return;
-            // A crowd or the player standing at a load-door landing can block
-            // either a mesh corridor or an authored pathgrid segment.
+            // An escort can meet a crowd at a landing or the swung-open leaf
+            // in its corridor. Keep steering around obstructions after opening a door.
             const bool wasEvading = live.mFollowObstacle.isEvading();
             live.mFollowObstacle.update(actor, point, duration, MWWorld::MovementDirectionFlag_Forward);
             if (live.mFollowObstacle.isEvading())
@@ -7052,7 +7064,7 @@ namespace MWMechanics
                 const float range = std::max(64.f, float(current->mTargetData.mDistance));
                 if (!recipient.isEmpty() && !recipient.getClass().getCreatureStats(recipient).isDead()
                     && (recipient == mWorld.getPlayerPtr()
-                        ? waitsForEscortedPlayer(live, *current, observedPosition)
+                        ? waitsForEscortedPlayer(live.mState, *current, observedPosition)
                         : cellKey(recipient) == cellKey(actor)
                             && distanceSquared(observedPosition, recipient.getRefData().getPosition().asVec3()) > range * range))
                 {
@@ -7350,7 +7362,7 @@ namespace MWMechanics
 
         if (live.mState.mPhase == ESM4::PackagePhase::Path)
         {
-            if (!highProcess && waitsForEscortedPlayer(live, *current, live.mState.mLastValidPosition.asVec3()))
+            if (!highProcess && waitsForEscortedPlayer(live.mState, *current, live.mState.mLastValidPosition.asVec3()))
                 return true;
             // Find's NPC conversation range is the approach endpoint. Walking
             // all the way to the target's feet can pin two moving actors
@@ -7796,7 +7808,12 @@ namespace MWMechanics
                             if (!live.mIgnoredPhysicalDoor.isNull()
                                 && live.mIgnoredPhysicalDoor != doorKey)
                                 releasePhysicalDoorCollision(actor, live);
-                            mWorld.mPhysics->setIgnoreCollision(actor, door, true);
+                            // An animated collision shape already moves its leaf out of the
+                            // passage. Keep its fixed sill available to the movement solver.
+                            const auto* collision = mWorld.mPhysics->getObject(door);
+                            if (!collision || !collision->isAnimated()
+                                || MWWorld::oblivionAnimatedDoorState(mWorld, door) != 1)
+                                mWorld.mPhysics->setIgnoreCollision(actor, door, true);
                             live.mIgnoredPhysicalDoor = doorKey;
                             live.mPhysicalDoorOpened = true;
                             live.mState.mDoorCooldown = 1.f;
@@ -7834,7 +7851,9 @@ namespace MWMechanics
                 const bool continueRoute = crossingCell || teleportDoor || live.mRouteCursor < live.mRoute.size()
                     || live.mContinuousRouteCursor < live.mContinuousRoute.size()
                     || (physicalDoor && !destinationReached);
-                if (crossingCell || teleportDoor)
+                // A closed gate may have forced a coarse path through the frame.
+                // Replan against the open passage if there is no mesh corridor to retain.
+                if (crossingCell || teleportDoor || (physicalDoor && live.mContinuousRoute.empty()))
                 {
                     live.mRoute.clear();
                     live.mContinuousRoute.clear();

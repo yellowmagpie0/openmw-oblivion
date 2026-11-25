@@ -3,6 +3,7 @@
 #include "common.hpp"
 #include "reader.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace ESM4
@@ -12,9 +13,11 @@ namespace ESM4
         std::span<const std::uint16_t> randomWords)
     {
         if (!source.mChanceNone || *source.mChanceNone > 100 || !source.mListFlags
-            || (*source.mListFlags & ~3u) || source.mEntries.size() != 1 || childSchool >= 6
-            || source.mEntries[0].mCount != 1 || source.mEntries[0].mSpellKey.isNull())
-            throw std::invalid_argument("unsupported single-child native leveled spell source");
+            || (*source.mListFlags & ~3u) || source.mEntries.empty() || childSchool >= 6
+            || std::any_of(source.mEntries.begin(), source.mEntries.end(), [&](const auto& entry) {
+                return entry.mCount != 1 || entry.mSpellKey.isNull() || entry.mLevel != source.mEntries.front().mLevel;
+            }))
+            throw std::invalid_argument("unsupported native leveled spell source");
         SingleLevelledSpellSelection result;
         const auto draw = [&]() {
             if (result.mDraws >= randomWords.size() || randomWords[result.mDraws] > 32767)
@@ -28,10 +31,14 @@ namespace ESM4
             if (school != childSchool
                 || source.mEntries[0].mLevel > static_cast<std::uint16_t>(magicSkills[school]))
                 continue;
-            draw(); // The native index draw is retained for an eligible singleton.
-            result.mSpell = source.mEntries[0].mSpellKey;
+            result.mSpell = source.mEntries[draw() % source.mEntries.size()].mSpellKey;
         }
         return result;
+    }
+
+    bool LevelledSpell::containsSpell(const ESM::FormKey& key) const
+    {
+        return std::any_of(mEntries.begin(), mEntries.end(), [&](const auto& entry) { return entry.mSpellKey == key; });
     }
 
     void LevelledSpell::load(Reader& reader)

@@ -5987,7 +5987,7 @@ namespace MWWorld
                 if (!sources) return nullptr;
                 for (const auto& selected : *carrier->mLeveledContactSpells)
                     if (std::none_of(sources->begin(), sources->end(), [&](const auto& source) {
-                            return source.mList->mEntries[0].mSpellKey == selected;
+                            return source.mList->containsSpell(selected);
                         }))
                         throw std::invalid_argument("native contact carrier lost its selected spell source");
                 const auto& spell = carrier->mLeveledContactSpells->back();
@@ -7579,7 +7579,7 @@ namespace MWWorld
                     throw std::runtime_error(
                         "TES4 runtime-state animation group has the wrong type: " + reference.mKey.serialize());
                 ESM::AnimationState::ScriptedAnimation animation;
-                animation.mGroup = *group;
+                animation.mGroup = Misc::StringUtils::lowerCase(*group);
                 animation.mTime = static_cast<float>(std::clamp(*progress, 0.0, 1.0));
                 if (const auto loopCount
                     = reference.mCustomState.find("obscript.animation_loop_count");

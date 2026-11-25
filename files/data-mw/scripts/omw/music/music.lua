@@ -63,7 +63,8 @@ local function onCombatTargetsChanged(eventData)
 end
 
 local function playerDied()
-    ambient.streamMusic("music/special/mw_death.mp3")
+    local track = core.contentFiles.has('Oblivion.esm') and 'music/special/death.mp3' or 'music/special/mw_death.mp3'
+    ambient.streamMusic(track)
 end
 
 local function switchPlaylist(newPlaylist)

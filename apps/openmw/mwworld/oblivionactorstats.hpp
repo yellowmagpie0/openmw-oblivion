@@ -106,8 +106,8 @@ namespace MWWorld
         const ESM4::LevelledSpell* mList;
         std::uint32_t mSchool;
     };
-    // Inert direct spells/powers, supported direct abilities, and singleton Witbane-like
-    // Disease1 source. Null rejects unsupported sources before any RNG use;
+    // Inert direct spells/powers, supported direct abilities, and same-level
+    // lists of attribute-draining diseases. Null rejects unsupported sources before any RNG use;
     // an empty plan has no leveled source and needs no construction snapshot.
     std::optional<std::vector<OblivionCreatureContactSpellSource>> resolveOblivionCreatureContactSpellSources(
         const ESMStore& store, const ESM::FormKey& base);

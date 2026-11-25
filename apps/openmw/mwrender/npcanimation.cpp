@@ -1163,8 +1163,13 @@ namespace MWRender
             // attachment bone
             const std::string_view bonefilter = (type == ESM::PRT_Hair) ? std::string_view{ "hair" } : bonename;
             mObjectParts[type] = insertBoundedPart(mesh, bonename, bonefilter, enchantedGlow, glowColor, isLight);
-            if (oblivion && type == ESM::PRT_Weapon && mObjectParts[type])
-                hideOblivionWeaponScabbard(*mObjectParts[type]->getNode());
+            if (oblivion && mObjectParts[type])
+            {
+                osg::Node* part = mObjectParts[type]->getNode().get();
+                part->setUserValue("openmwNativeActorAttachment", true);
+                if (type == ESM::PRT_Weapon)
+                    hideOblivionWeaponScabbard(*part);
+            }
         }
         catch (std::exception& e)
         {

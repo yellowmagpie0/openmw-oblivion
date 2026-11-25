@@ -4332,10 +4332,14 @@ namespace MWMechanics
             throw std::logic_error("native construction snapshot disagrees with shared base authority");
         const auto expectedSpellRandom = mCombatRngState;
         std::optional<std::uint32_t> selectedSpellRandom;
-        if (!oldValues && actor.getType() == ESM::REC_CREA4)
+        if ((!oldValues || activate) && !values.mLeveledContactSpells && actor.getType() == ESM::REC_CREA4)
         {
             const auto sources = MWWorld::resolveOblivionCreatureContactSpellSources(store, baseKey);
-            if (sources && !sources->empty())
+            // Older runtimes could never select from a multi-child disease list.
+            // Initialize that missing selection once when an existing actor returns.
+            if (sources && !sources->empty() && (!oldValues
+                    || std::any_of(sources->begin(), sources->end(),
+                        [](const auto& source) { return source.mList->mEntries.size() > 1; })))
             {
                 values.mLeveledContactSpells.emplace();
                 std::array<std::int32_t, 6> skills;

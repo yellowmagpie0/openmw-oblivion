@@ -268,6 +268,21 @@ namespace
         EXPECT_EQ(poses[0].mPose(0, 1), 1.f);
     }
 
+    TEST_F(ActorRagdollPoseTest, NativeAnimatedBoneScaleMovesChildWithoutScalingRigidBody)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot,
+            SceneUtil::ActorRagdollPoseBinding::RootSpace::NativeObjectLocal);
+        mConnector->setScale(.5f);
+        const auto placement = Nif::NiTransform::getIdentity();
+        const auto before = binding.captureWorldBones(placement);
+        ASSERT_EQ(before.size(), 2u);
+        EXPECT_EQ(before[0].mPose, osg::Matrixf::translate(10.5f, 2.f, 0.f));
+        const auto published = binding.applyNativeFrame({}, placement);
+        ASSERT_EQ(published.size(), 2u);
+        EXPECT_EQ(published[0].mPose, before[0].mPose);
+        EXPECT_EQ(mConnector->mScale, .5f);
+    }
+
     TEST_F(ActorRagdollPoseTest, NativePlacementWritebackDividesParentScaleWithoutAccumulation)
     {
         SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
