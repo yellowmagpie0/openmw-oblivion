@@ -60,7 +60,12 @@ namespace
                 return;
             auto* parent = path[path.size() - 2]->asGroup();
             osg::ref_ptr<osg::Group> shell = new osg::Group;
-            shell->addUpdateCallback(geometry.getName() == "CloudDome:0" ? mUpper : mLower);
+            const bool upper = geometry.getName() == "CloudDome:0";
+            // Composite the upper shell first. The centers of the two domes swap view-space
+            // depth as the camera pitches across the horizon.
+            shell->getOrCreateStateSet()->setRenderBinDetails(
+                upper ? 0 : 1, "TraversalOrderBin", osg::StateSet::PROTECTED_RENDERBIN_DETAILS);
+            shell->addUpdateCallback(upper ? mUpper : mLower);
             shell->addChild(&geometry);
             parent->replaceChild(&geometry, shell);
         }
@@ -367,6 +372,13 @@ namespace MWRender
         mSecunda->setVisible(mNativeSecunda);
 
         mCloudNode = new osg::Group;
+        if (oblivionSky)
+        {
+            // After the other sky geometry, still inside the early sky bin. Ignore the NIF's
+            // ordinary transparency sorting so only the explicit shell bins below take effect.
+            mCloudNode->getOrCreateStateSet()->setRenderBinDetails(
+                RenderBin_DepthSorted + 1, "RenderBin", osg::StateSet::OVERRIDE_RENDERBIN_DETAILS);
+        }
         mEarlyRenderBinRoot->addChild(mCloudNode);
 
         auto createCloudMesh = [&](osg::ref_ptr<CloudUpdater>& lower, osg::ref_ptr<CloudUpdater>& upper) {

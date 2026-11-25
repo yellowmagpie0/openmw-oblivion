@@ -6,6 +6,10 @@ The original MQ04 script advances to stage 35 when Martin is within 1,000 game u
 
 Continue with the [gate greeting and courtyard reception](CLOUD-RULER-RECEPTION-HANDOFF.md).
 
+## Dusk sky regression
+
+The gates checkpoint has Clear weather. Set the game hour to 18.8, face the open horizon and walk while tilting the view slightly above and below it. The reddish clouds should keep their layering, and the ground and companions should stay evenly lit. To make a layer swap obvious, give the upper and lower cloud textures different translucent colors in a private data directory. The lower layer should stay in front throughout the tilt. OblivionStormTamriel provides a separate control for genuine lightning.
+
 ## Play and verify
 
 Use `build-windows/Play-Weynon-to-Cloud-Ruler.cmd` for the full trip or `build-windows/Play-Cloud-Ruler-Gates.cmd` for the arrival. Both use ordinary player controls, a 1,280 × 720 window, a 30 FPS cap and distant terrain with a viewing distance of 14,336 game units. The house save in `sigil-amulet-resume/checkpoints` has SHA-256 `782c8ba5f67523f3ce82e62cdf5bfe0078aba98bfd2b9175ad7e8b11b9a9dcd4`.

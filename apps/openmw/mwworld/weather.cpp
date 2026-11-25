@@ -182,6 +182,7 @@ namespace MWWorld
         , mWindSpeed(Fallback::Map::getFloat("Weather_" + name + "_Wind_Speed"))
         , mCloudSpeed(Fallback::Map::getFloat("Weather_" + name + "_Cloud_Speed"))
         , mGlareView(Fallback::Map::getFloat("Weather_" + name + "_Glare_View"))
+        , mThunderSoundID(4)
         , mIsStorm(mWindSpeed > stormWindSpeed)
         , mRainSpeed(rainSpeed)
         , mRainEntranceSpeed(Fallback::Map::getFloat("Weather_" + name + "_Rain_Entrance_Speed"))
@@ -195,8 +196,10 @@ namespace MWWorld
         , mStormDirection(Weather::defaultDirection())
         , mCloudsMaximumPercent(Fallback::Map::getFloat("Weather_" + name + "_Clouds_Maximum_Percent"))
         , mTransitionDelta(Fallback::Map::getFloat("Weather_" + name + "_Transition_Delta"))
-        , mThunderFrequency(Fallback::Map::getFloat("Weather_" + name + "_Thunder_Frequency"))
+        // Morrowind produces roughly ten strikes per real minute at frequency 1.
+        , mThunderStrikesPerSecond(Fallback::Map::getFloat("Weather_" + name + "_Thunder_Frequency") * (10.f / 60.f))
         , mThunderThreshold(Fallback::Map::getFloat("Weather_" + name + "_Thunder_Threshold"))
+        , mThunderFadeOutThreshold(mThunderThreshold)
         , mFlashDecrement(Fallback::Map::getFloat("Weather_" + name + "_Flash_Decrement"))
         , mFlashBrightness(0.0f)
     {
@@ -302,8 +305,9 @@ namespace MWWorld
         , mStormDirection(Weather::defaultDirection())
         , mCloudsMaximumPercent(1.f)
         , mTransitionDelta(std::max(0.005f, static_cast<float>(weather.mData.mTransitionDelta) / 255.f))
-        , mThunderFrequency(static_cast<float>(weather.mData.mLightningFrequency) / 255.f)
-        , mThunderThreshold(static_cast<float>(weather.mData.mLightningBeginFadeIn) / 255.f)
+        , mThunderStrikesPerSecond(0.f)
+        , mThunderThreshold(0.999f * weather.mData.mLightningBeginFadeIn / 255.f)
+        , mThunderFadeOutThreshold(0.999f * (255 - weather.mData.mLightningEndFadeOut) / 255.f)
         , mFlashDecrement(4.f)
         , mFlashBrightness(0.f)
     {
@@ -329,14 +333,17 @@ namespace MWWorld
                 mRainLoopSoundID = id;
             else if (sound.mType == 3)
             {
-                auto slot = std::find_if(mThunderSoundID.begin(), mThunderSoundID.end(),
-                    [](const ESM::RefId& value) { return value.empty(); });
-                if (slot != mThunderSoundID.end())
-                    *slot = id;
+                if (!id.empty())
+                    mThunderSoundID.push_back(id);
             }
             else
                 mAmbientLoopSoundID = id;
         }
+
+        // TES4 rolls for lightning through its thunder sound entries. The frequency byte is a
+        // divisor for attempts spaced at least 30 ms apart, even Clear has it set to 255.
+        if (!mThunderSoundID.empty() && weather.mData.mLightningFrequency != 0)
+            mThunderStrikesPerSecond = 1.f / (0.030f * weather.mData.mLightningFrequency);
     }
 
     float Weather::transitionDelta() const
@@ -352,18 +359,20 @@ namespace MWWorld
         return transitionRatio / mCloudsMaximumPercent;
     }
 
-    float Weather::calculateThunder(const float transitionRatio, const float elapsedSeconds, const bool isPaused)
+    float Weather::calculateThunder(float transitionRatio, float elapsedSeconds, bool isPaused, bool fadingOut)
     {
         // When paused, the flash brightness remains the same and no new strikes can occur.
         if (!isPaused)
         {
             // Morrowind doesn't appear to do any calculations unless the transition ratio is higher than the Thunder
             // Threshold.
-            if (transitionRatio >= mThunderThreshold && mThunderFrequency > 0.0f)
+            const float threshold = fadingOut ? mThunderFadeOutThreshold : mThunderThreshold;
+            if (transitionRatio > threshold && mThunderStrikesPerSecond > 0.f)
             {
                 flashDecrement(elapsedSeconds);
+                const float strength = (transitionRatio - threshold) / (1.f - threshold);
                 auto& prng = MWBase::Environment::get().getWorld()->getPrng();
-                if (Misc::Rng::rollProbability(prng) <= thunderChance(transitionRatio, elapsedSeconds))
+                if (Misc::Rng::rollProbability(prng) < mThunderStrikesPerSecond * elapsedSeconds * strength)
                 {
                     lightningAndThunder();
                 }
@@ -385,16 +394,6 @@ namespace MWWorld
         mFlashBrightness = decrement > mFlashBrightness ? 0.0f : mFlashBrightness - decrement;
     }
 
-    inline float Weather::thunderChance(const float transitionRatio, const float elapsedSeconds) const
-    {
-        // This formula is reversed from the observation that with Thunder Frequency set to 1, there are roughly 10
-        // strikes per minute. It doesn't appear to be tied to in game time as Timescale doesn't affect it. Various
-        // values of Thunder Frequency seem to change the average number of strikes in a linear fashion.. During a
-        // transition, it appears to scaled based on how far past it is past the Thunder Threshold.
-        float scaleFactor = (transitionRatio - mThunderThreshold) / (1.0f - mThunderThreshold);
-        return ((mThunderFrequency * 10.0f) / 60.0f) * elapsedSeconds * scaleFactor;
-    }
-
     inline void Weather::lightningAndThunder(void)
     {
         // Morrowind seems to vary the intensity of the brightness based on which of the four sound IDs it selects.
@@ -405,7 +404,8 @@ namespace MWWorld
         unsigned int distance = Misc::Rng::rollDice(4, prng);
         // Flash brightness appears additive, since if multiple strikes occur, it takes longer for it to decay to 0.
         mFlashBrightness += 1 - (distance * 0.25f);
-        MWBase::Environment::get().getSoundManager()->playSound(mThunderSoundID[distance], 1.0, 1.0);
+        const auto sound = mThunderSoundID.size() == 4 ? distance : Misc::Rng::rollDice(mThunderSoundID.size(), prng);
+        MWBase::Environment::get().getSoundManager()->playSound(mThunderSoundID[sound], 1.0, 1.0);
     }
 
     RegionWeather::RegionWeather(const ESM::Region& region)
@@ -1788,7 +1788,7 @@ namespace MWWorld
         {
             calculateTransitionResult(1 - mTransitionFactor, gameHour);
             float currentFlash
-                = mWeatherSettings[mCurrentWeather].calculateThunder(mTransitionFactor, elapsedSeconds, isPaused);
+                = mWeatherSettings[mCurrentWeather].calculateThunder(mTransitionFactor, elapsedSeconds, isPaused, true);
             float nextFlash
                 = mWeatherSettings[mNextWeather].calculateThunder(1 - mTransitionFactor, elapsedSeconds, isPaused);
             flash = currentFlash + nextFlash;

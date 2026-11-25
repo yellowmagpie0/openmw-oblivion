@@ -20,6 +20,8 @@
 #include "apps/openmw/mwsound/soundmanagerimp.hpp"
 #include <components/vfs/manager.hpp>
 
+#include "oblivionworldfixture.hpp"
+
 namespace MWWorld
 {
     namespace
@@ -291,6 +293,41 @@ namespace MWWorld
             const Weather snow(native, 8);
             EXPECT_TRUE(snow.mRainEffect.empty());
             EXPECT_FALSE(snow.mParticleEffect.empty());
+        }
+
+        TEST(MWWorldWeatherTest, oblivionLightningRequiresAThunderSoundEvenAtFullFrequency)
+        {
+            TestingOpenMW::NativeWorldFixture fixture;
+            ESM4::Weather record{};
+            record.mData.mLightningFrequency = 255; // Shipped Clear, Cloudy, Fog, Rain and Snow.
+            record.mSounds = { { { 1, 0 }, 2 }, { { 2, 0 }, 1 }, { { 0, 0 }, 3 } };
+            Weather weather(record, 0);
+            const auto rng = fixture.mWorld.getPrng();
+            EXPECT_TRUE(weather.mThunderSoundID.empty());
+            EXPECT_EQ(weather.calculateThunder(1.f, 60.f, false), 0.f);
+            EXPECT_EQ(weather.calculateThunder(0.5f, 60.f, false, true), 0.f);
+            EXPECT_EQ(fixture.mWorld.getPrng(), rng);
+        }
+
+        TEST(MWWorldWeatherTest, oblivionStormsCanFlashAtFullStrengthAndRespectBothTransitionThresholds)
+        {
+            TestingOpenMW::NativeWorldFixture fixture;
+            ESM4::Weather record{};
+            // Oblivion gate storms can have thunder without a rain classification.
+            record.mData.mLightningFrequency = 188;
+            record.mData.mLightningBeginFadeIn = 255;
+            record.mData.mLightningEndFadeOut = 128;
+            record.mSounds = { { { 1, 0 }, 3 }, { { 2, 0 }, 2 } };
+            Weather weather(record, 0);
+            ASSERT_EQ(weather.mThunderSoundID, (std::vector<ESM::RefId>{ ESM::FormId{ 1, 0 } }));
+            EXPECT_EQ(weather.calculateThunder(0.99f, 60.f, false), 0.f);
+            EXPECT_GT(weather.calculateThunder(1.f, 60.f, false), 0.f);
+            EXPECT_EQ(weather.calculateThunder(0.45f, 60.f, false, true), 0.f);
+            EXPECT_GT(weather.calculateThunder(0.75f, 60.f, false, true), 0.f);
+
+            record.mData.mLightningFrequency = 0;
+            Weather disabled(record, 0);
+            EXPECT_EQ(disabled.calculateThunder(1.f, 60.f, false), 0.f);
         }
 
         TEST(MWWorldWeatherTest, oblivionCloudShellsKeepTheirAuthoredTexturesTintsAndSpeeds)

@@ -207,7 +207,7 @@ namespace MWWorld
         // This is used for Rain and Thunderstorm
         ESM::RefId mRainLoopSoundID;
 
-        std::array<ESM::RefId, 4> mThunderSoundID;
+        std::vector<ESM::RefId> mThunderSoundID;
 
         // Is this an ash storm / blight storm? If so, the following will happen:
         // - The particles and clouds will be oriented so they appear to come from the Red Mountain.
@@ -252,22 +252,19 @@ namespace MWWorld
         float transitionDelta() const;
         float cloudBlendFactor(const float transitionRatio) const;
 
-        float calculateThunder(const float transitionRatio, const float elapsedSeconds, const bool isPaused);
+        float calculateThunder(float transitionRatio, float elapsedSeconds, bool isPaused, bool fadingOut = false);
 
     private:
         float mTransitionDelta;
 
-        // Note: In MW, only thunderstorms support these attributes, but in the interest of making weather more
-        // flexible, these settings are imported for all weather types. Only thunderstorms will normally have any
-        // non-zero values.
-        float mThunderFrequency;
+        float mThunderStrikesPerSecond;
         float mThunderThreshold;
+        float mThunderFadeOutThreshold;
         float mFlashDecrement;
 
         float mFlashBrightness;
 
         void flashDecrement(const float elapsedSeconds);
-        float thunderChance(const float transitionRatio, const float elapsedSeconds) const;
         void lightningAndThunder(void);
     };
 
