@@ -469,6 +469,8 @@ namespace MWWorld
         /// If a compatible stack is found, the item's count is added to that stack, then the original is deleted.
         /// @return If the item was stacked, return the stack, otherwise return the old (untouched) item.
 
+        void replaceStockCount(const Ptr& stack, int signedCount);
+
         int count(const ESM::RefId& id) const;
         ///< @return How many items with refID \a id are in this container?
 

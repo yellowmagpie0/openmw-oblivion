@@ -2760,7 +2760,7 @@ TEST(OblivionEnableParent, LoadedLinksScriptQueriesAndSavedFlagsFollowRootChange
 namespace
 {
     std::string sameCellTeleportRecords(bool reachableExit, bool foreignCell = false, bool lockedOwner = false,
-        const std::string& sourceExtra = {}, unsigned sourceLockKey = 0)
+        const std::string& sourceExtra = {}, unsigned sourceLockKey = 0, float unreachableLanding = 0.f)
     {
         const auto group = [](unsigned kind, const std::string& data, unsigned label = 0xb04) {
             return bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + data.size()))
@@ -2811,7 +2811,7 @@ namespace
                     + sub(ESM::fourCC("PGRR"),bytes(links).substr(0,4))),0xd06),0xd06);
         }
         return record(ESM4::REC_DOOR, 0xd00, sub(ESM::fourCC("EDID"), std::string("TestTeleportDoor\0",17)))
-            + group(6, group(9, placed(0xd01,0xd00,128,160,0xd02,reachableExit ? 1024 : 0)
+            + group(6, group(9, placed(0xd01,0xd00,128,160,0xd02,reachableExit ? 1024.f : unreachableLanding)
                 + sourceExtra + (foreignCell ? std::string{} : destination) + pathgrid)) + foreign + package;
     }
 }
@@ -2942,6 +2942,23 @@ TEST(OblivionQuestGuidance, PrefersTrackedThenDestinationsThenTextAndBreaksPrior
     scripts.setStage(key(0xe13), 10);
     expectQuest(0xe13);
     EXPECT_TRUE(MWWorld::getOblivionQuestObjective(world)->mDestinations.empty());
+}
+
+TEST(OblivionQuestGuidance, UsesTheReachableTeleportBetweenDisconnectedPassagesInOneCell)
+{
+    MWClass::ESM4Door::registerSelf();
+    for (const bool reachesTarget : { false, true })
+    {
+        // A sparse corridor can put an XTEL landing well beyond the nearest
+        // waypoint. That landing still belongs to its own passage.
+        SwitchFixture fixture(false, false, sameCellTeleportRecords(reachesTarget, false, false, {}, 0, -900.f),
+            6, false);
+        auto& world = fixture.mFixture.mWorld;
+        const auto destination = world.getOblivionAiService()->questDestination(key(0xd03), world.getPlayerPtr());
+        ASSERT_EQ(destination.mNearby.has_value(), reachesTarget);
+        if (reachesTarget)
+            EXPECT_FLOAT_EQ(destination.mNearby->mPosition.x(), 128.f);
+    }
 }
 
 TEST(OblivionQuestGuidance, RoutesThroughALockedDoorWhenThePlayerHasItsKey)

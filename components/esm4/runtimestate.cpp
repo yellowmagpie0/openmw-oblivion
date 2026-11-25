@@ -812,7 +812,7 @@ namespace ESM4
             for (const RuntimeInventoryItem& item : inventory)
             {
                 writeKey(writer, item.mBase);
-                writer.integer(item.mCount);
+                writer.integer(item.mNegativeCount ? -item.mCount : item.mCount);
                 if (version >= 4)
                 {
                     if (version >= 24) writer.floating(static_cast<float>(item.mCondition));
@@ -857,6 +857,13 @@ namespace ESM4
                 RuntimeInventoryItem item;
                 item.mBase = readKey(reader);
                 item.mCount = reader.integer<std::int32_t>();
+                if (version >= 109 && item.mCount < 0)
+                {
+                    if (item.mCount == std::numeric_limits<std::int32_t>::min())
+                        throw std::runtime_error("Native inventory quantity exceeds int32 range");
+                    item.mCount = -item.mCount;
+                    item.mNegativeCount = true;
+                }
                 if (version >= 4)
                 {
                     item.mCondition = version >= 24 ? reader.float32()
@@ -903,6 +910,7 @@ namespace ESM4
                 const RuntimeInventoryItem& item = inventory[i];
                 stream << "{\"base\":\"" << escapeJson(item.mBase.serialize()) << "\",\"count\":"
                        << item.mCount;
+                if (item.mNegativeCount) stream << ",\"negative_count\":true";
                 if (version >= 4)
                 {
                     const double condition = version >= 24 ? static_cast<float>(item.mCondition) : item.mCondition;
@@ -2856,6 +2864,8 @@ namespace ESM4
             for (const RuntimeInventoryItem& item : inventory)
             {
                 validateOwnershipExtras(item.mOwnershipRank, item.mOwnershipGlobal, mVersion);
+                if (item.mNegativeCount && (mVersion < 109 || item.mCount <= 0))
+                    throw std::runtime_error("Invalid signed native inventory stack");
                 if (!item.mWeaponPoison.isNull() && (mVersion < 104 || !weaponPoisonIdentity(item.mWeaponPoison)
                     || (mVersion < 105 && item.mWeaponPoison.isDynamic())
                     || ESM::FormKey::deserialize(item.mWeaponPoison.serialize()) != item.mWeaponPoison

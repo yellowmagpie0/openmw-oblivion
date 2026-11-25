@@ -1770,6 +1770,7 @@ namespace MWWorld
                 ESM4::RuntimeInventoryItem item;
                 item.mBase = generatedKey ? *generatedKey : inventoryResolver.toFormKey(*formId);
                 item.mCount = itemPtr.getCellRef().getCount();
+                item.mNegativeCount = itemPtr.getCellRef().getCount(false) < 0;
                 if (const auto definition = OblivionProfileServices::itemDefinition(mStore, nativeId))
                 {
                     item.mCondition = definition->mMaxCondition < 0 ? -1

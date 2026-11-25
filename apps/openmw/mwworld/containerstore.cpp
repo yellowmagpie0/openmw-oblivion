@@ -1132,6 +1132,17 @@ void MWWorld::ContainerStore::clear()
     mModified = true;
 }
 
+void MWWorld::ContainerStore::replaceStockCount(const Ptr& stack, int signedCount)
+{
+    if (stack.getContainerStore() != this || signedCount == 0 || signedCount == std::numeric_limits<int>::min())
+        throw std::invalid_argument("Invalid native stock replacement");
+    resolve();
+    stack.getCellRef().setCount(signedCount);
+    flagAsModified();
+    if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
+        windows->inventoryUpdated(getPtr());
+}
+
 void MWWorld::ContainerStore::flagAsModified()
 {
     mWeightUpToDate = false;

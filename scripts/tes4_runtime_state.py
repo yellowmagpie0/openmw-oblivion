@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 108
+CURRENT_VERSION = 109
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -338,6 +338,9 @@ def _inventory(reader: _Reader, version: int) -> list[dict[str, Any]]:
     result = []
     for _ in range(reader.count()):
         item: dict[str, Any] = {"base": reader.string(), "count": reader.unpack("<i")}
+        if version >= 109 and item["count"] < 0:
+            item["negative_count"] = True
+            item["count"] = -item["count"]
         if version >= 4:
             item.update({
                 "condition": reader.unpack("<f" if version >= 24 else "<i"),
@@ -373,7 +376,8 @@ def _write_inventory(writer: _Writer, value: list[dict[str, Any]], version: int)
     writer.pack("<I", len(value))
     for item in value:
         writer.string(str(item["base"]))
-        writer.pack("<i", int(item["count"]))
+        count = int(item["count"])
+        writer.pack("<i", -count if item.get("negative_count") else count)
         if version >= 4:
             writer.pack("<f" if version >= 24 else "<i",
                         float(item.get("condition", -1)) if version >= 24
@@ -2873,6 +2877,9 @@ def _validate_inventory(value: list[dict[str, Any]], version: int, actor: bool) 
     }
     for item in value:
         _validate_ownership_extras(item, version)
+        if "negative_count" in item and (version < 109 or item["negative_count"] is not True
+                or not 0 < item.get("count", 0) <= 0x7fffffff):
+            raise RuntimeStateError("Invalid signed native inventory stack")
         poison = item.get("weapon_poison")
         if poison is not None and (not _weapon_poison_key(poison, version)
                 or item.get("count") != 1 or item.get("bound_source") is not None):

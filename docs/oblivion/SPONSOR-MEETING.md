@@ -21,3 +21,5 @@ python scripts/verify_sponsor_meeting.py build-windows/temple-player-ready/check
 ```
 
 The stock-controls restart in `sponsor-gallery-stock09` displayed Tar-Meena as the objective and accepted normal activation of the exit to the Elven Garden Sewers. With a 30 FPS cap at 1280 × 720, the stationary exit view averaged 28.8 FPS across 721 frames during seconds 15–40. The 95th-percentile frame took 39.7 ms. The full Windows test inventories passed with 2,353 engine tests and 3,327 component tests. Inventories, results and source fingerprints are in `build-windows/checks-4d3fd3c00c084828861f10046476746a`.
+
+Continue with [Tar-Meena's cipher](TAR-MEENAS-CIPHER.md).

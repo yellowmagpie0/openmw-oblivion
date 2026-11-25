@@ -79,7 +79,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 108;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 109;
 
     // v106: one Player-owned forward chair lifecycle. Clip clocks are independent
     // of actor locomotion; cold loading never replays entry or marker selection.
@@ -137,6 +137,9 @@ namespace ESM4
         ESM::FormKey mScriptOwner;
         // v104: single-use coating, separate from enchantment charge and crime owner.
         ESM::FormKey mWeaponPoison;
+
+        // Signed stock uses the same positive physical quantity in menus and transfers.
+        bool mNegativeCount = false;
 
         friend bool operator==(const RuntimeInventoryItem&, const RuntimeInventoryItem&) = default;
     };

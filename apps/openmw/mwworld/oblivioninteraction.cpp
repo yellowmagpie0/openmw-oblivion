@@ -524,7 +524,7 @@ namespace MWWorld
     int World::oblivionAddNativeInventoryItem(const Ptr& actor, const ESM::FormKey& key, int count)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !nativeInventoryOwner(actor)
-            || key.isNull() || count <= 0)
+            || key.isNull() || count == 0)
             return 0;
         const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key);
         if (!id)
@@ -534,6 +534,45 @@ namespace MWWorld
             return 0;
         const auto shared = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*id));
         auto& inventory = actor.getClass().getContainerStore(actor);
+        // A negative AddItem on a new NPC stock entry stores the signed change
+        // even though GetItemCount, barter and encumbrance see its magnitude.
+        if (actor.getType() == ESM::REC_NPC_4 && mStore.get<ESM4::Book>().search(key))
+        {
+            Ptr stock;
+            unsigned stacks = 0;
+            for (const auto& item : inventory)
+                if (item.getCellRef().getRefId() == shared)
+                {
+                    ++stacks;
+                    if (item.getCellRef().getCount(false) < 0)
+                        stock = item;
+                }
+            if (count < 0 || !stock.isEmpty())
+            {
+                const auto& baseItems = actor.get<ESM4::Npc>()->mBase->mInventory;
+                const bool baseStock = std::ranges::any_of(baseItems,
+                    [&](const auto& entry) { return entry.item == id->toUint32(); });
+                if (!baseStock && (stacks == 0 || (stacks == 1 && !stock.isEmpty())))
+                {
+                    if (count == std::numeric_limits<int>::min())
+                        throw std::invalid_argument("Native stock quantity exceeds int32");
+                    if (stock.isEmpty())
+                    {
+                        ManualRef source(mStore, shared, count);
+                        inventory.add(source.getPtr(), count, false);
+                    }
+                    else
+                    {
+                        const int previous = stock.getCellRef().getCount();
+                        const int delta = ESM4::nativeAddItemChangeDelta(0, -previous, count);
+                        inventory.replaceStockCount(stock, delta);
+                    }
+                    return ESM4::nativeInventoryCountMagnitude(count);
+                }
+            }
+        }
+        if (count < 0)
+            throw std::invalid_argument("Native AddItem cannot compose this signed inventory change");
         std::uint32_t existing = 0;
         const auto capacity = static_cast<std::uint32_t>(std::numeric_limits<int>::max() - count);
         for (auto it = inventory.begin(); it != inventory.end(); ++it)

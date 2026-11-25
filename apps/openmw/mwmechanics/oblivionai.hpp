@@ -22,6 +22,7 @@
 
 #include <osg/Vec3f>
 
+#include <components/esm4/actor.hpp>
 #include <components/esm4/aiselection.hpp>
 #include <components/esm4/aiphase.hpp>
 #include <components/esm4/detection.hpp>
@@ -288,6 +289,8 @@ namespace MWMechanics
         {
             std::map<const UnloadedLocation*, OblivionDoorState> mDoors;
             std::optional<OblivionSavedReferenceIndex> mReferences;
+            // A door route is evaluated for a single actor, before callbacks run.
+            std::optional<std::vector<ESM4::ActorFaction>> mActorFactions;
         };
 
         MWWorld::World& mWorld;
@@ -399,9 +402,9 @@ namespace MWMechanics
             const ESM4::PathgridNodeKey& destination) const;
         bool canUseDoor(const MWWorld::Ptr& actor, const LiveActor& live, const ESM::FormKey& doorKey, bool& locked) const;
         bool hasDoorOwnershipPermission(const LiveActor& live, const ESM::FormKey& owner,
-            const MWWorld::Ptr* actor = nullptr) const;
+            const MWWorld::Ptr* actor = nullptr, DoorStateCache* cache = nullptr) const;
         bool hasCellOwnershipPermission(const LiveActor& live, const ESM::FormKey& cell,
-            const MWWorld::Ptr* actor = nullptr) const;
+            const MWWorld::Ptr* actor = nullptr, DoorStateCache* cache = nullptr) const;
         bool canUseUnloadedDoor(const LiveActor& live, const UnloadedLocation& door, bool& locked,
             const MWWorld::Ptr* actor = nullptr, DoorStateCache* cache = nullptr) const;
         bool reserveAction(const MWWorld::Ptr& actor, LiveActor& live, const ESM4::AIPackage& package);

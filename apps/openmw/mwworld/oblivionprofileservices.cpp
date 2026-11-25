@@ -811,7 +811,7 @@ namespace MWWorld
                 throw std::runtime_error("TES4 runtime-state actor item cannot be resolved: "
                     + item.mBase.serialize());
             ManualRef source(store, generatedId ? *generatedId : sharedItemId(store, ESM::RefId(*itemId)),
-                item.mCount, incoming);
+                item.mNegativeCount ? -item.mCount : item.mCount, incoming);
             const Ptr ptr = source.getPtr();
             // Generated classes, actors, leveled lists and other definitions
             // are not actual inventory stacks, even when their ID resolves.

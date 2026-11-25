@@ -2579,8 +2579,6 @@ namespace MWWorld
                 if (nativeInventoryOwner(actor))
                 {
                     const auto count = boundedCount(argument(itemArg + 1));
-                    if (count < 0)
-                        throw std::invalid_argument("Native AddItem negative-count delta semantics are unsupported");
                     const int added = mWorld.oblivionAddNativeInventoryItem(actor, *item, count);
                     if (added > 0)
                     {

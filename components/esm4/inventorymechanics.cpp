@@ -13,7 +13,7 @@ namespace ESM4
     {
         bool sameStack(const RuntimeInventoryItem& left, const RuntimeInventoryItem& right)
         {
-            return !left.mBoundSource && !right.mBoundSource
+            return left.mNegativeCount == right.mNegativeCount && !left.mBoundSource && !right.mBoundSource
                 && left.mScriptOwner.isNull() && right.mScriptOwner.isNull()
                 && left.mWeaponPoison.isNull() && right.mWeaponPoison.isNull()
                 && left.mBase == right.mBase && left.mCondition == right.mCondition

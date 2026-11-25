@@ -4243,8 +4243,11 @@ namespace MWMechanics
             for (const auto from : mDoorRegions[region].mIncomingWalk)
                 relax(from, hops, true);
             for (const auto index : mDoorRegions[region].mIncomingDoors)
-                if (available(index))
-                    relax(regionFor(mDoorEndpoints[index]->first), hops + 1, false);
+            {
+                const auto from = regionFor(mDoorEndpoints[index]->first);
+                if (remaining[from] > hops + 1 && available(index))
+                    relax(from, hops + 1, false);
+            }
         }
         if (remaining[startRegion] == invalid || remaining[startRegion] == 0)
         {
@@ -5586,7 +5589,7 @@ namespace MWMechanics
     }
 
     bool OblivionAiService::hasDoorOwnershipPermission(
-        const LiveActor& live, const ESM::FormKey& owner, const MWWorld::Ptr* actor) const
+        const LiveActor& live, const ESM::FormKey& owner, const MWWorld::Ptr* actor, DoorStateCache* cache) const
     {
         if (owner.isNull())
             return false;
@@ -5618,14 +5621,17 @@ namespace MWMechanics
             return ESM::FormKey::content(mWorld.mContentFiles[contentFile], value.mIndex) == owner;
         };
         const auto key = actor && !actor->isEmpty() ? actorKey(*actor) : live.mState.mActor;
-        const auto entries = mWorld.getOblivionReferenceFactions(key);
-        return std::any_of(entries.begin(), entries.end(), [&matchesFaction](const auto& item) {
+        std::optional<std::vector<ESM4::ActorFaction>> local;
+        auto& factions = cache ? cache->mActorFactions : local;
+        if (!factions)
+            factions = mWorld.getOblivionReferenceFactions(key);
+        return std::ranges::any_of(*factions, [&matchesFaction](const auto& item) {
             return item.faction != 0 && item.rank != -1 && matchesFaction(ESM::FormId::fromUint32(item.faction));
         });
     }
 
     bool OblivionAiService::hasCellOwnershipPermission(
-        const LiveActor& live, const ESM::FormKey& cell, const MWWorld::Ptr* actor) const
+        const LiveActor& live, const ESM::FormKey& cell, const MWWorld::Ptr* actor, DoorStateCache* cache) const
     {
         if (cell.isNull())
             return false;
@@ -5633,7 +5639,7 @@ namespace MWMechanics
         if (record == nullptr || record->mOwner == ESM::FormId{})
             return false;
         const ESM::FormKey owner = ESM::FormKeyResolver(mWorld.mContentFiles).toFormKey(record->mOwner);
-        return hasDoorOwnershipPermission(live, owner, actor);
+        return hasDoorOwnershipPermission(live, owner, actor, cache);
     }
 
     void OblivionAiService::applyPackageDoorPolicy(const LiveActor& live, DoorPolicyEvent event)
@@ -5844,12 +5850,12 @@ namespace MWMechanics
         }
         if (!current.mLocked || (door.mTeleportDoor.isNull() && current.mOpen))
             return true;
-        bool ownsConnectedCell = hasCellOwnershipPermission(live, door.mCell, actor);
+        bool ownsConnectedCell = hasCellOwnershipPermission(live, door.mCell, actor, cache);
         if (!ownsConnectedCell)
             if (const auto marker = mUnloadedLocationByReference.find(door.mTeleportDoor);
                 marker != mUnloadedLocationByReference.end())
-                ownsConnectedCell = hasCellOwnershipPermission(live, mUnloadedLocations[marker->second].mCell, actor);
-        if (hasDoorOwnershipPermission(live, current.mOwner, actor) || ownsConnectedCell)
+                ownsConnectedCell = hasCellOwnershipPermission(live, mUnloadedLocations[marker->second].mCell, actor, cache);
+        if (ownsConnectedCell || hasDoorOwnershipPermission(live, current.mOwner, actor, cache))
             return true;
 
         const ESM::RefId& doorKey = current.mKey;

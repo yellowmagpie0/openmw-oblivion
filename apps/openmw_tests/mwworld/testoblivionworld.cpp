@@ -65,7 +65,9 @@
 #include <cstddef>
 #include <cstring>
 #include <new>
+#include <components/esm4/loadbook.hpp>
 #include <components/esm4/loadweap.hpp>
+#include "apps/openmw/mwclass/book.hpp"
 #include "apps/openmw/mwclass/weapon.hpp"
 #include "apps/openmw/mwclass/clothing.hpp"
 #include <components/esm4/loadclot.hpp>
@@ -1690,6 +1692,41 @@ namespace
         EXPECT_EQ(captured.front().mOwner, item.mOwner);
         EXPECT_EQ(world.getOblivionCombatService()->findActorValues(actor.getCellRef().getFormKey()), nullptr);
         EXPECT_EQ(world.getOblivionCombatService()->findActorLife(actor.getCellRef().getFormKey()), nullptr);
+    }
+
+    TEST(OblivionWorldTest, NpcBookStockRetainsItsSignedCountAcrossRestoreAndReplacement)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        auto& store = world.getStore();
+        MWClass::Book::registerSelf();
+        ESM4::Book native{};
+        native.mId = {0x942, 0};
+        const auto book = ESM::FormKey::content("headless.esm", 0x942);
+        store.getWritable<ESM4::Book>().insertStatic(native, book);
+        ESM::Book projected;
+        projected.blank();
+        projected.mId = ESM::RefId(native.mId);
+        store.insertStatic(projected);
+
+        ASSERT_EQ(world.oblivionAddNativeInventoryItem(actor, book, -2), 2);
+        const auto first = world.captureOblivionInventory(actor);
+        ASSERT_EQ(first.size(), 1u);
+        EXPECT_EQ(first.front().mCount, 2);
+        EXPECT_TRUE(first.front().mNegativeCount);
+        installEquipmentInventory(fixture, actor, first);
+        EXPECT_EQ(world.captureOblivionInventory(actor), first);
+        ASSERT_EQ(world.oblivionAddNativeInventoryItem(actor, book, -1), 1);
+        const auto replaced = world.captureOblivionInventory(actor);
+        ASSERT_EQ(replaced.size(), 1u);
+        EXPECT_EQ(replaced.front().mCount, 1);
+        EXPECT_TRUE(replaced.front().mNegativeCount);
+        ASSERT_EQ(world.oblivionAddNativeInventoryItem(actor, book, 3), 3);
+        const auto ordinary = world.captureOblivionInventory(actor);
+        ASSERT_EQ(ordinary.size(), 1u);
+        EXPECT_EQ(ordinary.front().mCount, 3);
+        EXPECT_FALSE(ordinary.front().mNegativeCount);
     }
 
     TEST(OblivionWorldTest, NativeActorAddNegativeDeltaFailsExplicitlyWithoutAuthorityBirth)

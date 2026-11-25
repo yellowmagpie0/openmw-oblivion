@@ -4,11 +4,14 @@
 #include <algorithm>
 #include <deque>
 #include <map>
+#include <queue>
 #include <set>
 #include <sstream>
 #include <tuple>
 
 #include <components/esm4/aiconditions.hpp>
+#include <components/esm4/crimerules.hpp>
+#include <components/esm4/loadacti.hpp>
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadqust.hpp>
@@ -85,6 +88,9 @@ namespace MWMechanics
                 result.mLabel = placed->mFullName;
         }
         if (result.mLabel.empty())
+            if (const auto* activator = store.search<ESM4::Activator>(location.mBase))
+                result.mLabel = activator->mFullName;
+        if (result.mLabel.empty())
             result.mLabel = targetCell->mFullName;
         // A quest can target an unnamed XMarker in the persistent exterior
         // cell. Give that point its nearby named landmark on the compass.
@@ -131,7 +137,7 @@ namespace MWMechanics
         };
         // Both walks read one snapshot. Index it once rather than scanning all saved references for each exit.
         std::optional<OblivionSavedReferenceIndex> references;
-        const auto canUseDoor = [&](const UnloadedLocation& door) {
+        const auto canUseDoor = [&](const UnloadedLocation& door, const ESM4::Cell& source, const ESM4::Cell& destination) {
             if (!references && mWorld.mOblivionRuntimeState)
                 references.emplace(mWorld.mOblivionRuntimeState->mReferences);
             const auto state = currentDoorState(door, nullptr, references ? &*references : nullptr);
@@ -139,45 +145,88 @@ namespace MWMechanics
                 return false;
             if (!state.mLocked || mWorld.oblivionPlayerHasItem(state.mKey))
                 return true;
-            return playerCell->isEsm4() && door.mCell == playerCell->getEsm4().mFormKey
-                && MWWorld::oblivionPlayerHasDoorExitPermission(mWorld, loadedPtrFor(door.mReference), player);
+            // Evaluate exit rights in the room the route would enter. An NPC's
+            // locked front door can still be used to leave their house.
+            if (source.isExterior() || source.mOwner.isZeroOrUnset()
+                || (!destination.isExterior() && !(destination.mCellFlags & ESM4::CELL_Public)))
+                return false;
+            const auto* placed = store.search<ESM4::Reference>(door.mReference);
+            if (!placed)
+                return false;
+            int level = placed->mLockLevel;
+            if (const auto resident = loadedPtrFor(door.mReference); !resident.isEmpty())
+                level = resident.getCellRef().getLockLevel();
+            else if (const auto* saved = references ? references->find(door.mReference) : nullptr)
+                level = saved->mLockLevel;
+            const auto trespass = MWWorld::oblivionActorTrespassing(mWorld, player, {}, source.mFormKey);
+            return ESM4::playerHasTrespassExitExemption({ trespass.value_or(false), true, true,
+                static_cast<std::uint8_t>(level), true, static_cast<std::uint8_t>(destination.mCellFlags) });
         };
-        if (playerSpace == targetSpace)
+        // A single interior may contain several disconnected sewer passages. Track
+        // which side of each teleport we can walk to, including its XTEL landing.
+        using Stop = std::pair<ESM::FormKey, std::optional<std::uint32_t>>;
+        const auto stopAt = [&](const ESM4::Cell& cell, const osg::Vec3f& point) {
+            Stop stop{ cell.mFormKey, std::nullopt };
+            if (!cell.isExterior())
+                if (const auto* grid = store.getOblivionPathgridService().graphForCell(cell.mFormKey))
+                    stop.second = grid->nearestEnabledNode({ point.x(), point.y(), point.z() });
+            return stop;
+        };
+        const auto canWalk = [&](const Stop& from, const Stop& to) {
+            if (!from.second || !to.second || from.second == to.second)
+                return true;
+            const auto* grid = store.getOblivionPathgridService().graphForCell(from.first);
+            return static_cast<bool>(grid->route(*from.second, *to.second));
+        };
+        const auto* origin = store.get<ESM4::Cell>().search(playerCell->getId());
+        const Stop start = origin ? stopAt(*origin, player.getRefData().getPosition().asVec3()) : Stop{};
+        const Stop goal = stopAt(*targetCell, position);
+        if (playerSpace == targetSpace && canWalk(start, goal))
             result.mNearby = MWWorld::QuestMarker{ targetSpace, position };
         if (targetCell->isExterior())
             setExterior({ targetSpace, position });
 
         // Walk the existing incoming XTEL index back from the target. This
         // preserves one-way links, and does not materialize other cells.
-        std::deque<ESM::FormKey> pending{ cellKey };
-        std::set<ESM::FormKey> visited{ cellKey };
+        using MapStep = std::pair<Stop, bool>;
+        const MapStep initial{ goal, !playerCell->isExterior() && targetCell->isExterior() };
+        std::deque<MapStep> pending{ initial };
+        std::set<MapStep> visitedSteps{ initial };
         while (!pending.empty() && !(result.mNearby && result.mWorldMap && result.mWorldMap->mSpace == preferredExterior))
         {
-            const auto incoming = mUnloadedDoorsByDestinationCell.find(pending.front());
+            const auto [current, crossedExterior] = pending.front();
             pending.pop_front();
+            if (crossedExterior && result.mWorldMap && result.mWorldMap->mSpace == preferredExterior)
+                continue;
+            const auto incoming = mUnloadedDoorsByDestinationCell.find(current.first);
             if (incoming == mUnloadedDoorsByDestinationCell.end())
                 continue;
+            const auto& currentCell = *store.search<ESM4::Cell>(current.first);
             for (const auto index : incoming->second)
             {
                 const auto& door = mUnloadedLocations[index];
-                if (visited.contains(door.mCell))
-                    continue;
                 const auto* source = store.search<ESM4::Cell>(door.mCell);
-                if (!source || !canUseDoor(door))
+                if (!source)
+                    continue;
+                const Stop departure = stopAt(*source, door.mPosition);
+                const MapStep next{ departure, crossedExterior || (!playerCell->isExterior() && source->isExterior()) };
+                if (visitedSteps.contains(next) || !canUseDoor(door, *source, currentCell)
+                    || (current.second && !canWalk(stopAt(currentCell, door.mTeleportPosition), current)))
                     continue;
 
                 const auto space = mapSpace(*source);
                 const auto marker = doorMarker(door, space);
-                if (!result.mNearby && space == playerSpace)
+                if (!crossedExterior && !result.mNearby && space == playerSpace && canWalk(start, departure))
                     result.mNearby = marker;
                 if (source->isExterior())
                     setExterior(marker);
-                // A city exterior can be a separate worldspace reached through
-                // another teleport door. Keep tracing back to the player's map.
+                // An exterior gate can project the target onto the parent map.
+                // Beyond this point an indoor player needs a separate route
+                // from their own room to the outdoors.
                 if (!source->isExterior() || space != playerSpace)
                 {
-                    visited.insert(door.mCell);
-                    pending.push_back(door.mCell);
+                    visitedSteps.insert(next);
+                    pending.push_back(next);
                 }
             }
         }
@@ -186,18 +235,41 @@ namespace MWMechanics
         // exterior. Find the first usable door on that leg.
         if (playerCell->isExterior() || result.mNearby || !result.mWorldMap)
             return result;
-        const auto* origin = store.get<ESM4::Cell>().search(playerCell->getId());
         if (!origin)
             return result;
-        std::deque<std::pair<ESM::FormKey, std::optional<MWWorld::QuestMarker>>> exits{
-            { origin->mFormKey, std::nullopt }
+        // Compare equal-door routes by walking distance. A short ladder exit
+        // and a trip across several long sewer corridors can have the same
+        // number of load doors.
+        struct ExitPath
+        {
+            unsigned mDoors;
+            float mDistance;
+            Stop mStop;
+            osg::Vec3f mArrival;
+            std::optional<MWWorld::QuestMarker> mFirst;
         };
-        visited = { origin->mFormKey };
+        const auto longer = [](const ExitPath& left, const ExitPath& right) {
+            return std::tie(left.mDoors, left.mDistance, left.mStop)
+                > std::tie(right.mDoors, right.mDistance, right.mStop);
+        };
+        std::priority_queue<ExitPath, std::vector<ExitPath>, decltype(longer)> exits(longer);
+        exits.push({ 0, 0.f, start, player.getRefData().getPosition().asVec3(), std::nullopt });
+        std::set<Stop> visited;
+        const auto& worlds = store.get<ESM4::World>();
+        const auto targetMap = MWWorld::resolveWorldspaceInheritance(worlds, result.mWorldMap->mSpace, ESM4::World::UseFlag_Map);
         while (!exits.empty())
         {
-            auto [cell, first] = std::move(exits.front());
-            exits.pop_front();
-            const auto outgoing = mUnloadedDoorsByCell.find(cell);
+            const auto path = exits.top();
+            exits.pop();
+            if (!visited.insert(path.mStop).second)
+                continue;
+            const auto& currentCell = *store.search<ESM4::Cell>(path.mStop.first);
+            if (currentCell.isExterior())
+            {
+                result.mNearby = path.mFirst;
+                return result;
+            }
+            const auto outgoing = mUnloadedDoorsByCell.find(path.mStop.first);
             if (outgoing == mUnloadedDoorsByCell.end())
                 continue;
             for (const auto index : outgoing->second)
@@ -206,26 +278,17 @@ namespace MWMechanics
                 const auto landing = mUnloadedLocationByReference.find(door.mTeleportDoor);
                 if (landing == mUnloadedLocationByReference.end())
                     continue;
-                const auto& next = mUnloadedLocations[landing->second].mCell;
-                if (visited.contains(next))
+                const auto* destination = store.search<ESM4::Cell>(mUnloadedLocations[landing->second].mCell);
+                if (!destination || (destination->isExterior()
+                    && MWWorld::resolveWorldspaceInheritance(worlds, mapSpace(*destination), ESM4::World::UseFlag_Map) != targetMap))
                     continue;
-                const auto* destination = store.search<ESM4::Cell>(next);
-                if (!destination || !canUseDoor(door))
+                const Stop next = stopAt(*destination, door.mTeleportPosition);
+                if (visited.contains(next) || !canUseDoor(door, currentCell, *destination)
+                    || !canWalk(path.mStop, stopAt(currentCell, door.mPosition)))
                     continue;
-                const auto step = first ? *first : doorMarker(door, playerSpace);
-                if (destination->isExterior())
-                {
-                    const auto& worlds = store.get<ESM4::World>();
-                    if (MWWorld::resolveWorldspaceInheritance(worlds, mapSpace(*destination), ESM4::World::UseFlag_Map)
-                        == MWWorld::resolveWorldspaceInheritance(worlds, result.mWorldMap->mSpace, ESM4::World::UseFlag_Map))
-                    {
-                        result.mNearby = step;
-                        return result;
-                    }
-                    continue;
-                }
-                visited.insert(next);
-                exits.emplace_back(next, step);
+                const auto first = path.mFirst ? *path.mFirst : doorMarker(door, playerSpace);
+                const float distance = path.mDistance + (door.mPosition - path.mArrival).length();
+                exits.push({ path.mDoors + 1, distance, next, door.mTeleportPosition, first });
             }
         }
         return result;
