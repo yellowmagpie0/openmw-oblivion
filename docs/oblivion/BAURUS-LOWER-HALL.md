@@ -10,6 +10,16 @@ Run `build-windows/Continue-in-the-Lower-Hall.cmd`. The checkpoint is `build-win
 
 ## Route verification
 
+The Lower Hall checkpoint also reproduces a FaceGen texture alignment issue.
+On the stock human head, the nostrils sit below the eyes in the base DDS
+but above them in the stored EGT color layer. The renderer now maps the two
+layers to the same facial landmarks. Compare the same greeting in
+`build-windows/baurus-face-before/Lower-Hall.png` and
+`build-windows/baurus-face-after/Lower-Hall.png`. The rebuilt game also
+rendered Phintias at First Edition in `build-windows/baurus-face-bookstore/Phintias.png`.
+All 11 FaceGen tests passed, including the regression for both image origins
+and mismatched texture sizes, in `build-windows/checks-d5eab9e06b7a4c4e84feaa49d55f9bd3`.
+
 `build-windows/sponsor-full26/openmw.log` records an uninterrupted playthrough from `Path-of-Dawn-Elven-Garden-Sewers.omwsave` on the final executable. The player followed Baurus, fought at the wheel, crossed the open passage and used both load doors. Baurus defeated the rats and goblins and started the briefing at the meeting door. `sponsor-full26/Briefing.png` shows the three choices. `sponsor-full26/Uninterrupted-Lower-Hall.omwsave` preserves stage 76 after postponing. The separately prepared handoff restores the same decision with full health and a fresh torch.
 
 ```powershell

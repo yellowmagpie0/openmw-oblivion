@@ -686,14 +686,15 @@ namespace MWRender
         osg::ref_ptr<osg::Image> image = new osg::Image;
         image->allocateImage(base.s(), base.t(), 1, GL_RGBA, GL_UNSIGNED_BYTE);
         image->setOrigin(base.getOrigin());
-        const bool flipRows = base.getOrigin() == osg::Image::BOTTOM_LEFT;
         for (std::uint32_t y = 0; y < static_cast<std::uint32_t>(base.t()); ++y)
         {
+            // Row zero of an Oblivion EGT corresponds to the bottom row of
+            // the diffuse DDS. Convert the base row before resampling.
+            const std::uint32_t baseY = base.getOrigin() == osg::Image::TOP_LEFT ? base.t() - 1 - y : y;
+            const std::uint32_t egtY = baseY * egt.mHeight / static_cast<std::uint32_t>(base.t());
             for (std::uint32_t x = 0; x < static_cast<std::uint32_t>(base.s()); ++x)
             {
                 const std::uint32_t egtX = x * egt.mWidth / static_cast<std::uint32_t>(base.s());
-                const std::uint32_t unflippedY = y * egt.mHeight / static_cast<std::uint32_t>(base.t());
-                const std::uint32_t egtY = flipRows ? egt.mHeight - 1 - unflippedY : unflippedY;
                 const std::size_t pixel = static_cast<std::size_t>(egtY) * egt.mWidth + egtX;
                 osg::Vec4f color = base.getColor(x, y);
                 color.r() = std::clamp(color.r() + deltas[pixel].x(), 0.f, 1.f);

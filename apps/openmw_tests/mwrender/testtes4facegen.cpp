@@ -210,36 +210,47 @@ namespace MWRender
         EXPECT_EQ((*result)[1], osg::Vec3f(2.f, 1.f, 0.f));
     }
 
-    TEST(Tes4FaceGen, MapsEgtTopToBottomRowsToImageOrigin)
+    TEST(Tes4FaceGen, AlignsOblivionComplexionWithDiffuseImageLandmarks)
     {
-        osg::ref_ptr<osg::Image> base = new osg::Image;
-        base->allocateImage(1, 2, 1, GL_RGBA, GL_UNSIGNED_BYTE);
-        base->setColor(osg::Vec4f(0.f, 0.f, 0.f, 1.f), 0, 0);
-        base->setColor(osg::Vec4f(0.f, 0.f, 0.f, 1.f), 0, 1);
-
+        // As in the stock human head, the mouth precedes the brows in EGT
+        // storage, while the brows precede the mouth in the diffuse DDS.
         ESM4::FaceGenTextureMode mode;
         mode.mScale = 1.f;
-        mode.mRed = { 10, 20 };
-        mode.mGreen = { 0, 0 };
-        mode.mBlue = { 0, 0 };
+        mode.mRed = { 30, 40, 10, 20 };
+        mode.mGreen.resize(4);
+        mode.mBlue.resize(4);
         ESM4::FaceGenEgt egt;
-        egt.mWidth = 1;
+        egt.mWidth = 2;
         egt.mHeight = 2;
         egt.mSymmetricTextures.push_back(mode);
 
-        base->setOrigin(osg::Image::BOTTOM_LEFT);
-        osg::ref_ptr<osg::Image> bottomLeft = applyTes4FaceGenEgt(*base, egt, {}, { 1.f });
-        ASSERT_NE(bottomLeft, nullptr);
-        EXPECT_EQ(bottomLeft->getOrigin(), osg::Image::BOTTOM_LEFT);
-        EXPECT_NEAR(bottomLeft->getColor(0, 0).r(), 20.f / 255.f, 1.f / 255.f);
-        EXPECT_NEAR(bottomLeft->getColor(0, 1).r(), 10.f / 255.f, 1.f / 255.f);
-
+        osg::ref_ptr<osg::Image> base = new osg::Image;
+        base->allocateImage(4, 5, 1, GL_RGBA, GL_UNSIGNED_BYTE);
         base->setOrigin(osg::Image::TOP_LEFT);
-        osg::ref_ptr<osg::Image> topLeft = applyTes4FaceGenEgt(*base, egt, {}, { 1.f });
-        ASSERT_NE(topLeft, nullptr);
-        EXPECT_EQ(topLeft->getOrigin(), osg::Image::TOP_LEFT);
-        EXPECT_NEAR(topLeft->getColor(0, 0).r(), 10.f / 255.f, 1.f / 255.f);
-        EXPECT_NEAR(topLeft->getColor(0, 1).r(), 20.f / 255.f, 1.f / 255.f);
+        for (int y = 0; y < base->t(); ++y)
+            for (int x = 0; x < base->s(); ++x)
+                base->setColor(osg::Vec4f(0.f, y / 4.f, 0.f, 1.f), x, y);
+
+        for (auto origin : { osg::Image::TOP_LEFT, osg::Image::BOTTOM_LEFT })
+        {
+            if (origin == osg::Image::BOTTOM_LEFT)
+                base->flipVertical();
+            base->setOrigin(origin);
+            const auto tinted = applyTes4FaceGenEgt(*base, egt, {}, { 1.f });
+            ASSERT_NE(tinted, nullptr);
+            EXPECT_EQ(tinted->getOrigin(), origin);
+            for (int y = 0; y < base->t(); ++y)
+            {
+                const int row = origin == osg::Image::TOP_LEFT ? y : base->t() - 1 - y;
+                for (int x = 0; x < base->s(); ++x)
+                {
+                    const auto color = tinted->getColor(x, row);
+                    const int tint = (y < 2 ? 10 : 30) + (x < 2 ? 0 : 10);
+                    EXPECT_NEAR(color.r(), tint / 255.f, 1.f / 255.f);
+                    EXPECT_NEAR(color.g(), y / 4.f, 1.f / 255.f);
+                }
+            }
+        }
     }
 
     TEST(Tes4FaceGen, CancelsBipedHeadBindOrientation)

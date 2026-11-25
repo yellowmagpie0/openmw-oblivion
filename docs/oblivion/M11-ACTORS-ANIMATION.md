@@ -17,8 +17,10 @@ XRGD poses execute through the normal OpenMW scene and animation runtime.
 - `RACE` and `NPC_` shape/texture coefficients now drive the official EGM and
   EGT FaceGen assets. TRI expression targets are retained as deformable scene
   geometry, with exact phoneme-channel matching and independent blinking.
-  EGT's top-to-bottom rows are mapped against each base image's actual OSG
-  origin, keeping complexion features on the intended UV region. Race
+  The first rows of the stock human head EGT contain the lower face. The
+  renderer maps them to the bottom of the diffuse texture using its OSG image
+  origin. [Baurus in the Lower Hall](BAURUS-LOWER-HALL.md) reproduces the
+  former displacement of the nostrils toward the eyes. Race
   height/weight and sex-specific tables are applied without TES3 body records.
 - Native eyes, hair, head/ear/mouth parts, naked-body slot meshes, and
   sex-specific armor/clothing models attach to the authoritative destination
