@@ -539,6 +539,41 @@ namespace MWRender
             std::vector<osg::observer_ptr<SceneUtil::RigGeometry>> mRigs;
         };
 
+        void suppressFacePartExportLights(osg::StateSet& state)
+        {
+            // Legacy ear and hair NIFs include the modeller's default lights.
+            for (const auto* name : { "nifEmbeddedLightAmbient", "nifEmbeddedLightDirection" })
+                state.addUniform(new osg::Uniform(name, osg::Vec4f()),
+                    osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+        }
+
+        struct FaceSkinMaterialVisitor : osg::NodeVisitor
+        {
+            FaceSkinMaterialVisitor()
+                : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN)
+            {
+                setNodeMaskOverride(~0u);
+            }
+
+            void apply(osg::Node& node) override
+            {
+                const osg::StateSet* state = node.getStateSet();
+                const auto* attribute = state ? state->getAttributePair(osg::StateAttribute::MATERIAL) : nullptr;
+                if (attribute)
+                {
+                    // TES4's skin shader lights the complexion with the cell ambient.
+                    // Exported head materials range from black (Orc) to grey (human).
+                    const auto& source = static_cast<const osg::Material&>(*attribute->first);
+                    osg::ref_ptr<osg::Material> material = new osg::Material(source);
+                    material->setAmbient(osg::Material::FRONT_AND_BACK, osg::Vec4f(1, 1, 1, 1));
+                    osg::ref_ptr<osg::StateSet> changed = new osg::StateSet(*state, osg::CopyOp::SHALLOW_COPY);
+                    changed->setAttribute(material, attribute->second);
+                    node.setStateSet(std::move(changed));
+                }
+                traverse(node);
+            }
+        };
+
         template <class T, T (*Loader)(std::istream&)>
         std::shared_ptr<const T> loadCachedFaceGen(const VFS::Manager& vfs, VFS::Path::NormalizedView path)
         {
@@ -554,6 +589,48 @@ namespace MWRender
             cache.emplace(path.value(), result);
             return result;
         }
+
+        osg::ref_ptr<osg::Image> applyHeadAge(osg::Image& complexion, const VFS::Path::Normalized& diffuse,
+            const std::vector<float>& shape, bool female, Resource::ResourceSystem& resources)
+        {
+            try
+            {
+                const auto& vfs = *resources.getVFS();
+                const auto control = loadCachedFaceGen<ESM4::FaceGenAgeControl, ESM4::loadFaceGenAgeControl>(
+                    vfs, VFS::Path::NormalizedView("facegen/si.ctl"));
+                if (!control)
+                    return {};
+                const float age = std::floor(control->evaluate(shape));
+                if (!(age >= 0.f && age <= 100.f))
+                    return {};
+                const std::string stem = std::string(diffuse.stem()) + (female ? 'f' : 'm');
+                // Try the exact age, then progressively younger decade maps.
+                for (int year = static_cast<int>(age); year >= 0; year = (year - 1) / 10 * 10)
+                {
+                    const std::string name = stem + std::to_string(year);
+                    const auto path = diffuse.parent() / VFS::Path::Normalized(name + ".dds");
+                    if (vfs.exists(path))
+                    {
+                        const auto detail = resources.getImageManager()->getImage(path);
+                        if (detail && detail->valid())
+                        {
+                            applyTes4FaceAgeDetail(complexion, *detail);
+                            const auto normal = diffuse.parent() / VFS::Path::Normalized(name + "_n.dds");
+                            if (vfs.exists(normal))
+                                return resources.getImageManager()->getImage(normal);
+                        }
+                        break;
+                    }
+                    if (year == 0)
+                        break;
+                }
+            }
+            catch (const std::exception& e)
+            {
+                Log(Debug::Warning) << "Unable to apply FaceGen age detail for " << diffuse << ": " << e.what();
+            }
+            return {};
+        }
     }
 
     void applyTes4HairTint(osg::Node& node, const osg::Vec4f& color, Resource::SceneManager& scenes)
@@ -563,8 +640,11 @@ namespace MWRender
         material->setColorMode(osg::Material::OFF);
         material->setAmbient(osg::Material::FRONT_AND_BACK, color);
         material->setDiffuse(osg::Material::FRONT_AND_BACK, color);
-        node.getOrCreateStateSet()->setAttributeAndModes(
-            material, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+        osg::ref_ptr<osg::StateSet> state = node.getStateSet()
+            ? new osg::StateSet(*node.getStateSet(), osg::CopyOp::SHALLOW_COPY) : new osg::StateSet;
+        suppressFacePartExportLights(*state);
+        state->setAttributeAndModes(material, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+        node.setStateSet(std::move(state));
         // Templates were compiled before this per-actor material existed.
         // Retaining their colorMode=2 would keep the mesh's cyan vertex colors.
         scenes.recreateShaders(&node);
@@ -641,6 +721,11 @@ namespace MWRender
     {
         const bool eye = partIndex == ESM4::Race::EyeLeft || partIndex == ESM4::Race::EyeRight;
         const bool ear = partIndex == ESM4::Race::EarMale || partIndex == ESM4::Race::EarFemale;
+        if (ear || partIndex == ESM4::Race::Head)
+        {
+            FaceSkinMaterialVisitor visitor;
+            node.accept(visitor);
+        }
         if (!eye && !ear)
             return;
         // The legacy ear mesh includes an export light of its own. Assembled
@@ -649,8 +734,7 @@ namespace MWRender
         osg::ref_ptr<osg::StateSet> state = node.getStateSet()
             ? new osg::StateSet(*node.getStateSet(), osg::CopyOp::SHALLOW_COPY) : new osg::StateSet;
         const auto mode = osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE;
-        for (const auto* name : { "nifEmbeddedLightAmbient", "nifEmbeddedLightDirection" })
-            state->addUniform(new osg::Uniform(name, osg::Vec4f()), mode);
+        suppressFacePartExportLights(*state);
         state->addUniform(new osg::Uniform("specStrength", eye ? 0.2f : 0.05f), mode);
         node.setStateSet(state);
     }
@@ -704,6 +788,29 @@ namespace MWRender
             }
         }
         return image;
+    }
+
+    void applyTes4FaceAgeDetail(osg::Image& complexion, const osg::Image& detail)
+    {
+        if (!complexion.valid() || !detail.valid())
+            return;
+        if (detail.s() >= complexion.s() && detail.t() >= complexion.t()
+            && (detail.s() != complexion.s() || detail.t() != complexion.t()))
+            complexion.scaleImage(detail.s(), detail.t(), 1);
+        for (int y = 0; y < complexion.t(); ++y)
+        {
+            const int row = complexion.getOrigin() == detail.getOrigin() ? y : complexion.t() - 1 - y;
+            const auto dy = static_cast<std::int64_t>(row) * detail.t() / complexion.t();
+            for (int x = 0; x < complexion.s(); ++x)
+            {
+                const auto dx = static_cast<std::int64_t>(x) * detail.s() / complexion.s();
+                const auto scale = detail.getColor(static_cast<unsigned>(dx), static_cast<unsigned>(dy));
+                auto color = complexion.getColor(x, y);
+                for (unsigned channel = 0; channel < 3; ++channel)
+                    color[channel] = std::min(1.f, color[channel] * 4.f * scale[channel]);
+                complexion.setColor(color, x, y);
+            }
+        }
     }
 
     bool applyTes4FaceGenEgm(osg::Geometry& geometry, const ESM4::FaceGenEgm& egm,
@@ -855,7 +962,7 @@ namespace MWRender
     }
 
     void applyTes4FaceGen(std::string_view model, osg::Node& node, const ESM4::Npc& traits,
-        const ESM4::Race& race, bool isFemale, std::string_view texture, bool bodyTexture,
+        const ESM4::Race& race, bool isFemale, std::string_view texture, Tes4FaceGenPart part,
         Resource::ResourceSystem* resourceSystem, std::vector<Tes4FaceMorph>& morphs)
     {
         const VFS::Path::Normalized requested(model);
@@ -868,7 +975,7 @@ namespace MWRender
         triPath.changeExtension(VFS::Path::ExtensionView("tri"));
         VFS::Path::Normalized egtPath(source);
         egtPath.changeExtension(VFS::Path::ExtensionView("egt"));
-        if (bodyTexture && !resourceSystem->getVFS()->exists(egtPath))
+        if (part == Tes4FaceGenPart::Body && !resourceSystem->getVFS()->exists(egtPath))
         {
             const bool upperBody = source.stem().find("upperbody") != std::string_view::npos;
             egtPath = VFS::Path::Normalized(upperBody
@@ -914,7 +1021,12 @@ namespace MWRender
                         osg::ref_ptr<osg::Image> image = applyTes4FaceGenEgt(
                             *base, egt, raceTexture, traits.mSymTextureModeCoefficients);
                         if (image != nullptr)
-                            overrideAllTextures(std::move(image), resourceSystem, node);
+                        {
+                            osg::ref_ptr<osg::Image> normal;
+                            if (part == Tes4FaceGenPart::Head)
+                                normal = applyHeadAge(*image, corrected, symmetric, isFemale, *resourceSystem);
+                            overrideAllTextures(std::move(image), resourceSystem, node, normal.get());
+                        }
                     }
                 }
             }
@@ -1326,7 +1438,7 @@ namespace MWRender
                 const std::string_view model
                     = bodyParts[i].mesh.empty() ? defaultTes4BodyMesh(i, isFemale) : bodyParts[i].mesh;
                 if (osg::ref_ptr<osg::Node> node = insertPart(model, {}, bodyParts[i].texture))
-                    applyTes4FaceGen(model, *node, traits, *race, isFemale, bodyParts[i].texture, true,
+                    applyTes4FaceGen(model, *node, traits, *race, isFemale, bodyParts[i].texture, Tes4FaceGenPart::Body,
                         mResourceSystem, mFaceMorphs);
             }
 
@@ -1348,8 +1460,9 @@ namespace MWRender
                 if (osg::ref_ptr<osg::Node> node = insertPart(part.mesh, "Bip01 Head", texture,
                         shouldCorrectTes4HeadPartOrientation(i)))
                 {
-                    applyTes4FaceGen(
-                        part.mesh, *node, traits, *race, isFemale, texture, false, mResourceSystem, mFaceMorphs);
+                    applyTes4FaceGen(part.mesh, *node, traits, *race, isFemale, texture,
+                        i == ESM4::Race::Head ? Tes4FaceGenPart::Head : Tes4FaceGenPart::Other,
+                        mResourceSystem, mFaceMorphs);
                     configureTes4HeadPartLighting(*node, i);
                 }
             }
@@ -1365,7 +1478,7 @@ namespace MWRender
                 if (osg::ref_ptr<osg::Node> node
                     = insertPart(hair->mModel.getOriginal(), "Bip01 Head", hair->mIcon, true))
                 {
-                    applyTes4FaceGen(hair->mModel.getOriginal(), *node, traits, *race, isFemale, {}, false,
+                    applyTes4FaceGen(hair->mModel.getOriginal(), *node, traits, *race, isFemale, {}, Tes4FaceGenPart::Other,
                         mResourceSystem, mFaceMorphs);
                     const osg::Vec4f color(traits.mHairColour.red / 255.f, traits.mHairColour.green / 255.f,
                         traits.mHairColour.blue / 255.f, 1.f);

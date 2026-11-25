@@ -668,7 +668,7 @@ namespace MWRender
         std::uint32_t covered = 0;
         std::set<std::string, std::less<>> attachedModels;
         const auto attachPart = [&](std::string_view model, std::string_view bone, std::string_view texture = {},
-                                    bool faceGen = false, bool bodyTexture = false,
+                                    Tes4FaceGenPart faceGen = Tes4FaceGenPart::None,
                                     bool correctHeadPartOrientation = true) -> osg::ref_ptr<osg::Node> {
             if (model.empty())
                 return {};
@@ -705,10 +705,10 @@ namespace MWRender
                 filterOblivionBodyParts(*node, mViewMode == VM_FirstPerson);
                 if (!texture.empty())
                     overrideAllTextures(VFS::Path::Normalized(texture), mResourceSystem, *node);
-                if (!faceGen && texture.empty())
+                if (faceGen == Tes4FaceGenPart::None && texture.empty())
                     applyTes4ClothingSkin(*node, *player, *race, female, *mResourceSystem);
-                if (faceGen)
-                    applyTes4FaceGen(path.value(), *node, *player, *race, female, texture, bodyTexture,
+                if (faceGen != Tes4FaceGenPart::None)
+                    applyTes4FaceGen(path.value(), *node, *player, *race, female, texture, faceGen,
                         mResourceSystem, mOblivionFaceMorphs);
                 mOblivionParts.emplace_back(std::make_unique<PartHolder>(node));
                 return node;
@@ -776,7 +776,7 @@ namespace MWRender
                 {
                     const std::string_view model
                         = body[i].mesh.empty() ? oblivionBodyMesh(i, female) : body[i].mesh;
-                    attachPart(model, "Bip01", body[i].texture, true, true);
+                    attachPart(model, "Bip01", body[i].texture, Tes4FaceGenPart::Body);
                 }
             }
         }
@@ -793,7 +793,8 @@ namespace MWRender
                 if ((i == ESM4::Race::EyeLeft || i == ESM4::Race::EyeRight) && !player->mEyes.isZeroOrUnset())
                     if (const ESM4::Eyes* eyes = store.get<ESM4::Eyes>().search(player->mEyes))
                         texture = eyes->mIcon;
-                if (auto node = attachPart(head[i].mesh, "Bip01 Head", texture, true, false,
+                if (auto node = attachPart(head[i].mesh, "Bip01 Head", texture,
+                        i == ESM4::Race::Head ? Tes4FaceGenPart::Head : Tes4FaceGenPart::Other,
                         shouldCorrectTes4HeadPartOrientation(i)))
                     configureTes4HeadPartLighting(*node, i);
             }
@@ -802,7 +803,7 @@ namespace MWRender
             if ((covered & ESM4::Armor::TES4_Hair) == 0 && !hairId.isZeroOrUnset())
                 if (const ESM4::Hair* hair = store.get<ESM4::Hair>().search(hairId))
                     if (const osg::ref_ptr<osg::Node> node
-                        = attachPart(hair->mModel.getOriginal(), "Bip01 Head", hair->mIcon, true, false, true))
+                        = attachPart(hair->mModel.getOriginal(), "Bip01 Head", hair->mIcon, Tes4FaceGenPart::Other))
                     {
                         const osg::Vec4f color(player->mHairColour.red / 255.f, player->mHairColour.green / 255.f,
                             player->mHairColour.blue / 255.f, 1.f);

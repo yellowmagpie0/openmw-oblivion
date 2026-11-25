@@ -12,6 +12,34 @@ records; creatures use their native multipart skeleton families; and external
 KF groups, facial morphs, voice-linked lip motion, death animations, and saved
 XRGD poses execute through the normal OpenMW scene and animation runtime.
 
+## November 2026 portrait survey
+
+The survey used ten stock NPCs, one per playable race. A separate test cell
+placed each actor under the same lighting for front and three-quarter views.
+The local before and after contact sheets are in `build-windows/portrait-room/`
+and `build-windows/portrait-final/` (`sheet0.jpg` and `sheet30.jpg`).
+The roster comprised Agata, Clesa, Dar Jee, Falanu Hlaalu, Glarthir, Jauffre,
+Martin, Mazoga, S'drassa and Sinderion.
+Two further cold launches checked Mazoga in Leyawiin Castle County Hall and
+Jauffre in Weynon Priory House. The original-location comparison is in
+`build-windows/portrait-final/original-locations.jpg`.
+
+Mazoga and S'drassa exposed a head-to-body lighting seam. The stock Orc and
+Khajiit head meshes specify black material ambient. TES4 skin receives the
+cell ambient directly. Hair also ignores the directional lights embedded in
+some exported hair meshes. These adjustments apply to each actor instance.
+
+Jauffre and Sinderion exposed the missing age detail. The renderer projects
+the combined symmetric face shape through the age control in `facegen/si.ctl`,
+looks for the sex-specific head texture at that age, then at younger decades.
+The matching detail multiplies the complexion by four times its RGB value.
+The companion normal map replaces the head's normal map when present.
+The original executable (SHA-256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`)
+evaluates the age at `0x5552a2` and resolves the filename at `0x551a00`.
+The stock `shaderpackage019.sdp` entry `SKIN2000.pso` supplies the texture
+blend and ambient lighting reference.
+
 ## Delivered implementation
 
 - `RACE` and `NPC_` shape/texture coefficients now drive the official EGM and

@@ -91,9 +91,33 @@ namespace MWRender
         const auto* material = dynamic_cast<const osg::Material*>(actor->getStateSet()->getAttribute(osg::StateAttribute::MATERIAL));
         ASSERT_NE(material, nullptr);
         EXPECT_EQ(material->getDiffuse(osg::Material::FRONT), gray);
+        const auto* direction = actor->getStateSet()->getUniformPair("nifEmbeddedLightDirection");
+        ASSERT_NE(direction, nullptr);
+        osg::Vec4f value;
+        EXPECT_TRUE(direction->first->get(value));
+        EXPECT_EQ(value, osg::Vec4f());
+        EXPECT_TRUE(direction->second & osg::StateAttribute::OVERRIDE);
         ASSERT_TRUE(geometry->getStateSet()->getUniform("colorMode")->get(mode));
         EXPECT_EQ(mode, 2); // A second actor's template must remain unchanged.
         EXPECT_EQ(authored->getColorMode(), osg::Material::AMBIENT_AND_DIFFUSE);
+    }
+
+    TEST(Tes4FaceGen, HeadReceivesAmbientLightWithoutChangingTheSharedMaterial)
+    {
+        osg::ref_ptr<osg::Group> part = new osg::Group;
+        osg::ref_ptr<osg::Geometry> face = new osg::Geometry;
+        part->addChild(face);
+        osg::ref_ptr<osg::Material> exported = new osg::Material;
+        exported->setAmbient(osg::Material::FRONT_AND_BACK, osg::Vec4f(0, 0, 0, 1));
+        exported->setShininess(osg::Material::FRONT_AND_BACK, 15.f);
+        face->getOrCreateStateSet()->setAttribute(exported);
+        configureTes4HeadPartLighting(*part, ESM4::Race::Head);
+        const auto* skin = dynamic_cast<const osg::Material*>(
+            face->getStateSet()->getAttribute(osg::StateAttribute::MATERIAL));
+        ASSERT_NE(skin, nullptr);
+        EXPECT_EQ(skin->getAmbient(osg::Material::FRONT), osg::Vec4f(1, 1, 1, 1));
+        EXPECT_EQ(skin->getShininess(osg::Material::FRONT), 15.f);
+        EXPECT_EQ(exported->getAmbient(osg::Material::FRONT), osg::Vec4f(0, 0, 0, 1));
     }
 
     TEST(Tes4FaceGen, ColorsOnlyEmbeddedBodySkinAndPreservesAuthoredStateAndOtherActors)
@@ -251,6 +275,29 @@ namespace MWRender
                 }
             }
         }
+    }
+
+    TEST(Tes4FaceGen, PreservesAgeDetailResolutionOrientationAndComplexionAlpha)
+    {
+        osg::ref_ptr<osg::Image> skin = new osg::Image;
+        skin->allocateImage(1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE);
+        skin->setOrigin(osg::Image::BOTTOM_LEFT);
+        skin->setColor(osg::Vec4f(.5f, .5f, .5f, .75f), 0, 0);
+        osg::ref_ptr<osg::Image> detail = new osg::Image;
+        detail->allocateImage(2, 2, 1, GL_RGBA, GL_UNSIGNED_BYTE);
+        detail->setOrigin(osg::Image::TOP_LEFT);
+        for (int x = 0; x < 2; ++x)
+        {
+            detail->setColor(osg::Vec4f(.125f, .25f, .5f, 0.f), x, 0);
+            detail->setColor(osg::Vec4f(.25f, .25f, .25f, 0.f), x, 1);
+        }
+        applyTes4FaceAgeDetail(*skin, *detail);
+        ASSERT_EQ(skin->s(), 2);
+        ASSERT_EQ(skin->t(), 2);
+        EXPECT_NEAR(skin->getColor(0, 1).r(), .25f, .02f);
+        EXPECT_NEAR(skin->getColor(0, 0).r(), .5f, .02f);
+        EXPECT_NEAR(skin->getColor(1, 1).b(), 1.f, .02f);
+        EXPECT_NEAR(skin->getColor(1, 1).a(), .75f, .02f);
     }
 
     TEST(Tes4FaceGen, CancelsBipedHeadBindOrientation)

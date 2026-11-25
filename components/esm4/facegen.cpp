@@ -1,5 +1,6 @@
 #include "facegen.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstring>
@@ -94,6 +95,42 @@ namespace
 
 namespace ESM4
 {
+    FaceGenAgeControl loadFaceGenAgeControl(std::istream& stream)
+    {
+        constexpr std::string_view format = "CTL";
+        expectHeader(stream, "FRCTL", "001");
+        skip(stream, 2 * sizeof(std::uint32_t), format); // basis versions
+        std::array<std::uint32_t, 4> dimensions;
+        for (auto& size : dimensions)
+            size = count(stream, format, sMaxMorphs);
+        for (const auto size : dimensions)
+        {
+            const auto controls = count(stream, format, sMaxMorphs);
+            for (std::uint32_t i = 0; i < controls; ++i)
+            {
+                skip(stream, size * sizeof(float), format);
+                skip(stream, count(stream, format, sMaxString), format);
+            }
+        }
+        // The first demographic control is the all-populations age projection.
+        FaceGenAgeControl result;
+        result.mShapeWeights.resize(dimensions.front());
+        readBytes(stream, result.mShapeWeights.data(), result.mShapeWeights.size() * sizeof(float), format);
+        result.mOffset = read<float>(stream, format);
+        if (!std::isfinite(result.mOffset) || !std::all_of(result.mShapeWeights.begin(),
+                result.mShapeWeights.end(), [](float value) { return std::isfinite(value); }))
+            fail(format, "non-finite age control");
+        return result;
+    }
+
+    float FaceGenAgeControl::evaluate(const std::vector<float>& shape) const
+    {
+        float age = mOffset;
+        for (std::size_t i = 0; i < std::min(shape.size(), mShapeWeights.size()); ++i)
+            age += shape[i] * mShapeWeights[i];
+        return age;
+    }
+
     FaceGenTri loadFaceGenTri(std::istream& stream)
     {
         constexpr std::string_view format = "TRI";

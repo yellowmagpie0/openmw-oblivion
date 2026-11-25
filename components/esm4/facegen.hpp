@@ -73,6 +73,15 @@ namespace ESM4
         std::vector<std::uint8_t> mPayload;
     };
 
+    struct FaceGenAgeControl
+    {
+        std::vector<float> mShapeWeights;
+        float mOffset = 0.f;
+
+        float evaluate(const std::vector<float>& shape) const;
+    };
+
+    FaceGenAgeControl loadFaceGenAgeControl(std::istream& stream);
     FaceGenTri loadFaceGenTri(std::istream& stream);
     FaceGenEgm loadFaceGenEgm(std::istream& stream);
     FaceGenEgt loadFaceGenEgt(std::istream& stream);

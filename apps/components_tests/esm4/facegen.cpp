@@ -23,6 +23,31 @@ namespace
     }
 }
 
+TEST(Esm4FaceGen, ReadsAgeProjectionAfterLabelledControls)
+{
+    std::string data;
+    appendHeader(data, "FRCTL", "001");
+    for (const auto value : { 1, 1, 2, 1, 1, 0 })
+        append<std::uint32_t>(data, value);
+    for (const int dimension : { 2, 1, 1, 0 })
+    {
+        append<std::uint32_t>(data, 1);
+        for (int i = 0; i < dimension; ++i)
+            append<float>(data, 0.f);
+        append<std::uint32_t>(data, 3);
+        data += "abc";
+    }
+    append<float>(data, 2.f);
+    append<float>(data, -3.f);
+    append<float>(data, 40.f);
+    std::istringstream stream(data);
+    const auto control = ESM4::loadFaceGenAgeControl(stream);
+    EXPECT_FLOAT_EQ(control.evaluate({ 4.f, 1.f }), 45.f);
+    EXPECT_FLOAT_EQ(control.evaluate({}), 40.f);
+    std::istringstream truncated(data.substr(0, data.size() - 1));
+    EXPECT_THROW(ESM4::loadFaceGenAgeControl(truncated), std::runtime_error);
+}
+
 TEST(Esm4FaceGen, LoadsEgmShapeModes)
 {
     std::string data;

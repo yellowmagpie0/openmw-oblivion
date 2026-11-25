@@ -64,7 +64,8 @@ namespace MWRender
     std::size_t overrideAllTextures(
         VFS::Path::NormalizedView texture, Resource::ResourceSystem* resourceSystem, osg::Node& node);
     std::size_t overrideAllTextures(
-        osg::ref_ptr<osg::Image> image, Resource::ResourceSystem* resourceSystem, osg::Node& node);
+        osg::ref_ptr<osg::Image> image, Resource::ResourceSystem* resourceSystem, osg::Node& node,
+        osg::Image* normalImage = nullptr);
 
     // Node callback to entirely skip the traversal.
     class NoTraverseCallback : public osg::NodeCallback

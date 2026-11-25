@@ -46,8 +46,10 @@ namespace MWRender
         const std::vector<float>& raceCoefficients, const std::vector<float>& npcCoefficients);
     bool applyTes4FaceGenEgm(osg::Geometry& geometry, const ESM4::FaceGenEgm& egm,
         const std::vector<float>& symmetric, const std::vector<float>& asymmetric);
+    void applyTes4FaceAgeDetail(osg::Image& complexion, const osg::Image& detail);
+    enum class Tes4FaceGenPart { None, Body, Head, Other };
     void applyTes4FaceGen(std::string_view model, osg::Node& node, const ESM4::Npc& traits,
-        const ESM4::Race& race, bool isFemale, std::string_view texture, bool bodyTexture,
+        const ESM4::Race& race, bool isFemale, std::string_view texture, Tes4FaceGenPart part,
         Resource::ResourceSystem* resourceSystem, std::vector<Tes4FaceMorph>& morphs);
     // Replace only body skin embedded in worn meshes. The resolver supplies an
     // actor's race texture with EGT colour applied; cloth and companion maps retain

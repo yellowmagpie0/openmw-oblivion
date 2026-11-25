@@ -15,6 +15,7 @@
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/scenemanager.hpp>
 #include <components/sceneutil/texturetype.hpp>
+#include <components/sceneutil/util.hpp>
 #include <components/sceneutil/visitor.hpp>
 #include <components/settings/values.hpp>
 
@@ -192,10 +193,32 @@ namespace MWRender
 
         struct AllTextureOverrideVisitor : osg::NodeVisitor
         {
-            explicit AllTextureOverrideVisitor(osg::ref_ptr<osg::Texture2D> texture)
+            AllTextureOverrideVisitor(osg::ref_ptr<osg::Texture2D> texture, osg::Image* normal)
                 : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN)
                 , mTexture(std::move(texture))
+                , mNormal(normal)
             {
+            }
+
+            void replace(osg::StateSet& state)
+            {
+                setDiffuseTexture(state, *mTexture);
+                if (!mNormal)
+                    return;
+                for (unsigned unit = 1; unit < state.getTextureAttributeList().size(); ++unit)
+                {
+                    const auto* pair = state.getTextureAttributePair(unit, osg::StateAttribute::TEXTURE);
+                    const auto* original = pair ? dynamic_cast<const osg::Texture2D*>(pair->first.get()) : nullptr;
+                    if (!original)
+                        continue;
+                    const auto& type = SceneUtil::getTextureType(state, *original, unit);
+                    if (type == "normalMap" || type == "normalSpecularMap")
+                    {
+                        osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(*original, osg::CopyOp::SHALLOW_COPY);
+                        texture->setImage(mNormal);
+                        state.setTextureAttribute(unit, texture, pair->second);
+                    }
+                }
             }
 
             void apply(osg::Node& node) override
@@ -204,7 +227,7 @@ namespace MWRender
                 {
                     osg::ref_ptr<osg::StateSet> stateSet
                         = new osg::StateSet(*node.getStateSet(), osg::CopyOp::SHALLOW_COPY);
-                    setDiffuseTexture(*stateSet, *mTexture);
+                    replace(*stateSet);
                     node.setStateSet(std::move(stateSet));
                     ++mCount;
                 }
@@ -216,13 +239,14 @@ namespace MWRender
                 osg::ref_ptr<osg::StateSet> stateSet = drawable.getStateSet() != nullptr
                     ? new osg::StateSet(*drawable.getStateSet(), osg::CopyOp::SHALLOW_COPY)
                     : new osg::StateSet;
-                setDiffuseTexture(*stateSet, *mTexture);
+                replace(*stateSet);
                 drawable.setStateSet(std::move(stateSet));
                 ++mCount;
                 traverse(drawable);
             }
 
             osg::ref_ptr<osg::Texture2D> mTexture;
+            osg::Image* mNormal;
             std::size_t mCount = 0;
         };
     }
@@ -283,7 +307,7 @@ namespace MWRender
     }
 
     std::size_t overrideAllTextures(
-        osg::ref_ptr<osg::Image> image, Resource::ResourceSystem* resourceSystem, osg::Node& node)
+        osg::ref_ptr<osg::Image> image, Resource::ResourceSystem* resourceSystem, osg::Node& node, osg::Image* normalImage)
     {
         if (image == nullptr)
             return 0;
@@ -291,7 +315,7 @@ namespace MWRender
         texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
         texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
         resourceSystem->getSceneManager()->applyFilterSettings(texture);
-        AllTextureOverrideVisitor visitor(std::move(texture));
+        AllTextureOverrideVisitor visitor(std::move(texture), normalImage);
         node.accept(visitor);
         return visitor.mCount;
     }
