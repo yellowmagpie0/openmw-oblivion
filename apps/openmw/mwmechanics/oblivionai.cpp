@@ -127,6 +127,63 @@ namespace MWMechanics
             return !target.isEmpty() && target.isInCell() && target.getType() == ESM::REC_ACTI4;
         }
 
+        void equipMissingOutfit(const MWWorld::Ptr& actor, const MWWorld::ESMStore& store)
+        {
+            using Slots = ESM4::Armor;
+            constexpr unsigned body = Slots::TES4_UpperBody | Slots::TES4_LowerBody;
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            const int feet = MWWorld::InventoryStore::Slot_Boots;
+            const auto shoes = inventory.getSlot(feet);
+            if (shoes == inventory.end())
+                return;
+            const auto nativeClothing = [&](const MWWorld::Ptr& item) {
+                return store.get<ESM4::Clothing>().search(
+                    MWWorld::OblivionProfileServices::nativeItemId(store, item.getCellRef().getRefId()));
+            };
+            const auto* footwear = nativeClothing(*shoes);
+            if (!footwear || (footwear->mClothingFlags & 0xffff) != Slots::TES4_Feet)
+                return;
+
+            // Earlier default selections could leave a living NPC wearing shoes instead
+            // of their entire outfit. Preserve all worn pieces except those shoes.
+            unsigned occupied = 0;
+            for (int slot = 0; slot < MWWorld::InventoryStore::Slots; ++slot)
+            {
+                const auto worn = inventory.getSlot(slot);
+                if (slot == feet || worn == inventory.end())
+                    continue;
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(store, worn->getCellRef().getRefId());
+                if (const auto* armor = store.get<ESM4::Armor>().search(id))
+                    occupied |= armor->mArmorFlags;
+                if (const auto* clothing = store.get<ESM4::Clothing>().search(id))
+                    occupied |= clothing->mClothingFlags;
+            }
+            if (occupied & body)
+                return;
+            auto outfit = inventory.end();
+            for (auto item = inventory.begin(); item != inventory.end(); ++item)
+            {
+                const auto* clothing = nativeClothing(*item);
+                const unsigned required = body | Slots::TES4_Feet;
+                if (!clothing || item->getCellRef().getCount() != 1
+                    || (clothing->mClothingFlags & required) != required
+                    || (clothing->mClothingFlags & occupied & 0xffff) != 0)
+                    continue;
+                if (outfit != inventory.end())
+                    return; // Preserve the saved choice if the intended outfit is ambiguous.
+                outfit = item;
+            }
+            if (outfit != inventory.end())
+            {
+                const auto slots = outfit->getClass().getEquipmentSlots(*outfit).first;
+                if (!slots.empty())
+                {
+                    inventory.unequipSlot(feet);
+                    inventory.equip(slots.front(), outfit);
+                }
+            }
+        }
+
         float findTargetRange(const ESM4::AIPackage& package, const MWWorld::Ptr& target)
         {
             // An NPC Find with no authored distance (for example a guard
@@ -4630,16 +4687,17 @@ namespace MWMechanics
         const ESM4::AIPackage* current = package(live.mState.mPackage);
         if (current == nullptr && live.mTransientPackage && live.mTransientPackage->mFormKey == live.mState.mPackage)
             current = &*live.mTransientPackage;
-        if (live.mState.mPackageType == ESM4::AIPackageType::UseItemAt)
+        if (current && current->mLocationData.mKind == ESM4::PackageLocationKind::NearReference
+            && current->mLocationData.mRadius == 0)
         {
             // A chair origin can be above the floor and inside its collision mesh.
             // Let the chair's entry animation take over from within activation range.
-            const auto* ref = current && current->mLocationData.mKind == ESM4::PackageLocationKind::NearReference
-                && current->mLocationData.mRadius == 0 ? mWorld.mStore.search<ESM4::Reference>(current->mLocationData.mReferenceKey) : nullptr;
+            const auto* ref = mWorld.mStore.search<ESM4::Reference>(current->mLocationData.mReferenceKey);
             const auto* chair = ref ? mWorld.mStore.search<ESM4::Furniture>(ref->mBaseKey) : nullptr;
             return chair && (chair->mActiveMarkerFlags & 0x40000000u) ? sArrivalTolerance : 0.f;
         }
-        return current == nullptr ? 0.f : static_cast<float>(current->mLocationData.mRadius);
+        return current && live.mState.mPackageType == ESM4::AIPackageType::Travel
+            ? static_cast<float>(current->mLocationData.mRadius) : 0.f;
     }
 
     float OblivionAiService::unloadedMovementSpeed(const LiveActor& live) const
@@ -5474,15 +5532,16 @@ namespace MWMechanics
         return result;
     }
 
-    bool OblivionAiService::canUseDoor(const MWWorld::Ptr& actor, const LiveActor& live, bool& locked) const
+    bool OblivionAiService::canUseDoor(const MWWorld::Ptr& actor, const LiveActor& live,
+        const ESM::FormKey& doorKey, bool& locked) const
     {
         locked = false;
-        if (live.mState.mDoor.isNull())
+        if (doorKey.isNull())
             return false;
-        if (const auto indexed = mUnloadedLocationByReference.find(live.mState.mDoor);
+        if (const auto indexed = mUnloadedLocationByReference.find(doorKey);
             indexed != mUnloadedLocationByReference.end())
             return canUseUnloadedDoor(live, mUnloadedLocations[indexed->second], locked, &actor);
-        const MWWorld::Ptr door = loadedPtrFor(live.mState.mDoor);
+        const MWWorld::Ptr door = loadedPtrFor(doorKey);
         ESM::RefId key;
         ESM::FormKey owner;
         const ESM::FormKeyResolver resolver(mWorld.mContentFiles);
@@ -5492,7 +5551,7 @@ namespace MWMechanics
         }
         else
         {
-            const ESM4::Reference* reference = mWorld.mStore.get<ESM4::Reference>().search(live.mState.mDoor);
+            const ESM4::Reference* reference = mWorld.mStore.get<ESM4::Reference>().search(doorKey);
             const bool isDoor = door.getClass().isDoor()
                 || (reference != nullptr && mWorld.mStore.search<ESM4::Door>(reference->mBaseKey) != nullptr);
             if (!isDoor || !door.getRefData().isEnabled() || door.mRef->isDeleted())
@@ -5508,7 +5567,7 @@ namespace MWMechanics
                 owner = resolver.toFormKey(*id);
         }
         bool ownsConnectedCell = false;
-        if (const auto indexed = mUnloadedLocationByReference.find(live.mState.mDoor);
+        if (const auto indexed = mUnloadedLocationByReference.find(doorKey);
             indexed != mUnloadedLocationByReference.end())
         {
             const UnloadedLocation& location = mUnloadedLocations[indexed->second];
@@ -5697,7 +5756,7 @@ namespace MWMechanics
             return false;
         bool locked = false;
         if (actor != nullptr)
-            return canUseDoor(*actor, live, locked);
+            return canUseDoor(*actor, live, live.mState.mDoor, locked);
         const auto indexed = mUnloadedLocationByReference.find(live.mState.mDoor);
         return indexed != mUnloadedLocationByReference.end()
             && canUseUnloadedDoor(live, mUnloadedLocations[indexed->second], locked);
@@ -6239,7 +6298,7 @@ namespace MWMechanics
         live.mState.mDoorAnimationStarted = false;
         live.mPhysicalDoorOpened = false;
         bool locked = false;
-        const bool usable = canUseDoor(actor, live, locked);
+        const bool usable = canUseDoor(actor, live, live.mState.mDoor, locked);
         stopMovement(actor);
         logEvent("door-approach", live, "door=" + live.mState.mDoor.serialize()
                 + " same-cell=true usable=" + (usable ? "true" : "false")
@@ -6679,6 +6738,26 @@ namespace MWMechanics
             faceAndMove(actor, *next, true);
             if (!escort && !greeting && actor.getType() == ESM::REC_NPC_4)
             {
+                // Combat owns its route independently of the interrupted package.
+                // A pursuer with passage rights can open a blocking leaf on this route.
+                if (repath && mWorld.mPhysics)
+                {
+                    const osg::Vec3f& ahead = distanceSquared(position, destination) < 128.f * 128.f
+                        ? destination : *next;
+                    const auto door = findBlockingOblivionDoor(actor, *mWorld.mPhysics, ahead, 128.f, {});
+                    if (!door.isEmpty())
+                    {
+                        const auto pose = MWWorld::oblivionAnimatedDoorState(mWorld, door);
+                        const bool closed = pose ? *pose == 3
+                            : door.getRefData().getPosition().rot[2] == door.getCellRef().getPosition().rot[2];
+                        bool locked = false;
+                        if (closed && canUseDoor(actor, live, actorKey(door), locked))
+                        {
+                            mWorld.activateDoor(door, MWWorld::DoorState::Opening);
+                            logEvent("combat-door", live, "door=" + actorKey(door).serialize());
+                        }
+                    }
+                }
                 navigation.mObstacle.update(actor, *next, duration, MWWorld::MovementDirectionFlag_Forward
                     | MWWorld::MovementDirectionFlag_Right | MWWorld::MovementDirectionFlag_Left
                     | MWWorld::MovementDirectionFlag_Back);
@@ -7000,6 +7079,9 @@ namespace MWMechanics
                 releasePhysicalDoorCollision(actor, live);
         }
         const osg::Vec3f observedPosition = actor.getRefData().getPosition().asVec3();
+        if (highProcess && (!live.mHasObservedPosition || live.mState.mTier != ESM4::ProcessTier::High)
+            && actor.getType() == ESM::REC_NPC_4 && !actor.getClass().getCreatureStats(actor).isDead())
+            equipMissingOutfit(actor, mWorld.mStore);
         const bool madeProgress = !live.mHasObservedPosition
             || (observedPosition - live.mLastObservedPosition).length2() > 0.25f;
         const bool observedCellChanged = live.mHasObservedPosition && live.mLastObservedCell != cellKey(actor);
@@ -7438,7 +7520,7 @@ namespace MWMechanics
             if (live.mState.mDoorCooldown > 0.f)
                 return false;
             bool locked = false;
-            const bool available = canUseDoor(actor, live, locked);
+            const bool available = canUseDoor(actor, live, live.mState.mDoor, locked);
             if (!available)
             {
                 transitionPackage(actor, live,
@@ -7729,7 +7811,7 @@ namespace MWMechanics
 
                 const MWWorld::Ptr actor = ptrFor(live.mState.mActor);
                 bool locked = false;
-                if (actor.isEmpty() || !canUseDoor(actor, live, locked))
+                if (actor.isEmpty() || !canUseDoor(actor, live, live.mState.mDoor, locked))
                 {
                     if (!actor.isEmpty())
                         transitionPackage(actor, live,

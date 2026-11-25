@@ -397,7 +397,7 @@ namespace MWMechanics
         bool executeFixedStep(const MWWorld::Ptr& actor, LiveActor& live, float duration, bool highProcess);
         std::optional<ESM::FormKey> doorForEdge(const ESM4::PathgridNodeKey& source,
             const ESM4::PathgridNodeKey& destination) const;
-        bool canUseDoor(const MWWorld::Ptr& actor, const LiveActor& live, bool& locked) const;
+        bool canUseDoor(const MWWorld::Ptr& actor, const LiveActor& live, const ESM::FormKey& doorKey, bool& locked) const;
         bool hasDoorOwnershipPermission(const LiveActor& live, const ESM::FormKey& owner,
             const MWWorld::Ptr* actor = nullptr) const;
         bool hasCellOwnershipPermission(const LiveActor& live, const ESM::FormKey& cell,

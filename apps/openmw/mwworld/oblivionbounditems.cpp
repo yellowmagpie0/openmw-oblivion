@@ -26,7 +26,7 @@ namespace MWWorld
     {
         bool boundWeaponEffect(std::uint32_t code)
         {
-            return code == ESM4::EFI_BWMA || code == ESM4::EFI_BWDA;
+            return code == ESM4::EFI_BWMA || code == ESM4::EFI_BWDA || code == ESM4::EFI_BWSW;
         }
 
         bool admittedBoundEffect(std::uint32_t code)

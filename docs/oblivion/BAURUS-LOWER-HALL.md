@@ -1,6 +1,6 @@
 # Baurus at the Lower Hall
 
-The course starts at the [Elven Garden sewer entrance](ELVEN-GARDEN-SEWER-ESCORT.md). Follow Baurus to the wheel, through the raised gate, across the second sewer interior and back into the southern section of the Elven Garden Sewers. Baurus stops near the two approaches to the Sponsor's meeting. The next chunk starts with his conversation about who should take the lead.
+The course starts at the [Elven Garden sewer entrance](ELVEN-GARDEN-SEWER-ESCORT.md). Follow Baurus to the wheel, through the raised gate, across the second sewer interior and back into the southern section of the Elven Garden Sewers. Baurus stops near the two approaches to the Sponsor's meeting. Continue with [the Sponsor meeting and the fourth Commentary](SPONSOR-MEETING.md).
 
 The installed `Oblivion.esm` has SHA-256 `a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`. The wheel's activation script `09588b` plays `Forward` on wheel `0830ae` and linked gate `0830ac`. Baurus's escort package `022b8f` targets marker `022b89`. Its completion script checks that he is within 200 units of the marker before advancing *The Path of Dawn* to stage 76. The load doors along the route are `06af16` and `06af26`.
 

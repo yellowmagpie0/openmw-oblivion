@@ -56,6 +56,24 @@ namespace MWWorld
                 if (a.pos[i] != b.pos[i] || a.rot[i] != b.rot[i]) return false;
             return true;
         }
+
+        // A Travel package can name the chair itself as the exact destination.
+        // Nearby-radius destinations only require the actor to be in the area.
+        bool usesLocationChair(ESM4::AIPackageType type)
+        {
+            return type == ESM4::AIPackageType::UseItemAt || type == ESM4::AIPackageType::Travel;
+        }
+
+        const ESM4::Reference* packageChair(const ESMStore& store, const ESM::FormKey& key)
+        {
+            const auto* pack = store.search<ESM4::AIPackage>(key);
+            if (!pack || pack->mLocationData.mKind != ESM4::PackageLocationKind::NearReference
+                || pack->mLocationData.mRadius != 0)
+                return nullptr;
+            const auto* ref = store.search<ESM4::Reference>(pack->mLocationData.mReferenceKey);
+            const auto* chair = ref ? store.search<ESM4::Furniture>(ref->mBaseKey) : nullptr;
+            return chair && (chair->mActiveMarkerFlags & 0x40000000u) ? ref : nullptr;
+        }
     }
 
     struct OblivionFurnitureResources
@@ -368,15 +386,9 @@ namespace MWWorld
             return 0;
         if (ai->mPackageType == ESM4::AIPackageType::Sleep && ai->mPhase != ESM4::PackagePhase::Complete)
             return 1;
-        if (!view && ai->mPackageType == ESM4::AIPackageType::UseItemAt)
-        {
-            const auto* pack = mStore.search<ESM4::AIPackage>(ai->mPackage);
-            const auto* ref = pack && pack->mLocationData.mRadius == 0 && pack->mLocationData.mKind == ESM4::PackageLocationKind::NearReference
-                ? mStore.search<ESM4::Reference>(pack->mLocationData.mReferenceKey) : nullptr;
-            const auto* chair = ref ? mStore.get<ESM4::Furniture>().search(ref->mBaseObj) : nullptr;
-            if (chair && (chair->mActiveMarkerFlags & 0x40000000u))
-                return 3;
-        }
+        if (!view && usesLocationChair(ai->mPackageType) && packageChair(mStore, ai->mPackage)
+            && !hasOblivionCombatController(actor).value_or(false))
+            return 3;
         return 0;
     }
 
@@ -389,17 +401,18 @@ namespace MWWorld
         if (!view) return false;
         auto& seat = view->mPackageSeat;
         const auto* ai = mOblivionAi->state(actor);
-        const bool atLocation = ai && ai->mPackageType == ESM4::AIPackageType::UseItemAt
+        const bool atLocation = ai && usesLocationChair(ai->mPackageType)
             && (ai->mPhase == ESM4::PackagePhase::Arrive || ai->mPhase == ESM4::PackagePhase::Act
                 || ai->mPhase == ESM4::PackagePhase::Wait || ai->mPhase == ESM4::PackagePhase::Complete);
         if (!seat && !atLocation) return false;
         const auto& stats = actor.getClass().getCreatureStats(actor);
         const bool cancelled = interrupted || stats.isDead() || stats.getAiSequence().isInCombat()
             || !actor.isInCell();
-        const auto* pack = atLocation && !cancelled ? mStore.search<ESM4::AIPackage>(ai->mPackage) : nullptr;
-        const auto* placed = pack && pack->mLocationData.mKind == ESM4::PackageLocationKind::NearReference
-            && pack->mLocationData.mRadius == 0 ? mStore.search<ESM4::Reference>(pack->mLocationData.mReferenceKey) : nullptr;
-        const Ptr chair = placed ? mWorldModel.getPtr(placed->mId) : Ptr();
+        const auto* placed = atLocation && !cancelled ? packageChair(mStore, ai->mPackage) : nullptr;
+        // A native combat controller can interrupt a completed Travel while the
+        // saved base package still names the chair. Play the normal exit once.
+        const Ptr chair = placed && !hasOblivionCombatController(ai->mActor).value_or(false)
+            ? mWorldModel.getPtr(placed->mId) : Ptr();
         const bool eligible = !chair.isEmpty() && chair.getType() == ESM::REC_FURN4
             && chair.getCell() == actor.getCell() && chair.getRefData().isEnabled() && !chair.mRef->isDeleted()
             && (chair.get<ESM4::Furniture>()->mBase->mActiveMarkerFlags & 0x40000000u);

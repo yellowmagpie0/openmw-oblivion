@@ -1141,6 +1141,11 @@ namespace MWWorld
 
         std::sort(candidates.begin(), candidates.end(), [](const Candidate& left, const Candidate& right) {
             if (left.mArmorRating != right.mArmorRating) return left.mArmorRating > right.mArmorRating;
+            constexpr unsigned body = ESM4::Armor::TES4_UpperBody | ESM4::Armor::TES4_LowerBody;
+            const bool leftOutfit = (left.mNativeSlots & body) == body;
+            const bool rightOutfit = (right.mNativeSlots & body) == body;
+            if (leftOutfit != rightOutfit)
+                return leftOutfit;
             if (left.mValue != right.mValue)
                 return left.mValue > right.mValue;
             return left.mSharedId < right.mSharedId;
