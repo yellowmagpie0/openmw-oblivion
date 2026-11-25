@@ -1658,13 +1658,16 @@ namespace MWWorld
         const auto* definition = mStore.search<ESM4::Quest>(quest);
         if (completed && (!definition || !(definition->mData.flags & ESM4::Quest::Flag_AllowRepeatStages)))
             return;
+        // Select entries before any result script can change another entry's conditions.
+        std::vector<std::uint32_t> eligible;
         if (definition)
-            if (auto update = captureOblivionJournalStage(mWorld, *this, *definition, stage);
+            if (auto update = evaluateOblivionStageEntries(mWorld, *this, *definition, stage, eligible);
                 update && std::ranges::find(state.mJournal, *update) == state.mJournal.end())
                 state.mJournal.push_back(std::move(*update));
         if (const auto programs = mQuestResults.find(quest); programs != mQuestResults.end())
             for (const auto& program : programs->second)
-                if (program->mUnit.mStage && *program->mUnit.mStage == stage)
+                if (program->mUnit.mStage == stage
+                    && (!program->mUnit.mStageEntry || std::ranges::binary_search(eligible, *program->mUnit.mStageEntry)))
                     execute(program, quest, quest, "__result");
     }
 

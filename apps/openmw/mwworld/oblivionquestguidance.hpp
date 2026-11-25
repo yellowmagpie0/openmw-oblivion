@@ -64,8 +64,8 @@ namespace MWWorld
     std::vector<OblivionJournalQuest> getOblivionJournal(const MWBase::World& world);
     std::string getOblivionJournalDebug(const MWBase::World& world, const ESM::FormKey& quest);
     std::optional<QuestObjective> getOblivionQuestObjective(MWBase::World& world, const ESM::FormKey& tracked = {});
-    std::optional<ESM4::RuntimeQuestJournalStage> captureOblivionJournalStage(
-        World& world, const OblivionScriptManager& scripts, const ESM4::Quest& quest, int stage);
+    std::optional<ESM4::RuntimeQuestJournalStage> evaluateOblivionStageEntries(World& world,
+        const OblivionScriptManager& scripts, const ESM4::Quest& quest, int stage, std::vector<std::uint32_t>& eligible);
 }
 
 #endif

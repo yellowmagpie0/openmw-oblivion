@@ -647,6 +647,10 @@ namespace MWClass
         appendReferenceState(info, ptr);
         if (ptr.getCellRef().getTeleport())
         {
+            auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorldOrNull());
+            if (world && ptr.getCellRef().isLocked() && ptr.getCell() == world->getPlayerPtr().getCell()
+                && MWWorld::oblivionPlayerHasDoorExitPermission(*world, ptr, world->getPlayerPtr()))
+                info.text += "\nExit permitted";
             const ESM::RefId cell = ptr.getCellRef().getDestCell();
             if (!cell.empty())
                 info.text += "\nDoor to " + std::string(MWBase::Environment::get().getWorld()->getCellName(

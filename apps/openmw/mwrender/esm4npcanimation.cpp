@@ -734,6 +734,12 @@ namespace MWRender
         if (!apply(egm.mSymmetricMorphs, symmetric) || !apply(egm.mAsymmetricMorphs, asymmetric))
             return false;
         vertices->dirty();
+        // A rig can still share the template's normal and texture arrays.
+        // Never register an individual face's vertices in that shared VBO
+        // while another instance or the compile thread is drawing from it.
+        osg::ref_ptr<osg::VertexBufferObject> buffer = new osg::VertexBufferObject;
+        buffer->setUsage(GL_DYNAMIC_DRAW_ARB);
+        vertices->setVertexBufferObject(buffer);
         geometry.setVertexArray(vertices);
         geometry.dirtyBound();
         geometry.dirtyGLObjects();

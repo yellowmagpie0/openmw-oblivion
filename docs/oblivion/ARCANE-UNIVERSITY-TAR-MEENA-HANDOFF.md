@@ -2,7 +2,7 @@
 
 Start with `build-windows/Continue-After-Baurus-Basement.cmd`. Leave the basement through the boarding house and go outside. Fast-travel to the Arcane University from the world map. Walk up the front steps, enter the Arch-Mage’s Lobby and speak to Tar-Meena. Choose **Mythic Dawn**, tell her you found a book, explain that you need to find the cult and ask where to find the other books.
 
-The course ends with *The Path of Dawn* at stage 40. Both stage-40 journal entries are recorded. The player carries one copy each of Volumes 1 and 2. The stock stage script places one copy of Volume 3 in the First Edition chest in the Market District. The compass changes to **First Edition**. Continue from the lobby with `build-windows/Continue-After-Tar-Meena.cmd`. The next chunk starts with finding Phintias at the bookstore.
+The course ends with *The Path of Dawn* at stage 40. Both stage-40 journal entries are recorded. The player carries one copy each of Volumes 1 and 2. The stock stage script places one copy of Volume 3 in the First Edition chest in the Market District. The compass changes to **First Edition**. Continue from the lobby with `build-windows/Continue-After-Tar-Meena.cmd`. The [First Edition handoff](FIRST-EDITION-HANDOFF.md) follows the lead to Phintias and Gwinas.
 
 ## Replaying the checks
 

@@ -84,6 +84,7 @@
 #include "../mwworld/globalvariablename.hpp"
 #include "../mwworld/action.hpp"
 #include "../mwworld/actionteleport.hpp"
+#include "../mwworld/oblivioninteraction.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
 #include "../mwworld/oblivionscriptmanager.hpp"
 #include "../mwworld/oblivionownership.hpp"
@@ -167,6 +168,17 @@ namespace MWMechanics
             if (base && Misc::StringUtils::ciEqual(base->mEditorId, "XMarkerHeading"))
                 return marker->mPos.rot[2];
             return {};
+        }
+
+        ESM4::ConditionValue residentItemCount(const MWWorld::World& world, const MWWorld::Ptr& owner,
+            const ESM::FormKey& item)
+        {
+            const auto id = ESM::FormKeyResolver(world.getContentFiles()).toFormId(item);
+            if (!id)
+                return ESM4::ConditionValue::missing();
+            const auto shared = MWWorld::OblivionProfileServices::sharedItemId(world.getStore(), ESM::RefId(*id));
+            return ESM4::ConditionValue::value(
+                MWWorld::oblivionInventoryItemCount(owner.getClass().getContainerStore(owner), shared));
         }
 
         void faceHeading(MWWorld::World& world, const MWWorld::Ptr& actor, float heading)
@@ -1833,11 +1845,7 @@ namespace MWMechanics
                 if (!parameter.mIsFormId)
                     return ESM4::ConditionValue::unsupported();
                 if (const MWWorld::Ptr loaded = loadedPtrFor(subjectKey); !loaded.isEmpty())
-                {
-                    const MWWorld::Ptr item = loaded.getClass().getContainerStore(loaded).search(
-                        ESM::RefId(parameter.mReference));
-                    return value(item.isEmpty() ? 0.0 : item.getCellRef().getCount());
-                }
+                    return residentItemCount(mWorld, loaded, parameterKey);
                 return value(staticInventoryCount(parameterKey));
             }
             if (function == "GetArmorRating")
@@ -2707,9 +2715,7 @@ namespace MWMechanics
             {
                 if (!parameter.mIsFormId)
                     return ESM4::ConditionValue::unsupported();
-                const MWWorld::Ptr item = subjectPtr.getClass().getContainerStore(subjectPtr).search(
-                    ESM::RefId(parameter.mReference));
-                return value(item.isEmpty() ? 0.0 : item.getCellRef().getCount());
+                return residentItemCount(mWorld, subjectPtr, parameterKey);
             }
             if (function == "GetLevel")
                 return value(nativeStats().getLevel());
@@ -5298,7 +5304,11 @@ namespace MWMechanics
                     || mWorld.mWorldScene->isCellActive(*loaded.getCell())) continue;
                 const auto* combat = mWorld.getOblivionCombatService();
                 const auto* life = combat ? combat->findActorLife(live.mState.mActor) : nullptr;
-                if (!life || life->mPhase != ESM4::ActorLifePhase::Alive
+                // A script can enable and move an NPC into an inactive cell
+                // before combat has ever created a life record for that actor.
+                const bool incapacitated = life ? life->mPhase != ESM4::ActorLifePhase::Alive
+                    : loaded.getRefData().getCustomData() && loaded.getClass().getCreatureStats(loaded).isDead();
+                if (incapacitated
                     || mWorld.hasOblivionCombatController(live.mState.mActor).value_or(false)) continue;
                 synchronizeIdentity(live, loaded);
                 live.mLastObservedPosition = loaded.getRefData().getPosition().asVec3();
@@ -6773,8 +6783,10 @@ namespace MWMechanics
     bool OblivionAiService::updateNpcGreeting(const MWWorld::Ptr& actor, LiveActor& live, float duration)
     {
         const auto phase = live.mState.mPhase;
-        if (live.mState.mPackageType != ESM4::AIPackageType::Ambush || actor.getType() != ESM::REC_NPC_4
-            || (phase != ESM4::PackagePhase::ReadyForM15Combat && phase != ESM4::PackagePhase::Path && !live.mConversation)
+        const bool find = live.mState.mPackageType == ESM4::AIPackageType::Find;
+        if (actor.getType() != ESM::REC_NPC_4
+            || (!find && phase != ESM4::PackagePhase::ReadyForM15Combat
+                && phase != ESM4::PackagePhase::Path && !live.mConversation)
             || ESM4::runtimeReferenceKey(live.mState.mTarget) == ESM::FormKey::dynamic("player", 1))
             return false;
         const auto target = loadedPtrFor(live.mState.mTarget);
@@ -6797,7 +6809,7 @@ namespace MWMechanics
             if (live.mConversation->mTurns < 64)
                 next = scripts->nextConversationInfo(live.mConversation->mInfo, speaker, listener);
         }
-        else
+        else if (!find)
         {
             // An ambush watches an area, not just the last navmesh waypoint.
             // A target entering the watch area can be met during the approach to the post.
@@ -6835,23 +6847,36 @@ namespace MWMechanics
             clearCombatRoute(actor);
             stopMovement(actor);
             if (!zTurn(actor, std::atan2(delta.x(), delta.y()), osg::DegreesToRadians(5.f))) return true;
+        }
+        if (!live.mConversation)
             if (const auto hello = mWorld.mStore.findEsm4FormKey("HELLO"))
                 next = scripts->selectNativeDialogueInfo(*hello, actor, target);
-        }
         if (!next)
         {
+            if (find)
+            {
+                live.mConversation.reset();
+                transitionPackage(actor, live,
+                    {0.f, true, true, true, false, true, false, false, true, false, false, true});
+                return true;
+            }
             setPhase(live, ESM4::PackagePhase::Complete);
             live.mState.mBoundary = ESM4::PhaseBoundary::None;
             return true;
         }
-        setPhase(live, ESM4::PackagePhase::ReadyForDialogue);
-        live.mState.mBoundary = ESM4::PhaseBoundary::ReadyForDialogue;
+        if (!find)
+        {
+            setPhase(live, ESM4::PackagePhase::ReadyForDialogue);
+            live.mState.mBoundary = ESM4::PhaseBoundary::ReadyForDialogue;
+        }
         const auto turns = live.mConversation ? live.mConversation->mTurns + 1 : 1;
         live.mConversation = LiveActor::Conversation{ *next, speaker == target, turns };
+        const auto owner = live.mState.mActor;
         const auto seconds = scripts->playPackageDialogue(*next, speaker, listener);
-        // A response result can replace this actor's package synchronously.
-        if (live.mConversation && live.mConversation->mInfo == *next)
-            live.mState.mActionTimer = static_cast<float>(seconds);
+        // A result can remove the actor or replace its package during playback.
+        if (auto found = mActors.find(owner); found != mActors.end() && found->second.mConversation
+            && found->second.mConversation->mInfo == *next && found->second.mConversation->mTurns == turns)
+            found->second.mState.mActionTimer = static_cast<float>(seconds);
         return true;
     }
 
@@ -7112,7 +7137,8 @@ namespace MWMechanics
             }
         }
 
-        if (highProcess && updateNpcGreeting(actor, live, duration))
+        if (highProcess && live.mState.mPackageType == ESM4::AIPackageType::Ambush
+            && updateNpcGreeting(actor, live, duration))
             return true;
         if (updateDialogueApproach(actor, live))
             return true;
@@ -7409,10 +7435,20 @@ namespace MWMechanics
                 if (!target.isEmpty() && target.getType() == ESM::REC_NPC_4)
                 {
                     const float range = findTargetRange(*current, target);
-                    if (highProcess && (!getLOS(actor, target)
-                            || distanceSquared(actor.getRefData().getPosition().asVec3(),
-                                   target.getRefData().getPosition().asVec3()) > range * range))
-                        approachCombatTarget(actor, target, duration);
+                    if (highProcess)
+                    {
+                        const auto delta = target.getRefData().getPosition().asVec3()
+                            - actor.getRefData().getPosition().asVec3();
+                        if (delta.length2() > range * range || !getLOS(actor, target))
+                            approachCombatTarget(actor, target, duration);
+                        else
+                        {
+                            stopMovement(actor);
+                            zTurn(actor, std::atan2(delta.x(), delta.y()), osg::DegreesToRadians(3.f));
+                            zTurn(target, std::atan2(-delta.x(), -delta.y()), osg::DegreesToRadians(3.f));
+                        }
+                        live.mState.mActionTimer = std::max(0.f, live.mState.mActionTimer - duration);
+                    }
                     return false;
                 }
             }
@@ -7800,7 +7836,7 @@ namespace MWMechanics
         for (const auto& [_, live] : mActors)
             if (live.mState.mPackageType == ESM4::AIPackageType::Find
                 && live.mState.mPhase == ESM4::PackagePhase::Act
-                && live.mState.mTier == ESM4::ProcessTier::High)
+                && live.mState.mTier == ESM4::ProcessTier::High && live.mState.mActionTimer <= 0.f)
                 conversations.push_back(live.mState);
         for (const auto& expected : conversations)
         {
@@ -7824,15 +7860,7 @@ namespace MWMechanics
                 || mWorld.hasOblivionCombatController(expected.mActor).value_or(false)
                 || mWorld.hasOblivionCombatController(expected.mTarget).value_or(false)
                 || !getLOS(actor, target)) continue;
-            transitionPackage(actor, found->second,
-                {0.f, true, true, true, false, true, false, false, true, false, false, true});
-            if (auto* scripts = mWorld.getOblivionScriptManager(); scripts && mWorld.mScriptsEnabled)
-            {
-                ObScript::RuntimeContext context;
-                context.mSelf = expected.mActor;
-                const std::vector<ObScript::Value> args{ObScript::ReferenceValue{expected.mTarget, {}}};
-                scripts->call("StartConversation", {}, args, context, {});
-            }
+            updateNpcGreeting(actor, found->second, 0.f);
         }
         // Dispatch placed-object actions outside the actor-map iteration.
         // The persisted timed reservation is sufficient to resume before commit.
@@ -8944,7 +8972,8 @@ namespace MWMechanics
                         return bases != mQuestPackageBases.end() && bases->second.contains(saved.mBase);
                     }));
             if (const auto cursor = conversations.find(saved.mActor); cursor != conversations.end()
-                && saved.mPhase == ESM4::PackagePhase::ReadyForDialogue && saved.mPackageType == ESM4::AIPackageType::Ambush)
+                && ((saved.mPhase == ESM4::PackagePhase::ReadyForDialogue && saved.mPackageType == ESM4::AIPackageType::Ambush)
+                    || (saved.mPhase == ESM4::PackagePhase::Act && saved.mPackageType == ESM4::AIPackageType::Find)))
                 live.mConversation = cursor->second;
             // Actors saved before their first update still owe an initial
             // selection. The transient flag is not serialized; recover it

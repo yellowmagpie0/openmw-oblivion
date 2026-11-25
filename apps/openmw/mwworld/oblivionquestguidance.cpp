@@ -22,6 +22,7 @@
 
 #include "class.hpp"
 #include "oblivionscriptmanager.hpp"
+#include "obliviontrespass.hpp"
 #include "worldimp.hpp"
 #include "worldspaceutils.hpp"
 
@@ -134,8 +135,12 @@ namespace MWMechanics
             if (!references && mWorld.mOblivionRuntimeState)
                 references.emplace(mWorld.mOblivionRuntimeState->mReferences);
             const auto state = currentDoorState(door, nullptr, references ? &*references : nullptr);
-            return state.mAvailable
-                && (!state.mLocked || mWorld.oblivionPlayerHasItem(state.mKey));
+            if (!state.mAvailable)
+                return false;
+            if (!state.mLocked || mWorld.oblivionPlayerHasItem(state.mKey))
+                return true;
+            return playerCell->isEsm4() && door.mCell == playerCell->getEsm4().mFormKey
+                && MWWorld::oblivionPlayerHasDoorExitPermission(mWorld, loadedPtrFor(door.mReference), player);
         };
         if (playerSpace == targetSpace)
             result.mNearby = MWWorld::QuestMarker{ targetSpace, position };
@@ -457,11 +462,9 @@ namespace MWWorld
         }
     }
 
-    std::optional<ESM4::RuntimeQuestJournalStage> captureOblivionJournalStage(
-        World& world, const OblivionScriptManager& scripts, const ESM4::Quest& quest, int stage)
+    std::optional<ESM4::RuntimeQuestJournalStage> evaluateOblivionStageEntries(World& world,
+        const OblivionScriptManager& scripts, const ESM4::Quest& quest, int stage, std::vector<std::uint32_t>& eligible)
     {
-        if (quest.mQuestName.empty())
-            return std::nullopt;
         const auto context = questConditionContext(world, scripts);
         const auto* ai = world.getOblivionAiService();
         const auto player = world.getPlayerPtr();
@@ -474,15 +477,19 @@ namespace MWWorld
             if (entry.mStage != stage)
                 continue;
             const auto index = ordinal++;
-            if (entry.mText.empty() && !(entry.mFlags & ESM4::Quest::JournalEntry::CompleteQuest))
-                continue;
-            hasJournalEntry = true;
+            const bool journal = !quest.mQuestName.empty()
+                && (!entry.mText.empty() || (entry.mFlags & ESM4::Quest::JournalEntry::CompleteQuest));
+            hasJournalEntry |= journal;
             auto result = ESM4::evaluateNativeConditions(entry.mConditions, context);
             if (result != ESM4::ConditionResult::True && result != ESM4::ConditionResult::False && ai)
                 result = ai->evaluateNativeIdleConditions(player, entry.mConditions, {});
             if (result == ESM4::ConditionResult::True)
-                update.mEntries.push_back(index);
-            else if (result != ESM4::ConditionResult::False)
+            {
+                eligible.push_back(index);
+                if (journal)
+                    update.mEntries.push_back(index);
+            }
+            else if (journal && result != ESM4::ConditionResult::False)
                 update.mUnresolved = true;
         }
         if (!hasJournalEntry)
@@ -605,8 +612,18 @@ namespace MWWorld
 
         const auto& store = world.getStore();
         const auto context = questConditionContext(world, *scripts);
-        const auto eligible = [&](std::span<const ESM4::PackageCondition> conditions) {
-            return ESM4::evaluateNativeConditions(conditions, context) == ESM4::ConditionResult::True;
+        const auto inPlayerCell = [&](const ESM4::PackageCondition& condition) {
+            if (condition.mFunction != 67 && (condition.mFunction != ESM4::FUN_GetInCellParam
+                    || ESM4::runtimeReferenceKey(condition.mParameter2.mReferenceKey) != ESM::FormKey::dynamic("player", 1)))
+                return false;
+            const auto* cell = store.search<ESM4::Cell>(condition.mParameter1.mReferenceKey);
+            return cell && player.getCell()->getCell()->getId() == cell->mId;
+        };
+        auto outside = context;
+        outside.mResolve = [&](const auto& condition, auto subject, bool opposite) {
+            if (subject == ESM4::ConditionSubject::Self && inPlayerCell(condition))
+                return ESM4::ConditionValue::value(0);
+            return context.mResolve(condition, subject, opposite);
         };
 
         struct Candidate
@@ -645,17 +662,24 @@ namespace MWWorld
             QuestObjective candidate{ quest.mFormKey, std::move(journal.mTitle), {}, {} };
             if (!journal.mSteps.empty())
                 candidate.mText = std::move(journal.mSteps.back().mText);
+            bool arrived = false;
             for (const auto& target : quest.mTargets)
             {
-                if (!eligible(target.mConditions))
+                if (ESM4::evaluateNativeConditions(target.mConditions, context) != ESM4::ConditionResult::True)
+                {
+                    // Some objectives hide their marker when the player enters the room.
+                    // Keep the current lead instead of switching to another quest at the door.
+                    if (!arrived && !candidate.mText.empty() && std::ranges::any_of(target.mConditions, inPlayerCell))
+                        arrived = ESM4::evaluateNativeConditions(target.mConditions, outside) == ESM4::ConditionResult::True;
                     continue;
+                }
                 auto destination = ai->questDestination(target.mReference, player);
                 // Keep a known target while its NPC is behind a locked door. The
                 // label and quest stay active even when there is no usable route.
                 if (!destination.mLabel.empty() || destination.mNearby || destination.mWorldMap)
                     candidate.mDestinations.push_back(std::move(destination));
             }
-            if (quest.mFormKey == tracked || !candidate.mDestinations.empty())
+            if (quest.mFormKey == tracked || arrived || !candidate.mDestinations.empty())
                 return candidate;
             if (!textOnly && !candidate.mText.empty())
                 textOnly = std::move(candidate);

@@ -185,8 +185,13 @@ namespace MWRender
         osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array;
         vertices->push_back(osg::Vec3f(1.f, 2.f, 3.f));
         vertices->push_back(osg::Vec3f(4.f, 5.f, 6.f));
+        osg::ref_ptr<osg::VertexBufferObject> buffer = new osg::VertexBufferObject;
+        vertices->setVertexBufferObject(buffer);
+        osg::ref_ptr<osg::Vec3Array> normals = new osg::Vec3Array(2);
+        normals->setVertexBufferObject(buffer);
         osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry;
         geometry->setVertexArray(vertices);
+        geometry->setNormalArray(normals, osg::Array::BIND_PER_VERTEX);
 
         ESM4::FaceGenMorph mode;
         mode.mScale = 0.5f;
@@ -199,6 +204,8 @@ namespace MWRender
         ASSERT_TRUE(applyTes4FaceGenEgm(*geometry, egm, { 2.f }, {}));
         const auto* result = dynamic_cast<const osg::Vec3Array*>(geometry->getVertexArray());
         ASSERT_NE(result, nullptr);
+        EXPECT_NE(result->getVertexBufferObject(), buffer.get());
+        EXPECT_EQ(buffer->getNumBufferData(), 2u);
         EXPECT_EQ((*result)[0], osg::Vec3f(3.f, 6.f, 9.f));
         EXPECT_EQ((*result)[1], osg::Vec3f(2.f, 1.f, 0.f));
     }

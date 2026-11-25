@@ -206,7 +206,7 @@ namespace MWWorld
         return ESM4::cellTreatsActorAsTrespasser(input);
     }
 
-    bool oblivionPlayerHasDoorExitPermission(World& world, const Ptr& door, const Ptr& actor)
+    bool oblivionPlayerHasDoorExitPermission(World& world, const ConstPtr& door, const Ptr& actor)
     {
         if (world.getGameProfile() != ESM::GameProfile::Oblivion
             || actor.isEmpty() || actor != world.getPlayerPtr() || door.isEmpty()

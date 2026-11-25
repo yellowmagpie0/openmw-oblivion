@@ -2904,7 +2904,7 @@ TEST(OblivionQuestGuidance, LoadedQuestDrivesTheTargetAndDoorAfterRestore)
 
 TEST(OblivionQuestGuidance, PrefersTrackedThenDestinationsThenTextAndBreaksPriorityTiesByFormKey)
 {
-    const auto quest = [](unsigned id, char priority, bool hasDestination) {
+    const auto quest = [](unsigned id, char priority, bool hasDestination, bool hideInside = false) {
         auto data = sub(ESM::fourCC("FULL"), std::string("Delivery\0", 9))
             + sub(ESM::fourCC("DATA"), std::string{ 0, priority })
             + sub(ESM::fourCC("INDX"), bytes(std::uint16_t{10}))
@@ -2912,11 +2912,19 @@ TEST(OblivionQuestGuidance, PrefersTrackedThenDestinationsThenTextAndBreaksPrior
             + sub(ESM::fourCC("CNAM"), std::string("Find the guide.\0", 16));
         if (hasDestination)
             data += sub(ESM::fourCC("QSTA"), bytes(0xd03u) + bytes(0u));
+        if (hideInside)
+        {
+            ESM4::AIPackage::CTDA outside{};
+            outside.fnIndex = 67; // GetInCell, evaluated on the player
+            outside.param1 = 0xb04;
+            data += sub(ESM::fourCC("CTDA"), bytes(outside));
+        }
         return record(ESM4::REC_QUST, id, data);
     };
     MWClass::ESM4Door::registerSelf();
     SwitchFixture fixture(false, false, sameCellTeleportRecords(true, true)
-        + quest(0xe10, 90, false) + quest(0xe12, 50, true) + quest(0xe11, 50, true), 11, false);
+        + quest(0xe10, 90, false) + quest(0xe12, 50, true) + quest(0xe11, 50, true)
+        + quest(0xe13, 70, true, true), 12, false);
     auto& world = fixture.mFixture.mWorld;
     auto& scripts = *world.getOblivionScriptManager();
     scripts.setStage(key(0xe10), 10);
@@ -2931,6 +2939,9 @@ TEST(OblivionQuestGuidance, PrefersTrackedThenDestinationsThenTextAndBreaksPrior
     expectQuest(0xe11);
     expectQuest(0xe10, key(0xe10));
     expectQuest(0xe12, key(0xe12));
+    scripts.setStage(key(0xe13), 10);
+    expectQuest(0xe13);
+    EXPECT_TRUE(MWWorld::getOblivionQuestObjective(world)->mDestinations.empty());
 }
 
 TEST(OblivionQuestGuidance, RoutesThroughALockedDoorWhenThePlayerHasItsKey)
@@ -3858,6 +3869,39 @@ TEST(OblivionQuestStages, NestedPrerequisitesCannotLowerStageOrReplayUnrepeatabl
     }
 }
 
+TEST(OblivionQuestStages, ResultScriptsUseTheirOwningEntryConditionsBeforeNestedStageChanges)
+{
+    const auto entry = [](std::string result, int prerequisite = -1, bool done = false) {
+        auto data = sub(ESM::fourCC("QSDT"), std::string(1, '\0'));
+        if (prerequisite >= 0)
+        {
+            ESM4::AIPackage::CTDA condition{};
+            condition.fnIndex = 59; // GetStageDone
+            condition.param1 = 0xd10;
+            condition.param2 = prerequisite;
+            condition.compValue = done ? 1.f : 0.f;
+            data += sub(ESM::fourCC("CTDA"), bytes(condition));
+        }
+        return data + sub(ESM::fourCC("SCTX"), result);
+    };
+    const auto quest = record(ESM4::REC_QUST, 0xd10,
+        sub(ESM::fourCC("EDID"), std::string("StageFlow\0", 10))
+        + sub(ESM::fourCC("DATA"), std::string{char(0), char(50)})
+        + sub(ESM::fourCC("INDX"), bytes(std::uint16_t(40)))
+        + entry("setstage StageFlow 10\n")
+        + entry("setstage StageFlow 20\n", 10, true)
+        + entry("setstage StageFlow 30\n", 10, false));
+    SwitchFixture f(false, false, quest, 1);
+    auto* scripts = f.mFixture.mWorld.getOblivionScriptManager();
+    ObScript::RuntimeContext context;
+    const std::vector<ObScript::Value> args{ObScript::ReferenceValue{key(0xd10), {}}, std::int64_t(40)};
+    scripts->call("SetStage", {}, args, context, {});
+    const auto* state = scripts->findQuestState(key(0xd10));
+    ASSERT_NE(state, nullptr);
+    EXPECT_EQ(state->mCompletedStages, (std::vector<std::int32_t>{10, 30, 40}));
+    EXPECT_TRUE(state->mJournal.empty());
+}
+
 namespace
 {
     std::string conversationRecords(unsigned nextSpeaker = 0, bool cycle = false)
@@ -4088,13 +4132,26 @@ TEST(OblivionConversation, FindStopsWithinAuthoredRangeBeforeWalkingIntoMovingPa
         // Restore before commit: speech and package completion occur once.
         ai.restore(ESM4::RuntimeState::deserializeBinary(f.capture().serializeBinary()));
         ai.commitPendingTransitions();
+        const auto* scripts = world.getOblivionScriptManager();
+        EXPECT_EQ(ai.state(key(0xa00))->mPhase,ESM4::PackagePhase::Act);
+        EXPECT_TRUE(scripts->hasSpokenDialogueInfo(key(0xd21)));
+        EXPECT_FALSE(scripts->hasSpokenDialogueInfo(key(0xd41)));
+        auto mid = world.captureOblivionRuntimeState();
+        ai.restore(ESM4::RuntimeState::deserializeBinary(mid.serializeBinary()));
+        for (const auto info : {0xd41u, 0xd51u})
+        {
+            ai.commitPendingTransitions();
+            EXPECT_TRUE(scripts->hasSpokenDialogueInfo(key(info)));
+            EXPECT_EQ(ai.state(key(0xa00))->mPhase,ESM4::PackagePhase::Act);
+        }
+        ai.commitPendingTransitions();
         EXPECT_EQ(ai.state(key(0xa00))->mPhase,ESM4::PackagePhase::Complete);
-        EXPECT_TRUE(world.getOblivionScriptManager()->hasSpokenDialogueInfo(key(0xd21)));
-        const auto after = f.capture();
+        const auto after = world.captureOblivionRuntimeState();
         ai.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()));
         ai.commitPendingTransitions();
-        EXPECT_EQ(f.capture().mSpokenDialogueInfos,after.mSpokenDialogueInfos);
-        EXPECT_EQ(f.capture().mQuests,after.mQuests);
+        const auto resumed = world.captureOblivionRuntimeState();
+        EXPECT_EQ(resumed.mSpokenDialogueInfos,after.mSpokenDialogueInfos);
+        EXPECT_EQ(resumed.mQuests,after.mQuests);
     }
 }
 
