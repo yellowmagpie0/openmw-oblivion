@@ -430,6 +430,12 @@ TEST(OblivionDialogueMenu, ScriptFactionRankSharesBaseAndRestoresMembershipWitho
             EXPECT_EQ(world.getOblivionFactionRank(key(0xd02), faction.mFormKey), rank);
             EXPECT_EQ(world.getOblivionFactionRank(key(0xd03), faction.mFormKey), -1);
             EXPECT_EQ(ObScript::asInteger(scripts.call("GetFactionRank", {}, {fact}, context, {})), rank);
+            EXPECT_EQ(ObScript::asInteger(scripts.call("GetInFaction", {}, {fact}, context, {})), rank != -1);
+            // The fixture player uses this NPC base. Query from a different
+            // actor with no membership to distinguish player and subject.
+            const ObScript::Value unrelated = ObScript::ReferenceValue{key(0xd03), {}};
+            EXPECT_EQ(ObScript::asInteger(scripts.call("GetInFaction", unrelated, {fact}, context, {})), 0);
+            EXPECT_EQ(ObScript::asInteger(scripts.call("GetPCInFaction", unrelated, {fact}, context, {})), rank != -1);
             ESM4::PackageCondition condition{};
             condition.mFunction = 73; condition.mParameter1.mReferenceKey = faction.mFormKey;
             condition.mOperator = ESM4::ConditionOperator::Equal; condition.mComparisonValue = rank;
@@ -2968,6 +2974,36 @@ TEST(OblivionQuestGuidance, PrefersTrackedThenDestinationsThenTextAndBreaksPrior
     scripts.setStage(key(0xe13), 10);
     expectQuest(0xe13);
     EXPECT_TRUE(MWWorld::getOblivionQuestObjective(world)->mDestinations.empty());
+}
+
+TEST(OblivionQuestGuidance, EnteringQuestDoorKeepsNewExplorationStageAheadOfAnUnrelatedMarker)
+{
+    ESM4::AIPackage::CTDA stageTen{};
+    stageTen.fnIndex = ESM4::FUN_GetStage;
+    stageTen.param1 = 0xe10;
+    stageTen.compValue = 10.f;
+    const auto exploration = record(ESM4::REC_QUST, 0xe10,
+        sub(ESM::fourCC("FULL"), std::string("Explore\0", 8)) + sub(ESM::fourCC("DATA"), std::string{0, 70})
+        + sub(ESM::fourCC("INDX"), bytes(std::uint16_t{20}))
+        + sub(ESM::fourCC("QSDT"), std::string(1, '\0')) + sub(ESM::fourCC("CNAM"), std::string("Look inside.\0", 13))
+        + sub(ESM::fourCC("QSTA"), bytes(0xd01u) + bytes(0u)) + sub(ESM::fourCC("CTDA"), bytes(stageTen)));
+    const auto other = record(ESM4::REC_QUST, 0xe11,
+        sub(ESM::fourCC("FULL"), std::string("Delivery\0", 9)) + sub(ESM::fourCC("DATA"), std::string{0, 50})
+        + sub(ESM::fourCC("QSTA"), bytes(0xd03u) + bytes(0u)));
+    MWClass::ESM4Door::registerSelf();
+    SwitchFixture fixture(false, false, sameCellTeleportRecords(true, true) + exploration + other, 10, false);
+    auto& world = fixture.mFixture.mWorld;
+    auto& scripts = *world.getOblivionScriptManager();
+    scripts.setStage(key(0xe11), 10);
+    scripts.setStage(key(0xe10), 10);
+    const ESM::FormKeyResolver ids(world.getContentFiles());
+    world.getPlayer().setCell(&world.getWorldModel().getCell(ESM::RefId(*ids.toFormId(key(0xd06)))));
+    scripts.setStage(key(0xe10), 20);
+    const auto objective = MWWorld::getOblivionQuestObjective(world);
+    ASSERT_TRUE(objective);
+    EXPECT_EQ(objective->mQuest, key(0xe10));
+    EXPECT_EQ(objective->mText, "Look inside.");
+    EXPECT_TRUE(objective->mDestinations.empty());
 }
 
 TEST(OblivionQuestGuidance, UsesTheReachableTeleportBetweenDisconnectedPassagesInOneCell)

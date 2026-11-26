@@ -1,6 +1,6 @@
 # The noon inscription on Green Emperor Way
 
-From [Tar-Meena's cipher](TAR-MEENAS-CIPHER.md), leave the Arch-Mage's Lobby, travel to the Imperial City Palace and approach the inscribed face of the Tomb of Prince Camarril. Read it while the red map is visible around noon. This finishes The Path of Dawn and starts Dagon Shrine. The next playable leg is the journey to Lake Arrius Caverns.
+From [Tar-Meena's cipher](TAR-MEENAS-CIPHER.md), leave the Arch-Mage's Lobby, travel to the Imperial City Palace and approach the inscribed face of the Tomb of Prince Camarril. Read it while the red map is visible around noon. This finishes The Path of Dawn and starts Dagon Shrine. Continue with [the journey to Lake Arrius and the doorkeeper's password](LAKE-ARRIUS-CAVERNS.md).
 
 The winning Oblivion master (SHA-256 `a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`) places tomb `024e4a` with base `06a5ca` and mesh `Architecture/ImperialCity/ICMausoleumMQ01.NIF`. Script `024dcb` plays the mesh's forward group after 11:48 through 12:30 and reverses it after 12:30. Activation requires a time strictly between 11:48 and 12:30. Merely waiting beside the glowing stone leaves the quest at stage 93.
 

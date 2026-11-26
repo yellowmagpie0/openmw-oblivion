@@ -503,6 +503,7 @@ namespace MWWorld
         std::optional<ESM::FormKey> getOblivionReferenceScriptOverride(const ESM::FormKey& actor) const;
         std::vector<ESM4::ActorFaction> getOblivionActorFactions(const ESM::FormKey& base) const;
         std::int8_t getOblivionFactionRank(const ESM::FormKey& actor, const ESM::FormKey& faction) const;
+        bool isInOblivionFaction(const ESM::FormKey& actor, const ESM::FormKey& faction) const;
         bool setOblivionFactionRank(const ESM::FormKey& actor, const ESM::FormKey& faction, std::int32_t rank);
         bool setOblivionAlerted(const ESM::FormKey& actor, std::int32_t value);
         bool getOblivionAlerted(const ESM::FormKey& actor) const;

@@ -6,6 +6,8 @@
 #include <components/esm3/loadclot.hpp>
 #include <components/esm3/loadnpc.hpp>
 #include <components/esm3/loadrace.hpp>
+#include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadclot.hpp>
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/windowmanager.hpp"
@@ -67,6 +69,17 @@ namespace MWClass
         const MWWorld::LiveCellRef<ESM::Clothing>* ref = ptr.get<ESM::Clothing>();
 
         MWWorld::Class::EquipmentSlots slots;
+
+        // TES3 clothing has no hat type. Keep projected TES4 hoods out of
+        // the robe slot so the two independently worn meshes can coexist.
+        if (ref->mBase->mId.is<ESM::FormId>())
+        {
+            const auto& store = *MWBase::Environment::get().getESMStore();
+            const auto* native = store.get<ESM4::Clothing>().search(ref->mBase->mId);
+            constexpr unsigned head = ESM4::Armor::TES4_Head | ESM4::Armor::TES4_Hair;
+            if (native && (native->mClothingFlags & head) && !(native->mClothingFlags & (0xffffu & ~head)))
+                return { { MWWorld::InventoryStore::Slot_Helmet }, false };
+        }
 
         if (ref->mBase->mData.mType == ESM::Clothing::Ring)
         {

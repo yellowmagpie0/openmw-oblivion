@@ -120,6 +120,7 @@ namespace MWMechanics
         const ESM4::RuntimeActorAiState* state(const MWWorld::ConstPtr& actor) const;
         const ESM4::RuntimeActorAiState* state(const ESM::FormKey& actor) const;
         MWWorld::QuestDestination questDestination(const ESM::FormKey& reference, const MWWorld::Ptr& player) const;
+        std::vector<ESM::FormKey> nearbyMapMarkers(const MWWorld::Ptr& player, float radius) const;
         std::optional<ESM::FormKey> currentPackage(const MWWorld::ConstPtr& actor) const;
         ESM4::PackageProcedure currentProcedure(const MWWorld::ConstPtr& actor) const;
         bool isCurrentPackage(const MWWorld::ConstPtr& actor, const ESM::FormKey& package) const;

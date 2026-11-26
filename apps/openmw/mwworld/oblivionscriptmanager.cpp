@@ -1533,6 +1533,8 @@ namespace MWWorld
         const ScopedReferenceQueries queries(*this, references);
         updateEffectShaders(std::max(0.0, secondsPassed));
         mWorld.mLastOblivionScriptSeconds = secondsPassed;
+        if (secondsPassed > 0 && (mElapsed == 0 || std::floor(mElapsed * 4) != std::floor((mElapsed + secondsPassed) * 4)))
+            discoverMapMarkers();
         mElapsed += secondsPassed;
         for (auto speech = mNativeSpeech.begin(); speech != mNativeSpeech.end();)
         {
@@ -1636,6 +1638,48 @@ namespace MWWorld
                 if (const auto it = ref.mCustomState.find(mapMarkerRevealKey); it != ref.mCustomState.end())
                     result.emplace(ref.mKey, static_cast<std::uint8_t>(std::get<std::int64_t>(it->second)));
         return result;
+    }
+
+    void OblivionScriptManager::discoverMapMarkers()
+    {
+        const auto* ai = mWorld.getOblivionAiService();
+        const auto player = mWorld.getPlayerPtr();
+        if (!ai || player.isEmpty() || !player.isInCell() || !player.getCell()->isExterior())
+            return;
+        const auto setting = [&](std::string_view name) {
+            const auto key = mStore.findEsm4FormKey(name);
+            return key ? mStore.search<ESM4::GameSetting>(*key) : nullptr;
+        };
+        const auto* radius = setting("iMapMarkerRevealDistance");
+        const auto* distance = radius ? std::get_if<std::int32_t>(&radius->mData) : nullptr;
+        for (const auto& key : ai->nearbyMapMarkers(player, distance ? static_cast<float>(*distance) : 1000.f))
+        {
+            const auto* marker = mStore.search<ESM4::Reference>(key);
+            if (!marker || (marker->mMapMarkerFlags & 3) == 3)
+                continue;
+            if (const auto* saved = std::as_const(*this).referenceState(key))
+            {
+                const auto it = saved->mCustomState.find(mapMarkerRevealKey);
+                if (saved->mDeleted || (it != saved->mCustomState.end()
+                    && ((std::get<std::int64_t>(it->second) | marker->mMapMarkerFlags) & 3) == 3))
+                    continue;
+            }
+            if (!mWorld.getOblivionReferenceEnabled(key, sReferenceQueries.mIndex).value_or(false))
+                continue;
+            auto* saved = referenceState(key);
+            if (!saved)
+                continue;
+            saved->mCustomState[mapMarkerRevealKey] = std::int64_t(3);
+            auto& placesFound = mWorld.mOblivionRuntimeState->mPlayer.mActorValues[ESM4::playerMiscStatKey(7)];
+            placesFound = ESM4::addPlayerMiscStat(ESM4::playerMiscStatValue(placesFound), 1);
+            if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
+            {
+                const auto* text = setting("sDiscoveredText");
+                const auto* prefix = text ? std::get_if<std::string>(&text->mData) : nullptr;
+                windows->messageBox((prefix ? *prefix : "You have discovered") + " " + marker->mFullName + ".");
+            }
+            trace("discovered ref=" + key.serialize() + " location=" + marker->mFullName);
+        }
     }
 
     void OblivionScriptManager::setStage(const ESM::FormKey& quest, std::int32_t stage)
@@ -3531,6 +3575,12 @@ namespace MWWorld
             // without extracting arguments or changing game/platform state.
             trace("addachievement pc-noop");
             return std::int64_t(0);
+        }
+        if (name == "getinfaction" || name == "getpcinfaction")
+        {
+            const auto faction = keyFromValue(argument(0));
+            const auto member = name == "getpcinfaction" ? ESM::FormKey::dynamic("player", 1) : objectKey();
+            return std::int64_t(faction && mWorld.isInOblivionFaction(member, *faction));
         }
         if (name == "getfactionrankdifference")
         {

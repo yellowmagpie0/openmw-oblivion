@@ -39,6 +39,25 @@ namespace
 
 namespace MWMechanics
 {
+    std::vector<ESM::FormKey> OblivionAiService::nearbyMapMarkers(const MWWorld::Ptr& player, float radius) const
+    {
+        std::vector<ESM::FormKey> result;
+        if (player.isEmpty() || !player.isInCell() || !player.getCell()->isExterior() || radius <= 0)
+            return result;
+        const auto& space = player.getCell()->getCell()->getWorldSpace();
+        const auto position = player.getRefData().getPosition().asVec3();
+        for (const auto index : mNamedMapMarkers)
+        {
+            const auto& marker = mUnloadedLocations[index];
+            if ((marker.mPosition - position).length2() >= radius * radius)
+                continue;
+            const auto* cell = mWorld.mStore.search<ESM4::Cell>(marker.mCell);
+            if (cell && cell->isExterior() && cell->mParent == space)
+                result.push_back(marker.mReference);
+        }
+        return result;
+    }
+
     MWWorld::QuestDestination OblivionAiService::questDestination(
         const ESM::FormKey& reference, const MWWorld::Ptr& player) const
     {
@@ -777,6 +796,7 @@ namespace MWWorld
             if (!journal.mSteps.empty())
                 candidate.mText = std::move(journal.mSteps.back().mText);
             bool arrived = false;
+            const auto stage = std::lower_bound(state->mCompletedStages.begin(), state->mCompletedStages.end(), state->mStage);
             for (const auto& target : quest.mTargets)
             {
                 if (ESM4::evaluateNativeConditions(target.mConditions, context) != ESM4::ConditionResult::True)
@@ -785,6 +805,25 @@ namespace MWWorld
                     // Keep the current lead instead of switching to another quest at the door.
                     if (!arrived && !candidate.mText.empty() && std::ranges::any_of(target.mConditions, inPlayerCell))
                         arrived = ESM4::evaluateNativeConditions(target.mConditions, outside) == ESM4::ConditionResult::True;
+                    // Entering a targeted door can advance the journal to an
+                    // exploration stage with no marker until the next conversation.
+                    if (!arrived && !candidate.mText.empty() && !player.getCell()->isExterior()
+                        && stage != state->mCompletedStages.begin())
+                    {
+                        const auto* door = store.search<ESM4::Reference>(target.mReference);
+                        const auto* landing = door && !door->mDoor.destDoor.isZeroOrUnset()
+                            ? store.get<ESM4::Reference>().search(door->mDoor.destDoor) : nullptr;
+                        if (landing && landing->mParent == player.getCell()->getCell()->getId())
+                        {
+                            auto beforeEntry = context;
+                            beforeEntry.mResolve = [&](const auto& condition, auto subject, bool opposite) {
+                                if (condition.mFunction == 58 && condition.mParameter1.mReferenceKey == quest.mFormKey)
+                                    return ESM4::ConditionValue::value(*std::prev(stage));
+                                return context.mResolve(condition, subject, opposite);
+                            };
+                            arrived = ESM4::evaluateNativeConditions(target.mConditions, beforeEntry) == ESM4::ConditionResult::True;
+                        }
+                    }
                     continue;
                 }
                 auto destination = ai->questDestination(target.mReference, player);

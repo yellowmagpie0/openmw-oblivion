@@ -274,8 +274,11 @@ namespace MWWorld
 
     void OblivionInteractionAction::executeImp(const Ptr& actor)
     {
-        if (mKind != OblivionInteractionKind::Actor
-            && actor != MWBase::Environment::get().getWorld()->getPlayerPtr())
+        // Scripted doors can receive Activate from an NPC's package. Keep that
+        // actor through the door's normal lock, key and motion handling.
+        if (actor != MWBase::Environment::get().getWorld()->getPlayerPtr()
+            && mKind != OblivionInteractionKind::Actor
+            && (mKind != OblivionInteractionKind::Door || actor.isEmpty() || !actor.getClass().isActor()))
             return;
 
         // World is the sole MWBase::World implementation in the game executable.

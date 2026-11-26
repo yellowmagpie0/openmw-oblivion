@@ -263,6 +263,7 @@ namespace MWWorld
         void requireMutableRuntime() const;
 
         void compileCorpus();
+        void discoverMapMarkers();
         void indexNativeVoices();
         NativeVoice findNativeVoice(const ESM::FormKey& info, const Ptr& actor, const ESM::FormKey& voiceType,
             bool firstResponseOnly = false) const;

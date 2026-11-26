@@ -61,7 +61,6 @@
 #include <components/esm4/loadmisc.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadfact.hpp>
-#include <components/esm4/factionrules.hpp>
 #include <components/esm4/loadrefr.hpp>
 #include <components/esm4/loadrace.hpp>
 #include <components/esm4/playermechanics.hpp>
@@ -122,9 +121,10 @@ namespace MWMechanics
         constexpr float sPhysicalDoorReleaseDistance = 2.f * sDoorLookAheadDistance;
         constexpr float sMaximumFrameCatchup = 8.f * sFixedStep;
 
-        bool placedActivator(const MWWorld::Ptr& target)
+        bool packageActivationTarget(const MWWorld::Ptr& target)
         {
-            return !target.isEmpty() && target.isInCell() && target.getType() == ESM::REC_ACTI4;
+            return !target.isEmpty() && target.isInCell() && (target.getType() == ESM::REC_ACTI4
+                || (target.getType() == ESM::REC_DOOR4 && !target.getCellRef().getTeleport()));
         }
 
         void equipMissingOutfit(const MWWorld::Ptr& actor, const MWWorld::ESMStore& store)
@@ -134,14 +134,16 @@ namespace MWMechanics
             auto& inventory = actor.getClass().getInventoryStore(actor);
             const int feet = MWWorld::InventoryStore::Slot_Boots;
             const auto shoes = inventory.getSlot(feet);
-            if (shoes == inventory.end())
-                return;
             const auto nativeClothing = [&](const MWWorld::Ptr& item) {
                 return store.get<ESM4::Clothing>().search(
                     MWWorld::OblivionProfileServices::nativeItemId(store, item.getCellRef().getRefId()));
             };
-            const auto* footwear = nativeClothing(*shoes);
-            if (!footwear || (footwear->mClothingFlags & 0xffff) != Slots::TES4_Feet)
+            const auto* footwear = shoes == inventory.end() ? nullptr : nativeClothing(*shoes);
+            const bool replaceShoes = footwear && (footwear->mClothingFlags & 0xffff) == Slots::TES4_Feet;
+            const auto head = inventory.getSlot(MWWorld::InventoryStore::Slot_Helmet);
+            // Older saves put hoods in the robe slot, displacing an otherwise compatible outfit.
+            const bool wearingHood = head != inventory.end() && nativeClothing(*head);
+            if (!replaceShoes && !wearingHood)
                 return;
 
             // Earlier default selections could leave a living NPC wearing shoes instead
@@ -150,7 +152,7 @@ namespace MWMechanics
             for (int slot = 0; slot < MWWorld::InventoryStore::Slots; ++slot)
             {
                 const auto worn = inventory.getSlot(slot);
-                if (slot == feet || worn == inventory.end())
+                if ((replaceShoes && slot == feet) || worn == inventory.end())
                     continue;
                 const auto id = MWWorld::OblivionProfileServices::nativeItemId(store, worn->getCellRef().getRefId());
                 if (const auto* armor = store.get<ESM4::Armor>().search(id))
@@ -164,7 +166,7 @@ namespace MWMechanics
             for (auto item = inventory.begin(); item != inventory.end(); ++item)
             {
                 const auto* clothing = nativeClothing(*item);
-                const unsigned required = body | Slots::TES4_Feet;
+                const unsigned required = replaceShoes ? body | Slots::TES4_Feet : body;
                 if (!clothing || item->getCellRef().getCount() != 1
                     || (clothing->mClothingFlags & required) != required
                     || (clothing->mClothingFlags & occupied & 0xffff) != 0)
@@ -178,7 +180,8 @@ namespace MWMechanics
                 const auto slots = outfit->getClass().getEquipmentSlots(*outfit).first;
                 if (!slots.empty())
                 {
-                    inventory.unequipSlot(feet);
+                    if (replaceShoes)
+                        inventory.unequipSlot(feet);
                     inventory.equip(slots.front(), outfit);
                 }
             }
@@ -252,7 +255,7 @@ namespace MWMechanics
         bool canActivatePlacedObject(const MWWorld::World& world,
             const MWWorld::Ptr& actor, const MWWorld::Ptr& target)
         {
-            return placedActivator(target) && !actor.isEmpty() && actor.isInCell()
+            return packageActivationTarget(target) && !actor.isEmpty() && actor.isInCell()
                 && actor.getCell() == target.getCell() && target.getCellRef().getCount() > 0
                 && target.getRefData().isEnabled()
                 && (target.getRefData().getPosition().asVec3() - actor.getRefData().getPosition().asVec3()).length()
@@ -861,11 +864,13 @@ namespace MWMechanics
         if (!key.isDynamic())
         {
             const auto* ref = mWorld.mStore.search<ESM4::Reference>(key);
-            if (!mWorld.mStore.search<ESM4::Activator>(ref ? ref->mBaseKey : key))
+            const auto& base = ref ? ref->mBaseKey : key;
+            if (!mWorld.mStore.search<ESM4::Activator>(base)
+                && !(ref && ref->mDoor.destDoor.isZeroOrUnset() && mWorld.mStore.search<ESM4::Door>(base)))
                 return {};
         }
         const auto ptr = loadedPtrFor(key);
-        return placedActivator(ptr) ? ptr : MWWorld::Ptr{};
+        return packageActivationTarget(ptr) ? ptr : MWWorld::Ptr{};
     }
 
     MWWorld::Ptr OblivionAiService::loadedPtrFor(const ESM::FormKey& key) const
@@ -2016,16 +2021,10 @@ namespace MWMechanics
             if (function == "GetFactionRankDifference")
                 return value(nativeFactionRankDifference(mWorld, subjectKey, parameterKey,
                     condition.mParameter2.mReferenceKey));
-            if (function == "GetInFaction")
+            if (function == "GetInFaction" || function == "GetPCInFaction")
             {
-                const auto id = resolver.toFormId(parameterKey);
-                const auto base = mWorld.getOblivionReferenceBaseKey(subjectKey);
-                const auto* faction = mWorld.mStore.search<ESM4::Faction>(parameterKey);
-                if (!id || !base || !faction) return value(0.0);
-                const auto entries = mWorld.getOblivionReferenceFactions(subjectKey);
-                return value(ESM4::factionMembership(entries, {}, id->toUint32(),
-                    ESM4::runtimeReferenceKey(subjectKey) == ESM::FormKey::dynamic("player", 1),
-                    faction->mFactionFlags.value_or(0)) ? 1.0 : 0.0);
+                const auto member = function == "GetPCInFaction" ? ESM::FormKey::dynamic("player", 1) : subjectKey;
+                return value(mWorld.isInOblivionFaction(member, parameterKey));
             }
             if (function == "GetDeadCount")
             {
@@ -2050,16 +2049,6 @@ namespace MWMechanics
             if (function == "IsInCombat")
             {
                 return value(mWorld.isOblivionInCombat(subjectKey).value_or(false) ? 1.0 : 0.0);
-            }
-            if (function == "GetPCInFaction")
-            {
-                const MWWorld::Ptr player = mWorld.getPlayerPtr();
-                if (parameterKey.isNull() || player.isEmpty() || !player.getClass().isNpc())
-                    return value(0.0);
-                const std::optional<ESM::FormId> factionId = resolver.toFormId(parameterKey);
-                return value(factionId && player.getClass().getNpcStats(player).isInFaction(ESM::RefId(*factionId))
-                        ? 1.0
-                        : 0.0);
             }
             if (function == "IsRaining" || function == "IsSnowing" || function == "IsPleasant")
             {
@@ -2623,15 +2612,6 @@ namespace MWMechanics
             };
             const auto subjectKey = subjectPtr == mWorld.getPlayerPtr()
                 ? ESM::FormKey::dynamic("player", 1) : subjectPtr.getCellRef().getFormKey();
-            const auto factionMatches = [&](const ESM::FormKey& factionKey) {
-                const auto base = mWorld.getOblivionReferenceBaseKey(subjectKey);
-                const auto id = ESM::FormKeyResolver(mWorld.mContentFiles).toFormId(factionKey);
-                const auto* faction = mWorld.mStore.search<ESM4::Faction>(factionKey);
-                if (!base || !id || !faction) return false;
-                const auto entries = mWorld.getOblivionReferenceFactions(subjectKey);
-                return ESM4::factionMembership(entries, {}, id->toUint32(),
-                    subjectPtr == mWorld.getPlayerPtr(), faction->mFactionFlags.value_or(0));
-            };
             const auto playerPtr = mWorld.getPlayerPtr();
             const auto playerNpcStats = [&]() -> const NpcStats* {
                 return !playerPtr.isEmpty() && playerPtr.getClass().isNpc()
@@ -2846,7 +2826,7 @@ namespace MWMechanics
                 return value(nativeFactionRankDifference(mWorld, subjectKey, parameterKey,
                     condition.mParameter2.mReferenceKey));
             if (function == "GetInFaction")
-                return value(factionMatches(parameterKey) ? 1.0 : 0.0);
+                return value(mWorld.isInOblivionFaction(subjectKey, parameterKey));
             if (function == "GetPCMiscStat")
             {
                 const auto* scripts = mWorld.getOblivionScriptManager();
@@ -2933,13 +2913,7 @@ namespace MWMechanics
             if (function == "IsEssential")
                 return value(subjectPtr.getClass().isEssential(subjectPtr) ? 1.0 : 0.0);
             if (function == "GetPCInFaction")
-            {
-                if (parameterKey.isNull() || playerNpcStats() == nullptr)
-                    return value(0.0);
-                const std::optional<ESM::FormId> factionId
-                    = ESM::FormKeyResolver(mWorld.mContentFiles).toFormId(parameterKey);
-                return value(factionId && playerNpcStats()->isInFaction(ESM::RefId(*factionId)) ? 1.0 : 0.0);
-            }
+                return value(mWorld.isInOblivionFaction(ESM::FormKey::dynamic("player", 1), parameterKey));
             if (function == "GetDisposition")
             {
                 const auto peer = comparisonPtr();
@@ -7483,8 +7457,9 @@ namespace MWMechanics
                 if (!target.isEmpty() && target != actor
                     && (usableActivator || (target.getType() == ESM::REC_NPC_4 && getLOS(actor, target)))
                     && cellKey(actor) == cellKey(target)
-                    && distanceSquared(actor.getRefData().getPosition().asVec3(),
-                           target.getRefData().getPosition().asVec3()) <= range * range)
+                    && ((usableActivator && target.getType() == ESM::REC_DOOR4)
+                        || distanceSquared(actor.getRefData().getPosition().asVec3(),
+                               target.getRefData().getPosition().asVec3()) <= range * range))
                 {
                     stopMovement(actor);
                     transitionPackage(actor, live,
@@ -7583,7 +7558,7 @@ namespace MWMechanics
                 && current->mTargetData.hasReference())
             {
                 const auto target = loadedPtrFor(live.mState.mTarget);
-                if (placedActivator(target))
+                if (packageActivationTarget(target))
                     return false; // Commit the script after actor iteration, including after restore.
                 if (!target.isEmpty() && target.getType() == ESM::REC_NPC_4)
                 {

@@ -5,6 +5,7 @@
 #include <components/esm4/playermurderstate.hpp>
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadfact.hpp>
+#include <components/esm4/factionrules.hpp>
 #include <components/esm4/loadgmst.hpp>
 #include <components/esm4/loadlvsp.hpp>
 #include <components/misc/strings/format.hpp>
@@ -3240,6 +3241,18 @@ namespace MWWorld
         const auto entries = getOblivionReferenceFactions(actor);
         const auto found = std::ranges::find(entries, id->toUint32(), &ESM4::ActorFaction::faction);
         return found == entries.end() ? -1 : found->rank;
+    }
+
+    bool World::isInOblivionFaction(const ESM::FormKey& actor, const ESM::FormKey& faction) const
+    {
+        const auto* definition = mStore.search<ESM4::Faction>(faction);
+        const auto member = ESM4::runtimeReferenceKey(actor);
+        const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(faction);
+        if (!definition || !id || !getOblivionReferenceBaseKey(member))
+            return false;
+        const auto entries = getOblivionReferenceFactions(member);
+        return ESM4::factionMembership(entries, {}, id->toUint32(),
+            member == ESM::FormKey::dynamic("player", 1), definition->mFactionFlags.value_or(0));
     }
 
     bool World::setOblivionFactionRank(const ESM::FormKey& actor, const ESM::FormKey& faction, std::int32_t rank)
