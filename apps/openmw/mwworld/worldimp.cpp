@@ -2093,6 +2093,226 @@ namespace MWWorld
         mOblivionAnimatedReferenceStates = std::move(animatedReferences);
     }
 
+    ESM4::RuntimeReferenceState World::captureOblivionLiveReference(const ConstPtr& ptr,
+        const ESM::FormKeyResolver& resolver, const ESM4::RuntimeReferenceState* previous) const
+    {
+        if (ptr.isEmpty() || !ptr.isInCell())
+            throw std::invalid_argument("Native TES4 reference capture requires a placed object");
+        const ESM::FormKey key = ptr.getCellRef().getFormKey();
+        const Ptr mutablePtr(const_cast<LiveCellRefBase*>(ptr.mRef),
+            const_cast<CellStore*>(ptr.mCell));
+        const ESM::RefId baseRefId = ptr.getCellRef().getRefId();
+        const ESM::FormId* baseId = baseRefId.getIf<ESM::FormId>();
+        const ESM::FormId* cellId = ptr.getCell()->getCell()->getId().getIf<ESM::FormId>();
+        if (baseId == nullptr || cellId == nullptr)
+            throw std::runtime_error("Native TES4 reference has no FormId base or cell identity");
+
+        ESM4::RuntimeReferenceState reference;
+        reference.mKey = key;
+        reference.mBase = resolver.toFormKey(*baseId);
+        reference.mCell = resolver.toFormKey(*cellId);
+        reference.mEnabled = ptr.getRefData().isEnabled();
+        reference.mDeleted = ptr.mRef->isDeleted();
+        reference.mPosition = ptr.getRefData().getPosition();
+        const ESM::RefId ownerId = ptr.getCellRef().getOwner();
+        if (const ESM::FormId* owner = ownerId.getIf<ESM::FormId>())
+            reference.mOwner = resolver.toFormKey(*owner);
+        reference.mDropRelations = ptr.getCellRef().getNativeDropRelations();
+        reference.mOwnershipRank = ptr.getCellRef().getNativeOwnershipRank();
+        reference.mOwnershipGlobal = OblivionProfileServices::captureOwnershipGlobal(
+            mStore, resolver, ptr.getCellRef());
+        const unsigned type = ptr.getClass().getType();
+        const bool actorReference = type == ESM::REC_NPC_4 || type == ESM::REC_CREA4;
+        if (!actorReference)
+        {
+            reference.mWeaponPoison = ptr.getCellRef().getNativeWeaponPoison();
+            reference.mItemCondition = ptr.getCellRef().getNativeItemCondition();
+            const float charge = ptr.getCellRef().getEnchantmentCharge();
+            if (charge >= 0.f) reference.mItemCharge = charge;
+            try
+            {
+                reference.mLockLevel = ptr.getCellRef().getLockLevel();
+            }
+            catch (const std::logic_error&)
+            {
+                reference.mLockLevel = 0;
+            }
+        }
+
+        // ONAM supplies an initial final pose, not an activation or unlock.
+        // Persist it through the same owner as subsequent script animations.
+        const auto seedDoorPose = [&] {
+            if (type != ESM::REC_DOOR4
+                || reference.mCustomState.contains("obscript.animation_group")) return;
+            const auto& poses = ptr.getRefData().getAnimationState().mScriptedAnims;
+            if (poses.empty()) return;
+            const auto& pose = poses.front();
+            reference.mCustomState["obscript.animation_group"] = pose.mGroup;
+            reference.mCustomState["obscript.animation_mode"] = std::int64_t(1);
+            reference.mCustomState["obscript.animation_playing"] = false;
+            reference.mCustomState["obscript.animation_scripted"] = true;
+            reference.mCustomState["obscript.animation_progress"] = double(pose.mTime);
+            reference.mCustomState["obscript.animation_loop_count"] = std::int64_t(pose.mLoopCount);
+            reference.mCustomState["obscript.animation_absolute"] = pose.mAbsolute;
+        };
+        seedDoorPose();
+        if (previous)
+        {
+            reference.mInventory = previous->mInventory;
+            reference.mCustomState = previous->mCustomState;
+            seedDoorPose();
+            reference.mActorDrawState = previous->mActorDrawState;
+            if (mOblivionRuntimeState->mVersion < 4
+                && (ptr.getClass().getType() == ESM::REC_NPC_4
+                    || ptr.getClass().getType() == ESM::REC_CREA4))
+                migrateLegacyActorEquipment(reference.mInventory, mStore, resolver);
+
+            // Scripted non-looping animations retain their final
+            // visual pose after playback, but the renderer's live
+            // controller is rebuilt when a TES4 save is loaded.
+            // Mirror its persisted queue position into the native
+            // FormKey-keyed state so that embedded-NIF animations
+            // restore through the ordinary object path as well.
+            const auto group = reference.mCustomState.find("obscript.animation_group");
+            const auto scripted = reference.mCustomState.find("obscript.animation_scripted");
+            bool isScripted = true;
+            if (scripted != reference.mCustomState.end())
+            {
+                const auto* value = std::get_if<bool>(&scripted->second);
+                if (value == nullptr)
+                    throw std::runtime_error("TES4 runtime-state animation scripted flag has the wrong type: "
+                        + reference.mKey.serialize());
+                isScripted = *value;
+            }
+            if (group != reference.mCustomState.end() && isScripted)
+            {
+                if (const auto* name = std::get_if<std::string>(&group->second))
+                {
+                    const ESM::AnimationState& animationState
+                        = ptr.getRefData().getAnimationState();
+                    const auto animation = std::find_if(animationState.mScriptedAnims.begin(),
+                        animationState.mScriptedAnims.end(), [&](const auto& value) {
+                            return Misc::StringUtils::ciEqual(value.mGroup, *name);
+                        });
+                    if (animation != animationState.mScriptedAnims.end())
+                    {
+                        reference.mCustomState["obscript.animation_progress"]
+                            = static_cast<double>(animation->mTime);
+                        reference.mCustomState["obscript.animation_loop_count"]
+                            = static_cast<std::int64_t>(std::min<std::uint64_t>(animation->mLoopCount,
+                                std::numeric_limits<std::int64_t>::max()));
+                        reference.mCustomState["obscript.animation_absolute"] = animation->mAbsolute;
+                    }
+                    else if (const auto playing
+                        = reference.mCustomState.find("obscript.animation_playing");
+                        playing != reference.mCustomState.end()
+                        && std::get_if<bool>(&playing->second) != nullptr
+                        && *std::get_if<bool>(&playing->second))
+                    {
+                        // A completed scripted non-looping group
+                        // stays posed at its stop key even though
+                        // there is no longer a live playback clock.
+                        reference.mCustomState["obscript.animation_progress"] = 1.0;
+                        reference.mCustomState["obscript.animation_playing"] = false;
+                    }
+                }
+            }
+        }
+        else
+        {
+            const auto addInventory
+                = [&](const std::vector<ESM4::InventoryItem>& inventory, bool equip) {
+                for (const ESM4::InventoryItem& item : inventory)
+                {
+                    const ESM::FormKey itemKey
+                        = resolver.toFormKey(ESM::FormId::fromUint32(item.item));
+                    const std::int32_t count = ESM4::inventoryItemCount(item);
+                    if (!itemKey.isNull() && count != 0)
+                    {
+                        ESM4::RuntimeInventoryItem runtimeItem;
+                        runtimeItem.mBase = itemKey;
+                        runtimeItem.mCount = count;
+                        if (const auto definition = OblivionProfileServices::itemDefinition(
+                                mStore, ESM::RefId(ESM::FormId::fromUint32(item.item))))
+                        {
+                            runtimeItem.mCondition = definition->mMaxCondition;
+                            runtimeItem.mCharge = definition->mMaxCharge;
+                        }
+                        reference.mInventory.push_back(std::move(runtimeItem));
+                        if (equip)
+                        {
+                            auto definition = OblivionProfileServices::itemDefinition(
+                                mStore, ESM::RefId(ESM::FormId::fromUint32(item.item)));
+                            if (definition && definition->mSlots != 0)
+                            {
+                                definition->mBase = itemKey;
+                                ESM4::equipInventoryItem(reference.mInventory, *definition);
+                            }
+                        }
+                    }
+                }
+            };
+            switch (ptr.getClass().getType())
+            {
+                case ESM::REC_CONT4:
+                    addInventory(ptr.get<ESM4::Container>()->mBase->mInventory, false);
+                    break;
+                case ESM::REC_CREA4:
+                    addInventory(ptr.get<ESM4::Creature>()->mBase->mInventory, true);
+                    break;
+                case ESM::REC_NPC_4:
+                    addInventory(ptr.get<ESM4::Npc>()->mBase->mInventory, true);
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (actorReference)
+        {
+            reference.mInventory = captureOblivionInventory(mutablePtr);
+            reference.mActorDrawState = captureOblivionActorDrawState(mutablePtr);
+        }
+        else if (ptr.getType() == ESM::REC_CONT4 && ptr.getRefData().getCustomData())
+            reference.mInventory = captureOblivionInventory(mutablePtr);
+        reference.mCustomState["count"]
+            = static_cast<std::int64_t>(ptr.getCellRef().getCount(false));
+        reference.mCustomState["scale"] = static_cast<double>(ptr.getCellRef().getScale());
+        reference.mCustomState["record_type"]
+            = static_cast<std::int64_t>(ptr.getClass().getType());
+        if (type == ESM::REC_DOOR4 && !ptr.getCellRef().getTeleport())
+        {
+            const auto motion = ptr.getClass().getDoorState(ptr);
+            // An explicit idle distinguishes a changed default from a pending transition.
+            if (motion != DoorState::Idle || reference.mCustomState.contains("obscript.door_default_open"))
+                reference.mCustomState[doorMotionKey] = static_cast<std::int64_t>(motion);
+            else
+                reference.mCustomState.erase(doorMotionKey);
+        }
+        if (type == ESM::REC_LIGH4)
+        {
+            reference.mCustomState.erase(std::string(lightUsageKey));
+            const auto& light = ptr.get<ESM4::Light>()->mBase->mData;
+            const float remaining = ptr.getClass().getRemainingUsageTime(ptr);
+            if (remaining >= 0 && remaining != float(light.time))
+            {
+                reference.mCustomState[std::string(lightUsageKey)] = double(remaining);
+                savedNativeLightUsageTime(mStore, reference);
+            }
+        }
+        if (!actorReference)
+        {
+            try
+            {
+                reference.mCustomState["locked"] = ptr.getCellRef().isLocked();
+            }
+            catch (const std::logic_error&)
+            {
+                // Some projected references do not have lock state.
+            }
+        }
+        return reference;
+    }
+
     ESM4::RuntimeState World::captureOblivionRuntimeState() const
     {
         ESM4::RuntimeState state;
@@ -2258,219 +2478,10 @@ namespace MWWorld
                         return true;
                     try
                     {
-                    const Ptr mutablePtr(const_cast<LiveCellRefBase*>(ptr.mRef),
-                        const_cast<CellStore*>(ptr.mCell));
-                    const ESM::RefId baseRefId = ptr.getCellRef().getRefId();
-                    const ESM::FormId* baseId = baseRefId.getIf<ESM::FormId>();
-                    const ESM::FormId* cellId = ptr.getCell()->getCell()->getId().getIf<ESM::FormId>();
-                    if (baseId == nullptr || cellId == nullptr)
-                        throw std::runtime_error("Native TES4 reference has no FormId base or cell identity");
-
-                    ESM4::RuntimeReferenceState reference;
-                    reference.mKey = key;
-                    reference.mBase = resolver.toFormKey(*baseId);
-                    reference.mCell = resolver.toFormKey(*cellId);
-                    reference.mEnabled = ptr.getRefData().isEnabled();
-                    reference.mDeleted = ptr.mRef->isDeleted();
-                    reference.mPosition = ptr.getRefData().getPosition();
-                    const ESM::RefId ownerId = ptr.getCellRef().getOwner();
-                    if (const ESM::FormId* owner = ownerId.getIf<ESM::FormId>())
-                        reference.mOwner = resolver.toFormKey(*owner);
-                    reference.mDropRelations = ptr.getCellRef().getNativeDropRelations();
-                    reference.mOwnershipRank = ptr.getCellRef().getNativeOwnershipRank();
-                    reference.mOwnershipGlobal = OblivionProfileServices::captureOwnershipGlobal(
-                        mStore, resolver, ptr.getCellRef());
-                    const unsigned type = ptr.getClass().getType();
-                    const bool actorReference = type == ESM::REC_NPC_4 || type == ESM::REC_CREA4;
-                    if (!actorReference)
-                    {
-                        reference.mWeaponPoison = ptr.getCellRef().getNativeWeaponPoison();
-                        reference.mItemCondition = ptr.getCellRef().getNativeItemCondition();
-                        const float charge = ptr.getCellRef().getEnchantmentCharge();
-                        if (charge >= 0.f) reference.mItemCharge = charge;
-                        try
-                        {
-                            reference.mLockLevel = ptr.getCellRef().getLockLevel();
-                        }
-                        catch (const std::logic_error&)
-                        {
-                            reference.mLockLevel = 0;
-                        }
-                    }
-
-                    // ONAM supplies an initial final pose, not an activation or unlock.
-                    // Persist it through the same owner as subsequent script animations.
-                    const auto seedDoorPose = [&] {
-                        if (type != ESM::REC_DOOR4
-                            || reference.mCustomState.contains("obscript.animation_group")) return;
-                        const auto& poses = ptr.getRefData().getAnimationState().mScriptedAnims;
-                        if (poses.empty()) return;
-                        const auto& pose = poses.front();
-                        reference.mCustomState["obscript.animation_group"] = pose.mGroup;
-                        reference.mCustomState["obscript.animation_mode"] = std::int64_t(1);
-                        reference.mCustomState["obscript.animation_playing"] = false;
-                        reference.mCustomState["obscript.animation_scripted"] = true;
-                        reference.mCustomState["obscript.animation_progress"] = double(pose.mTime);
-                        reference.mCustomState["obscript.animation_loop_count"] = std::int64_t(pose.mLoopCount);
-                        reference.mCustomState["obscript.animation_absolute"] = pose.mAbsolute;
-                    };
-                    seedDoorPose();
-                    if (const auto previous = previousReferences.find(key); previous != previousReferences.end())
-                    {
-                        reference.mInventory = previous->second->mInventory;
-                        reference.mCustomState = previous->second->mCustomState;
-                        seedDoorPose();
-                        reference.mActorDrawState = previous->second->mActorDrawState;
-                        if (mOblivionRuntimeState->mVersion < 4
-                            && (ptr.getClass().getType() == ESM::REC_NPC_4
-                                || ptr.getClass().getType() == ESM::REC_CREA4))
-                            migrateLegacyActorEquipment(reference.mInventory, mStore, resolver);
-
-                        // Scripted non-looping animations retain their final
-                        // visual pose after playback, but the renderer's live
-                        // controller is rebuilt when a TES4 save is loaded.
-                        // Mirror its persisted queue position into the native
-                        // FormKey-keyed state so that embedded-NIF animations
-                        // restore through the ordinary object path as well.
-                        const auto group = reference.mCustomState.find("obscript.animation_group");
-                        const auto scripted = reference.mCustomState.find("obscript.animation_scripted");
-                        bool isScripted = true;
-                        if (scripted != reference.mCustomState.end())
-                        {
-                            const auto* value = std::get_if<bool>(&scripted->second);
-                            if (value == nullptr)
-                                throw std::runtime_error("TES4 runtime-state animation scripted flag has the wrong type: "
-                                    + reference.mKey.serialize());
-                            isScripted = *value;
-                        }
-                        if (group != reference.mCustomState.end() && isScripted)
-                        {
-                            if (const auto* name = std::get_if<std::string>(&group->second))
-                            {
-                                const ESM::AnimationState& animationState
-                                    = ptr.getRefData().getAnimationState();
-                                const auto animation = std::find_if(animationState.mScriptedAnims.begin(),
-                                    animationState.mScriptedAnims.end(), [&](const auto& value) {
-                                        return Misc::StringUtils::ciEqual(value.mGroup, *name);
-                                    });
-                                if (animation != animationState.mScriptedAnims.end())
-                                {
-                                    reference.mCustomState["obscript.animation_progress"]
-                                        = static_cast<double>(animation->mTime);
-                                    reference.mCustomState["obscript.animation_loop_count"]
-                                        = static_cast<std::int64_t>(std::min<std::uint64_t>(animation->mLoopCount,
-                                            std::numeric_limits<std::int64_t>::max()));
-                                    reference.mCustomState["obscript.animation_absolute"] = animation->mAbsolute;
-                                }
-                                else if (const auto playing
-                                    = reference.mCustomState.find("obscript.animation_playing");
-                                    playing != reference.mCustomState.end()
-                                    && std::get_if<bool>(&playing->second) != nullptr
-                                    && *std::get_if<bool>(&playing->second))
-                                {
-                                    // A completed scripted non-looping group
-                                    // stays posed at its stop key even though
-                                    // there is no longer a live playback clock.
-                                    reference.mCustomState["obscript.animation_progress"] = 1.0;
-                                    reference.mCustomState["obscript.animation_playing"] = false;
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        const auto addInventory
-                            = [&](const std::vector<ESM4::InventoryItem>& inventory, bool equip) {
-                            for (const ESM4::InventoryItem& item : inventory)
-                            {
-                                const ESM::FormKey itemKey
-                                    = resolver.toFormKey(ESM::FormId::fromUint32(item.item));
-                                const std::int32_t count = ESM4::inventoryItemCount(item);
-                                if (!itemKey.isNull() && count != 0)
-                                {
-                                    ESM4::RuntimeInventoryItem runtimeItem;
-                                    runtimeItem.mBase = itemKey;
-                                    runtimeItem.mCount = count;
-                                    if (const auto definition = OblivionProfileServices::itemDefinition(
-                                            mStore, ESM::RefId(ESM::FormId::fromUint32(item.item))))
-                                    {
-                                        runtimeItem.mCondition = definition->mMaxCondition;
-                                        runtimeItem.mCharge = definition->mMaxCharge;
-                                    }
-                                    reference.mInventory.push_back(std::move(runtimeItem));
-                                    if (equip)
-                                    {
-                                        auto definition = OblivionProfileServices::itemDefinition(
-                                            mStore, ESM::RefId(ESM::FormId::fromUint32(item.item)));
-                                        if (definition && definition->mSlots != 0)
-                                        {
-                                            definition->mBase = itemKey;
-                                            ESM4::equipInventoryItem(reference.mInventory, *definition);
-                                        }
-                                    }
-                                }
-                            }
-                        };
-                        switch (ptr.getClass().getType())
-                        {
-                            case ESM::REC_CONT4:
-                                addInventory(ptr.get<ESM4::Container>()->mBase->mInventory, false);
-                                break;
-                            case ESM::REC_CREA4:
-                                addInventory(ptr.get<ESM4::Creature>()->mBase->mInventory, true);
-                                break;
-                            case ESM::REC_NPC_4:
-                                addInventory(ptr.get<ESM4::Npc>()->mBase->mInventory, true);
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    if (actorReference)
-                    {
-                        reference.mInventory = captureOblivionInventory(mutablePtr);
-                        reference.mActorDrawState = captureOblivionActorDrawState(mutablePtr);
-                    }
-                    else if (ptr.getType() == ESM::REC_CONT4 && ptr.getRefData().getCustomData())
-                        reference.mInventory = captureOblivionInventory(mutablePtr);
-                    reference.mCustomState["count"]
-                        = static_cast<std::int64_t>(ptr.getCellRef().getCount(false));
-                    reference.mCustomState["scale"] = static_cast<double>(ptr.getCellRef().getScale());
-                    reference.mCustomState["record_type"]
-                        = static_cast<std::int64_t>(ptr.getClass().getType());
-                    if (type == ESM::REC_DOOR4 && !ptr.getCellRef().getTeleport())
-                    {
-                        const auto motion = ptr.getClass().getDoorState(ptr);
-                        // An explicit idle distinguishes a changed default from a pending transition.
-                        if (motion != DoorState::Idle || reference.mCustomState.contains("obscript.door_default_open"))
-                            reference.mCustomState[doorMotionKey] = static_cast<std::int64_t>(motion);
-                        else
-                            reference.mCustomState.erase(doorMotionKey);
-                    }
-                    if (type == ESM::REC_LIGH4)
-                    {
-                        reference.mCustomState.erase(std::string(lightUsageKey));
-                        const auto& light = ptr.get<ESM4::Light>()->mBase->mData;
-                        const float remaining = ptr.getClass().getRemainingUsageTime(ptr);
-                        if (remaining >= 0 && remaining != float(light.time))
-                        {
-                            reference.mCustomState[std::string(lightUsageKey)] = double(remaining);
-                            savedNativeLightUsageTime(mStore, reference);
-                        }
-                    }
-                    if (!actorReference)
-                    {
-                        try
-                        {
-                            reference.mCustomState["locked"] = ptr.getCellRef().isLocked();
-                        }
-                        catch (const std::logic_error&)
-                        {
-                            // Some projected references do not have lock state.
-                        }
-                    }
-                    state.mReferences.push_back(std::move(reference));
-                    return true;
+                        const auto previous = previousReferences.find(key);
+                        state.mReferences.push_back(captureOblivionLiveReference(ptr, resolver,
+                            previous != previousReferences.end() ? previous->second : nullptr));
+                        return true;
                     }
                     catch (const std::exception& error)
                     {

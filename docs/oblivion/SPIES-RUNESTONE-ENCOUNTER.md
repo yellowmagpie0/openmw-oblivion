@@ -18,6 +18,8 @@ After the 15-hour wait, Jearl attacked shortly after 18:15. Saveri arrived from 
 
 Run `build-windows/Continue-After-the-Runestone-Encounter.cmd` to continue the investigation in Bruma. The save check reads the independently reloaded and resaved checkpoint alongside the original combat saves.
 
+The next [Bruma investigation](SPIES-JEARLS-ORDERS.md) follows the keys to Captain Burd and Jearl’s basement.
+
 ```powershell
 $run = 'build-windows/sponsor-runestone07'
 $stock = 'build-windows/sponsor-runestone-stock02'

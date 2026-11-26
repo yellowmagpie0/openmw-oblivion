@@ -14,6 +14,7 @@
 
 #include "../mwworld/actiontake.hpp"
 #include "../mwworld/class.hpp"
+#include "../mwworld/oblivioninteraction.hpp"
 
 #include "formatting.hpp"
 
@@ -54,6 +55,9 @@ namespace MWGui
 
         MWWorld::Ptr player = MWMechanics::getPlayer();
         bool showTakeButton = scroll.getContainerStore() != &player.getClass().getContainerStore(player);
+        if (scroll.getType() == ESM::REC_BOOK4
+            && (scroll.get<ESM4::Book>()->mBase->mData.flags & ESM4::Book::Flag_NoTake))
+            showTakeButton = false;
 
         const std::string* text;
         if (scroll.getType() == ESM::REC_BOOK)
@@ -113,10 +117,21 @@ namespace MWGui
 
     void ScrollWindow::onTakeButtonClicked(MyGUI::Widget* /*sender*/)
     {
+        if (mScroll.getType() == ESM::REC_BOOK4
+            && (mScroll.get<ESM4::Book>()->mBase->mData.flags & ESM4::Book::Flag_NoTake))
+            return;
         MWBase::Environment::get().getWindowManager()->playSound(ESM::RefId::stringRefId("Item Book Up"));
 
-        MWWorld::ActionTake take(mScroll);
-        take.execute(MWMechanics::getPlayer());
+        if (mScroll.getType() == ESM::REC_BOOK4)
+        {
+            MWWorld::OblivionInteractionAction take(mScroll, MWWorld::OblivionInteractionKind::TakeBook);
+            take.execute(MWMechanics::getPlayer());
+        }
+        else
+        {
+            MWWorld::ActionTake take(mScroll);
+            take.execute(MWMechanics::getPlayer());
+        }
 
         MWBase::Environment::get().getWindowManager()->removeGuiMode(GM_Scroll);
     }

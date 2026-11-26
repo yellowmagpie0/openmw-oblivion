@@ -8,6 +8,7 @@
 #include "worldmodel.hpp"
 #include "../mwmechanics/creaturestats.hpp"
 #include "../mwmechanics/oblivionai.hpp"
+#include "../mwmechanics/oblivionaidestination.hpp"
 #include "../mwrender/esm4npcanimation.hpp"
 #include <components/esm4/loadpack.hpp>
 #include "../mwphysics/actor.hpp"
@@ -424,7 +425,10 @@ namespace MWWorld
         const auto& stats = actor.getClass().getCreatureStats(actor);
         const bool cancelled = interrupted || stats.isDead() || stats.getAiSequence().isInCombat()
             || !actor.isInCell();
-        const auto* placed = atLocation && !cancelled ? packageChair(mStore, ai->mPackage) : nullptr;
+        const ESM4::Reference* placed = nullptr;
+        if (atLocation && !cancelled)
+            placed = ai->mPackageType == ESM4::AIPackageType::Sleep
+                ? mStore.search<ESM4::Reference>(ai->mTarget) : packageChair(mStore, ai->mPackage);
         // A native combat controller can interrupt a completed Travel while the
         // saved base package still names the chair. Play the normal exit once.
         const Ptr chair = placed && !hasOblivionCombatController(ai->mActor).value_or(false)
@@ -433,7 +437,8 @@ namespace MWWorld
             && chair.getCell() == actor.getCell() && chair.getRefData().isEnabled() && !chair.mRef->isDeleted();
         if (!seat)
         {
-            if (!eligible || (actor.getRefData().getPosition().asVec3() - chair.getRefData().getPosition().asVec3()).length2() > 128.f * 128.f
+            if (!eligible || (actor.getRefData().getPosition().asVec3() - chair.getRefData().getPosition().asVec3()).length2()
+                    > MWMechanics::sOblivionFurnitureUseDistance * MWMechanics::sOblivionFurnitureUseDistance
                 || view->mUnsupportedPackageSeat == placed->mFormKey)
                 return false;
             if (view->mPackageSeatRetry > 0.f)

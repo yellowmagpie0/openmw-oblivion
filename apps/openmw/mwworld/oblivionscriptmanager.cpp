@@ -555,7 +555,14 @@ namespace MWWorld
                 Log(Debug::Info) << "Native dialogue candidate: info=" << info.mFormKey.serialize()
                     << " result=" << static_cast<int>(conditions);
             if (conditions == ESM4::ConditionResult::Unsupported || conditions == ESM4::ConditionResult::MissingContext)
-                throw std::runtime_error("Native dialogue condition cannot be evaluated: " + info.mFormKey.serialize());
+            {
+                // A missing condition disqualifies this response. Other responses
+                // and the ambient simulation must still get their turn.
+                if (diagnose)
+                    Log(Debug::Warning) << "Skipping native dialogue response with unresolved condition: "
+                                        << info.mFormKey.serialize();
+                return false;
+            }
             return conditions == ESM4::ConditionResult::True;
         }, [&]() {
             auto* combat = mWorld.getOblivionCombatService();
@@ -3659,6 +3666,11 @@ namespace MWWorld
             mWorld.mOblivionRuntimeState->mPlayer.mActorValues[ESM4::playerMiscStatKey(index)]
                 = ESM4::addPlayerMiscStat(previous, static_cast<std::int32_t>(delta));
             return std::int64_t(0);
+        }
+        if (name == "getpcfame")
+        {
+            const auto player = mWorld.getPlayerPtr();
+            return std::int64_t(player.isEmpty() ? 0 : player.getClass().getNpcStats(player).getReputation());
         }
         if (name == "getpcinfamy" || name == "getpcfactionmurder" || name == "getpcfactionsteal")
         {

@@ -47,6 +47,7 @@
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadligh.hpp>
 #include <components/esm4/loadinfo.hpp>
+#include <components/esm4/loadspel.hpp>
 #include <components/esm4/loadstat.hpp>
 #include <components/misc/strings/algorithm.hpp>
 #include <components/esm4/combatsettings.hpp>
@@ -349,6 +350,25 @@ namespace MWMechanics
             const auto actual = nativeClassId(world, actor, base);
             const auto* id = actual.getIf<ESM::FormId>();
             return id && ESM::FormKeyResolver(world.getContentFiles()).toFormKey(*id) == expected;
+        }
+
+        bool nativeHasDisease(MWWorld::World& world, const ESM::FormKey& actor, const ESM::FormKey& base)
+        {
+            if (const auto* combat = world.getOblivionCombatService())
+                if (const auto* values = combat->findActorValues(actor); values && values->mPassiveAbilities)
+                    return std::any_of(values->mPassiveAbilities->begin(), values->mPassiveAbilities->end(),
+                        [](const auto& spell) { return spell.mSpellType == 1; });
+            const auto& store = world.getStore();
+            const ESM::FormKeyResolver resolver(world.getContentFiles());
+            const auto disease = [&](ESM::FormId id) {
+                const auto* spell = store.search<ESM4::Spell>(resolver.toFormKey(id));
+                return spell && spell->mData && spell->mData->mType == 1;
+            };
+            if (const auto* npc = store.search<ESM4::Npc>(base))
+                return std::any_of(npc->mSpell.begin(), npc->mSpell.end(), disease);
+            if (const auto* creature = store.search<ESM4::Creature>(base))
+                return std::any_of(creature->mSpell.begin(), creature->mSpell.end(), disease);
+            return false;
         }
 
         std::optional<bool> nativeNpcFemale(MWWorld::World& world, const MWWorld::Ptr& actor,
@@ -1772,6 +1792,14 @@ namespace MWMechanics
             if (function == "GetIsClass")
                 return value(nativeClassMatches(mWorld, loadedPtrFor(subjectKey), subjectLocation->mBase,
                     parameterKey) ? 1.0 : 0.0);
+            if (function == "GetDisease")
+                return value(nativeHasDisease(mWorld, subjectKey, subjectLocation->mBase));
+            if (function == "SameSexAsPC")
+            {
+                const auto female = nativeNpcFemale(mWorld, loadedPtrFor(subjectKey), subjectLocation->mBase);
+                const auto player = nativeNpcFemale(mWorld, mWorld.getPlayerPtr(), {});
+                return value(female && player && *female == *player);
+            }
             if (function == "SameSex" || function == "SameRace")
             {
                 const auto peer = comparisonLocation();
@@ -2967,12 +2995,14 @@ namespace MWMechanics
                 return value(nativeIsGuard(mWorld, subjectPtr, baseKey(subjectPtr)) ? 1.0 : 0.0);
             if (function == "GetIsClass")
                 return value(nativeClassMatches(mWorld, subjectPtr, baseKey(subjectPtr), parameterKey) ? 1.0 : 0.0);
-            if (function == "SameSex" || function == "SameRace")
+            if (function == "GetDisease")
+                return value(nativeHasDisease(mWorld, actorKey(subjectPtr), baseKey(subjectPtr)));
+            if (function == "SameSex" || function == "SameRace" || function == "SameSexAsPC")
             {
                 // Original4F62A0 compares race identity;4F6350/519D20 compares sex.
                 // A missing or non-NPC peer is false; the dispatcher supplies
                 // the opposite dialogue context for an omitted actor argument.
-                const auto peer = comparisonPtr();
+                const auto peer = function == "SameSexAsPC" ? mWorld.getPlayerPtr() : comparisonPtr();
                 if (peer.isEmpty()) return value(0.0);
                 if (function == "SameRace")
                 {
@@ -3244,8 +3274,7 @@ namespace MWMechanics
             || live.mState.mInterruptionReason != "target-unresolved")
             return;
         const auto* current = package(live.mState.mPackage);
-        if (!current || current->mLocationData.mKind != ESM4::PackageLocationKind::NearReference
-            || current->mLocationData.mRadius <= 0)
+        if (!current || current->mLocationData.mKind != ESM4::PackageLocationKind::NearReference)
             return;
         const auto centre = mUnloadedLocationByReference.find(current->mLocationData.mReferenceKey);
         if (centre == mUnloadedLocationByReference.end() || mUnloadedLocations[centre->second].mType == ESM::REC_FURN4)
@@ -3394,7 +3423,12 @@ namespace MWMechanics
         };
         const auto bedNear = [&](const StableLocation& centre, float radius) -> std::optional<StableLocation> {
             const auto beds = mBedsByCell.find(centre.mCell);
-            if (beds == mBedsByCell.end() || radius <= 0.f)
+            if (beds == mBedsByCell.end())
+                return std::nullopt;
+            // Barracks shifts can specify a room marker with no search radius.
+            // The room bounds the search in that case.
+            const auto* cell = mWorld.mStore.search<ESM4::Cell>(centre.mCell);
+            if (radius < 0.f || (radius == 0.f && (!cell || cell->isExterior())))
                 return std::nullopt;
             std::set<ESM::FormKey> occupied;
             for (const auto& [key, other] : mActors)
@@ -3405,7 +3439,7 @@ namespace MWMechanics
                     occupied.insert(other.mState.mTarget);
 
             std::optional<StableLocation> best;
-            float bestDistance = radius * radius;
+            float bestDistance = radius == 0.f ? std::numeric_limits<float>::max() : radius * radius;
             for (const auto index : beds->second)
             {
                 const auto& placed = mUnloadedLocations[index];
@@ -4428,8 +4462,10 @@ namespace MWMechanics
                         }
                     }
 
+                    const float tolerance = sameCell && live.mState.mPackageType == ESM4::AIPackageType::Sleep
+                        ? sOblivionFurnitureUseDistance : sArrivalTolerance;
                     status = DetourNavigator::findPath(*navigator, mWorld.getPathfindingAgentBounds(actor),
-                        actor.getRefData().getPosition().asVec3(), target, flags, costs, sArrivalTolerance,
+                        actor.getRefData().getPosition().asVec3(), target, flags, costs, tolerance,
                         checkpoints, std::back_inserter(live.mContinuousRoute));
                     success = status == DetourNavigator::Status::Success && !live.mContinuousRoute.empty();
                     if (!success)
@@ -4854,6 +4890,7 @@ namespace MWMechanics
 
         const float radius = travelArrivalRadius(live);
         if ((live.mState.mPackageType == ESM4::AIPackageType::Travel
+                || live.mState.mPackageType == ESM4::AIPackageType::Sleep
                 || live.mState.mPackageType == ESM4::AIPackageType::Follow
                 || (live.mState.mPackageType == ESM4::AIPackageType::UseItemAt && radius > 0.f))
             && oblivionDestinationReached(live.mState.mCell, live.mState.mLastValidPosition.asVec3(),
@@ -6449,9 +6486,10 @@ namespace MWMechanics
         const auto steer = [&](const osg::Vec3f& point, bool mesh = false) {
             faceAndMove(actor, point, run, sneak);
             const bool escort = live.mState.mPackageType == ESM4::AIPackageType::Escort;
+            const bool approachingBed = live.mState.mPackageType == ESM4::AIPackageType::Sleep;
             const bool outdoorFollow = mesh && live.mState.mPackageType == ESM4::AIPackageType::Follow
                 && actor.getCell()->isExterior() && live.mIgnoredPhysicalDoor.isNull();
-            if ((!escort && !outdoorFollow)
+            if ((!escort && !outdoorFollow && !approachingBed)
                 || (!live.mState.mDoor.isNull() && (!escort || live.mRouteDoor != live.mState.mDoor)))
                 return;
             // An escort can meet a crowd at a landing or the swung-open leaf
@@ -6470,6 +6508,7 @@ namespace MWMechanics
         };
         const float radius = travelArrivalRadius(live);
         if ((live.mState.mPackageType == ESM4::AIPackageType::Travel
+                || live.mState.mPackageType == ESM4::AIPackageType::Sleep
                 || live.mState.mPackageType == ESM4::AIPackageType::Follow
                 || (live.mState.mPackageType == ESM4::AIPackageType::UseItemAt && radius > 0.f))
             && oblivionDestinationReached(live.mState.mCell, position,

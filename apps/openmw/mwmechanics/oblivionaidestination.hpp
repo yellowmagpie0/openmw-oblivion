@@ -15,6 +15,7 @@
 
 namespace MWMechanics
 {
+    inline constexpr float sOblivionFurnitureUseDistance = 128.f;
     inline bool oblivionResidentTargetNeedsRepath(const ESM::FormKey& previousTarget,
         const ESM::FormKey& target, const ESM::FormKey& previousCell, const ESM::FormKey& cell,
         const osg::Vec3f& previousDestination, const osg::Vec3f& destination, float repathSeconds,
@@ -65,6 +66,13 @@ namespace MWMechanics
                 && std::isfinite(travelRadius) && travelRadius >= 0.f
                 && std::abs(delta.z()) <= tolerance
                 && delta.x() * delta.x() + delta.y() * delta.y() <= horizontal * horizontal;
+        }
+        if (type == ESM4::AIPackageType::Sleep)
+        {
+            const auto delta = position - destination;
+            return !cell.isNull() && cell == destinationCell && std::isfinite(tolerance)
+                && std::abs(delta.z()) <= tolerance
+                && delta.length2() <= sOblivionFurnitureUseDistance * sOblivionFurnitureUseDistance;
         }
         return !cell.isNull() && cell == destinationCell && std::isfinite(tolerance) && tolerance >= 0.f
             && (position - destination).length2() <= tolerance * tolerance;

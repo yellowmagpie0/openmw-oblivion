@@ -182,6 +182,17 @@ namespace
             key(1), chair + osg::Vec3f(0, 0, 80), key(1), chair, 64.f, use, 64.f));
     }
 
+    TEST(OblivionAiTest, SleeperCanUseTheBedFromItsEdgeOnTheSameFloor)
+    {
+        const auto sleep = ESM4::AIPackageType::Sleep;
+        const osg::Vec3f bed(232, 959, -543);
+        const osg::Vec3f beside(233, 1029, -574);
+        EXPECT_TRUE(MWMechanics::oblivionDestinationReached(key(1), beside, key(1), bed, 64.f, sleep));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1), beside, key(2), bed, 64.f, sleep));
+        EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1), bed + osg::Vec3f(0, 0, 110),
+            key(1), bed, 64.f, sleep));
+    }
+
     TEST(OblivionAiTest, PathgridCornerRequiresHorizontalArrivalDespiteAuthoredHeightOffset)
     {
         // Original tutorial PGRD entry0; the saved Emperor had already

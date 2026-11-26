@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <array>
 #include <bit>
-#include <cctype>
 #include <cmath>
 #include <exception>
 #include <limits>
@@ -207,25 +206,6 @@ namespace MWWorld
             OPENMW_FIND_TES4_NAME(Weapon);
 #undef OPENMW_FIND_TES4_NAME
             return result.empty() ? id.toDebugString() : result;
-        }
-
-        std::string plainBookText(std::string_view input)
-        {
-            std::string result;
-            result.reserve(std::min<std::size_t>(input.size(), 700));
-            bool inTag = false;
-            for (const char value : input)
-            {
-                if (value == '<')
-                    inTag = true;
-                else if (value == '>')
-                    inTag = false;
-                else if (!inTag && result.size() < 700)
-                    result.push_back(value == '\r' ? '\n' : value);
-            }
-            while (!result.empty() && std::isspace(static_cast<unsigned char>(result.back())))
-                result.pop_back();
-            return result;
         }
 
         const char* kindName(OblivionInteractionKind kind)
@@ -1059,12 +1039,7 @@ namespace MWWorld
             // Newly admitted references need not have existed when the save
             // cache was last refreshed. Import only this live reference; a
             // whole-state replacement would discard unrelated cached state.
-            auto live = captureOblivionRuntimeState();
-            const auto found = std::find_if(live.mReferences.begin(), live.mReferences.end(),
-                [&](const auto& reference) { return reference.mKey == key; });
-            if (found == live.mReferences.end())
-                throw std::invalid_argument("pickup source is absent from the live native state");
-            newSource.emplace(std::move(*found));
+            newSource.emplace(captureOblivionLiveReference(ptr, resolver));
             mOblivionRuntimeState->mReferences.reserve(mOblivionRuntimeState->mReferences.size() + 1);
             cached = &*newSource;
         }
@@ -1479,13 +1454,11 @@ namespace MWWorld
             mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
 
         const ESM::FormKey key = ptr.getCellRef().getFormKey();
-        const auto found = std::find_if(mOblivionRuntimeState->mReferences.begin(),
-            mOblivionRuntimeState->mReferences.end(),
-            [&](const ESM4::RuntimeReferenceState& state) { return state.mKey == key; });
-        if (found == mOblivionRuntimeState->mReferences.end())
-            throw std::runtime_error("M5 interaction reference is absent from native TES4 state: " + key.serialize());
-
-        ESM4::RuntimeReferenceState& state = *found;
+        auto* saved = findOblivionSavedReference(key);
+        if (!saved)
+            saved = &mOblivionRuntimeState->mReferences.emplace_back(
+                captureOblivionLiveReference(ptr, ESM::FormKeyResolver(mContentFiles)));
+        ESM4::RuntimeReferenceState& state = *saved;
         const auto base = state.mBase;
         auto report = [&](std::string_view result) {
             const Ptr player = getPlayerPtr();
@@ -1667,20 +1640,13 @@ namespace MWWorld
             {
                 const ESM4::Book* book = ptr.get<ESM4::Book>()->mBase;
                 const bool scroll = (book->mData.flags & ESM4::Book::Flag_Scroll) != 0;
-                if (!scroll)
-                {
-                    auto windows = MWBase::Environment::get().getWindowManager();
-                    windows->pushGuiMode(MWGui::GM_Book, ptr);
-                    if (windows->getMode() != MWGui::GM_Book)
-                        break;
-                }
+                const auto mode = scroll ? MWGui::GM_Scroll : MWGui::GM_Book;
+                auto windows = MWBase::Environment::get().getWindowManager();
+                windows->pushGuiMode(mode, ptr);
+                if (windows->getMode() != mode)
+                    break;
                 readOblivionSkillBook(ptr);
                 state.mCustomState["read"] = true;
-                if (scroll)
-                {
-                    std::string text = plainBookText(book->mText);
-                    message(book->mFullName + (text.empty() ? std::string{} : "\n\n" + text));
-                }
                 report("read");
                 break;
             }
