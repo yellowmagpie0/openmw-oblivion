@@ -79,7 +79,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 110;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 111;
 
     // v106: one Player-owned forward chair lifecycle. Clip clocks are independent
     // of actor locomotion; cold loading never replays entry or marker selection.
@@ -358,6 +358,8 @@ namespace ESM4
         // Equipment displaced on application; restore existing instances,
         // never generate these ordinary items again during removal/reload.
         std::vector<RuntimeInventoryItem> mDisplacedEquipment;
+        // v111: remaining lifetime of a scripted bound spell on the player.
+        double mRemainingSeconds = 0;
         friend bool operator==(const RuntimeBoundAbility&, const RuntimeBoundAbility&) = default;
     };
 

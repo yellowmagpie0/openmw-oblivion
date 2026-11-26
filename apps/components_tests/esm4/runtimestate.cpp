@@ -6471,6 +6471,24 @@ TEST(ESM4RuntimeState, BoundEquipment83KeepsInstanceSourcesAndDisplacedEquipment
     EXPECT_EQ(unbound.canonicalJson().find("bound_source"),std::string::npos);
 }
 
+TEST(ESM4RuntimeState, PlayerBoundSpell111PreservesTheRemainingDuration)
+{
+    auto state = makeState();
+    state.mVersion = 111;
+    const auto spell = ESM::FormKey::content("oblivion.esm", 0x66cd6);
+    ESM4::RuntimeInventoryItem item;
+    item.mBase = ESM::FormKey::content("oblivion.esm", 0x26274);
+    item.mCount = 1;
+    item.mBoundSource = ESM4::BoundItemSource{ spell, 0 };
+    state.mPlayer.mInventory.push_back(item);
+    state.mNativeBoundAbilities[state.mPlayer.mReference] = {{ spell, {}, 121.75 }};
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()), state);
+    state.mVersion = 110;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mNativeBoundAbilities.at(state.mPlayer.mReference).front().mRemainingSeconds = 0;
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()), state);
+}
+
 TEST(ESM4RuntimeState, BoundEquipment83RejectsOrphanDuplicateAndNestedOwnership)
 {
     auto state = makeState();

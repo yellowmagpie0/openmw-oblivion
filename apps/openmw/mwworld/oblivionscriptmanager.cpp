@@ -4322,6 +4322,12 @@ namespace MWWorld
         {
             const auto spell = keyFromValue(argument(0));
             const auto victim = keyFromValue(argument(1));
+            if (spell && victim && ESM4::runtimeReferenceKey(*victim) == ESM::FormKey::dynamic("player", 1)
+                && objectPtr() == mWorld.getPlayerPtr() && mWorld.updateOblivionPlayerBoundSpells(*spell, 0))
+            {
+                trace("cast source=player spell=" + spell->serialize() + " target=player bound-equipment=true");
+                return std::int64_t(0);
+            }
             if (spell && victim && mWorld.castOblivionEnvironmentalFire(objectPtr(), *spell, *victim))
             {
                 trace("cast source=" + objectKey().serialize() + " spell=" + spell->serialize()

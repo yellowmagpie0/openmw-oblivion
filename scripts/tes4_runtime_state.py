@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 110
+CURRENT_VERSION = 111
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -2854,6 +2854,10 @@ def _validate_bound_abilities(state):
                 raise RuntimeStateError("Invalid or duplicate bound ability spell")
             spells.add(spell)
             displaced = ability.get("displaced_inventory", [])
+            remaining = ability.get("remaining_seconds", 0)
+            if not math.isfinite(remaining) or remaining < 0 or (remaining and (
+                    version < 111 or actor != state["player"]["reference"])):
+                raise RuntimeStateError("Invalid bound spell timer")
             if not isinstance(displaced, list) or len(displaced) > MAX_COLLECTION or any(not isinstance(i, dict) for i in displaced):
                 raise RuntimeStateError("Invalid displaced bound equipment list")
             _validate_inventory(displaced, version, False)
@@ -3863,8 +3867,14 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             actor = reader.string(); order = tuple(actor.split(":"))
             if previous is not None and previous >= order:
                 raise RuntimeStateError("Noncanonical bound ability owners")
-            abilities = [{"spell": reader.string(), "displaced_inventory": _inventory(reader, version if version >= 97 else 82)}
-                         for _ in range(reader.count())]
+            abilities = []
+            for _ in range(reader.count()):
+                ability = {"spell": reader.string(), "displaced_inventory": _inventory(reader, version if version >= 97 else 82)}
+                if version >= 111 and actor == result["player"]["reference"]:
+                    remaining = reader.unpack("<d")
+                    if remaining != 0:
+                        ability["remaining_seconds"] = remaining
+                abilities.append(ability)
             owners.append({"actor": actor, "abilities": abilities}); previous = order
         result["native_bound_abilities"] = owners
     if version >= 86:
@@ -4832,6 +4842,8 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             for ability in owner["abilities"]:
                 writer.string(ability["spell"])
                 _write_inventory(writer, ability.get("displaced_inventory", []), version if version >= 97 else 82)
+                if version >= 111 and owner["actor"] == state["player"]["reference"]:
+                    writer.pack("<d", ability.get("remaining_seconds", 0))
     if version >= 86:
         contacts = state.get("native_trap_contacts", [])
         writer.pack("<I", len(contacts))

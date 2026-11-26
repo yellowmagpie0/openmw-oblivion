@@ -2,6 +2,8 @@
 
 Run `build-windows/Continue-After-Steffans-Briefing.cmd` to resume after speaking to Captain Steffan. The next lead is the runestone on the road below Cloud Ruler Temple at dusk.
 
+The [runestone encounter](SPIES-RUNESTONE-ENCOUNTER.md) continues from this save.
+
 From [Martin’s handoff](MARTINS-XARXES-HANDOFF.md), leave the east wing and speak to Jauffre in the courtyard. Ask about **Spies** and agree to find them. In the recorded run Steffan was in the east wing. Walk back inside, speak to him and select **Spies**. The captains’ locations depend on their schedules.
 
 ## Content and runtime checks

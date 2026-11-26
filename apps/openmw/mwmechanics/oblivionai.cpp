@@ -11,6 +11,7 @@
 #include "oblivionai.hpp"
 
 #include <components/esm4/cellcondition.hpp>
+#include <components/settings/values.hpp>
 #include "oblivioncombat.hpp"
 #include "oblivionaidestination.hpp"
 #include "oblivionaigait.hpp"
@@ -2170,6 +2171,21 @@ namespace MWMechanics
             return *mSimulationNow;
         const ESM::EpochTimeStamp stamp = mWorld.mTimeManager->getEpochTimeStamp();
         return { stamp.mYear, stamp.mMonth, stamp.mDay, stamp.mGameHour };
+    }
+
+    bool OblivionAiService::reevaluateWaitingPackage(const LiveActor& live, const ESM4::AIPackage* package) const
+    {
+        const auto& state = live.mState;
+        if (!package || package->mPackageFlags.has(ESM4::PackageFlag::MustComplete))
+            return false;
+        const bool waiting = state.mPhase == ESM4::PackagePhase::Wait;
+        if (waiting && state.mPackageType == ESM4::AIPackageType::Wander)
+            return true;
+        // A rest or a restored save can cross the end of a meal or sleep shift
+        // while the actor is still walking to the furniture, using it, or waiting.
+        return (waiting || state.mPackageType == ESM4::AIPackageType::Eat
+                   || state.mPackageType == ESM4::AIPackageType::Sleep)
+            && state.mScheduleWindow && ESM4::calendarHoursUntil(now(), state.mScheduleWindow->mEnd) <= 0;
     }
 
     MWWorld::Ptr OblivionAiService::ptrFor(const ESM::FormKey& key) const
@@ -5058,9 +5074,6 @@ namespace MWMechanics
             live.mState.mDoorCooldown = std::max(0.f, live.mState.mDoorCooldown - duration);
 
         const auto* waitingPackage = package(live.mState.mPackage);
-        const bool waitingWander = live.mState.mPhase == ESM4::PackagePhase::Wait
-            && live.mState.mPackageType == ESM4::AIPackageType::Wander && waitingPackage
-            && !waitingPackage->mPackageFlags.has(ESM4::PackageFlag::MustComplete);
         const bool waitingAmbush = reevaluateWaitingAmbush(live.mState, waitingPackage);
         const bool routeChanged = (live.mState.mPhase == ESM4::PackagePhase::Interrupted
                                       || live.mState.mPhase == ESM4::PackagePhase::Stalled)
@@ -5077,7 +5090,7 @@ namespace MWMechanics
                     || reevaluateStalledPackage(live.mState, waitingPackage)
                     || live.mState.mPhase == ESM4::PackagePhase::Complete
                     || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull())
-                    || routeChanged || waitingWander || waitingAmbush)))
+                    || routeChanged || reevaluateWaitingPackage(live, waitingPackage) || waitingAmbush)))
         {
             const bool idleWait = live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull();
             const bool restart = live.mNeedsSelection || (!idleWait && (routeChanged || doorRestored));
@@ -7197,6 +7210,25 @@ namespace MWMechanics
         live.mSelectionCheckTimer = std::max(0.f, live.mSelectionCheckTimer - std::max(0.f, duration));
         const bool wasMounted = updateMountedAttachment(actor, live, highProcess);
         const bool remainsMounted = wasMounted && !live.mState.mMount.isNull();
+        if (!highProcess && live.mAbstractPositionDirty && !remainsMounted
+            && live.mState.mPhase != ESM4::PackagePhase::Door)
+        {
+            // Actors measures the resident transform when assigning its processing tier.
+            // Hand back a low-process traveller when the simulated position enters range.
+            const auto player = mWorld.getPlayerPtr();
+            // Use the near edge of the actor fade band. A path bending back
+            // across the outer edge must not alternate tiers every few steps.
+            const float range = 0.9f * static_cast<float>(Settings::game().mActorsProcessingRange);
+            if (!player.isEmpty() && player.isInCell()
+                && distanceSquared(live.mState.mLastValidPosition.asVec3(), player.getRefData().getPosition().asVec3())
+                    <= range * range)
+            {
+                const auto* cell = mWorld.mStore.search<ESM4::Cell>(live.mState.mLastValidCell);
+                if (cell && (cell->mFormKey == cellKey(player) || (cell->isExterior() && player.getCell()->isExterior()
+                        && cell->mParent == player.getCell()->getCell()->getWorldSpace())))
+                    live.mPendingRealization = true;
+            }
+        }
         if (highProcess && live.mAbstractPositionDirty && !remainsMounted)
         {
             static_cast<void>(reconcileAbstractPosition(actor, live));
@@ -7418,9 +7450,6 @@ namespace MWMechanics
             && refreshMovingTargetRoute(live, *waitingPackage, actor);
         const bool followContextChanged = reevaluateFollowContext(waitingPackage)
             && (observedCellChanged || sourceCellChanged);
-        const bool waitingWander = live.mState.mPhase == ESM4::PackagePhase::Wait
-            && live.mState.mPackageType == ESM4::AIPackageType::Wander && waitingPackage
-            && !waitingPackage->mPackageFlags.has(ESM4::PackageFlag::MustComplete);
         const auto* interruptedPackage = package(live.mState.mPackage);
         const bool actionRestored = live.mSelectionCheckTimer <= 0.f
             && live.mState.mPhase == ESM4::PackagePhase::Interrupted
@@ -7437,7 +7466,7 @@ namespace MWMechanics
                 || (live.mCheckPackageAfterStage && canReevaluateAfterStage(live.mState, waitingPackage))
                 || reevaluateStalledPackage(live.mState, waitingPackage)
                 || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull())
-                || stalledRouteChanged || waitingWander)))
+                || stalledRouteChanged || reevaluateWaitingPackage(live, waitingPackage))))
         {
             // A terminal package remains terminal while it is still the
             // selected winner. Retry after an explicit graph change or when
@@ -8251,14 +8280,18 @@ namespace MWMechanics
                 }
 
                 const ESM4::PackagePhase previousPhase = live.mState.mPhase;
+                const auto previousPackage = live.mState.mPackage;
                 const std::size_t previousRouteCursor = live.mRouteCursor;
                 const osg::Vec3f previousPosition = live.mState.mLastValidPosition.asVec3();
                 const float previousActionTimer = live.mState.mActionTimer;
                 const float previousDuration = live.mState.mDurationRemaining;
-                const float step = remaining > 0.f
-                    ? std::min(remaining,
-                        live.mState.mPhase == ESM4::PackagePhase::Path ? 300.f : remaining)
-                    : 0.f;
+                // Choosing a package, resolving its target and acknowledging
+                // arrival consume no game hours. Spend the skipped time on
+                // travel and actions after these instantaneous transitions.
+                const bool transitionOnly = previousPhase == ESM4::PackagePhase::Select
+                    || previousPhase == ESM4::PackagePhase::Resolve || previousPhase == ESM4::PackagePhase::Arrive;
+                const float step = transitionOnly ? 0.f
+                    : std::min(remaining, previousPhase == ESM4::PackagePhase::Path ? 300.f : remaining);
 
                 executeStep(live, step);
 
@@ -8276,7 +8309,7 @@ namespace MWMechanics
                     references.reset();
                 }
 
-                if (step > 0.f)
+                if (step > 0.f && previousPackage == live.mState.mPackage)
                 {
                     remaining -= step;
                     mSimulationNow = ESM4::calendarAddHours(*mSimulationNow,

@@ -691,6 +691,7 @@ namespace MWWorld
         std::vector<ESM4::RuntimeInventoryItem> captureOblivionInventory(const Ptr& actor) const;
         void updateOblivionBoundEquipment(const Ptr& actor, bool castPower = false, bool expirePower = false);
         void advanceOblivionBoundEquipment(double seconds);
+        bool updateOblivionPlayerBoundSpells(const ESM::FormKey& cast, double elapsed);
         std::unique_ptr<InventoryStore> prepareOblivionSavedActorInventory(const Ptr& actor) const;
         std::unique_ptr<InventoryStore> prepareOblivionContainerInventory(const Ptr& container);
         bool oblivionActorItemEquipped(const Ptr& actor, const ESM::FormKey& key) const;

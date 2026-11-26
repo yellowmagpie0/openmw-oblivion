@@ -34,6 +34,83 @@ namespace MWWorld
             return code == ESM4::EFI_MYTH || code == ESM4::EFI_MYHL || boundWeaponEffect(code);
         }
 
+        ESM4::RuntimeInventoryItem boundItem(const ESMStore& store, const ESM::FormKey& spell,
+            std::uint32_t effectCode, std::uint32_t index)
+        {
+            const ESM4::EffectSetting* definition = nullptr;
+            for (const auto& candidate : store.get<ESM4::EffectSetting>())
+                if (candidate.mEffectCode == effectCode)
+                {
+                    if (definition) throw std::invalid_argument("ambiguous native bound effect code");
+                    definition = &candidate;
+                }
+            if (!definition || !definition->mData || !definition->mData->mAssociatedForm
+                || definition->mFlags & ESM4::Rec_Deleted)
+                throw std::invalid_argument("native bound effect has no winning associated item");
+            const auto& itemKey = *definition->mData->mAssociatedForm;
+            const bool weapon = boundWeaponEffect(effectCode);
+            std::optional<ESM4::InventoryItemDefinition> item;
+            if (weapon)
+            {
+                const auto* record = store.get<ESM4::Weapon>().searchStatic(itemKey);
+                if (record && !(record->mFlags & ESM4::Rec_Deleted))
+                    item = OblivionProfileServices::itemDefinition(store, ESM::RefId(record->mId));
+            }
+            else
+            {
+                const auto* record = store.get<ESM4::Armor>().searchStatic(itemKey);
+                if (record && !(record->mFlags & ESM4::Rec_Deleted))
+                    item = OblivionProfileServices::itemDefinition(store, ESM::RefId(record->mId));
+            }
+            const std::uint32_t association = definition->mData->mFlags & 0x70000u;
+            if (!item || !itemKey.isContent() || association != (weapon ? 0x10000u : 0x20000u)
+                || item->mType != (weapon ? ESM4::InventoryItemType::Weapon : ESM4::InventoryItemType::Armor)
+                || item->mSlots == 0 || item->mChooseOneSlot || item->mMaxCondition <= 0)
+                throw std::invalid_argument("native bound effect has an incompatible associated item");
+            ESM4::RuntimeInventoryItem grant;
+            grant.mBase = itemKey; grant.mCount = 1; grant.mCondition = item->mMaxCondition;
+            grant.mCharge = item->mMaxCharge; grant.mEquippedSlots = item->mSlots;
+            grant.mBoundSource = ESM4::BoundItemSource{spell, index};
+            return grant;
+        }
+
+        std::optional<ESM4::BoundEquipmentGrant> scriptedBoundGrant(const ESMStore& store,
+            const ESM::FormKey& key, unsigned int& duration)
+        {
+            const auto* spell = store.get<ESM4::Spell>().searchStatic(key);
+            if (!spell || !spell->mData || spell->mFlags & ESM4::Rec_Deleted || spell->mEffects.empty())
+                return std::nullopt;
+            duration = spell->mEffects.front().mDuration;
+            ESM4::BoundEquipmentGrant grant{ key, {} };
+            for (const auto& effect : spell->mEffects)
+            {
+                if ((!boundWeaponEffect(effect.mId) && effect.mId != ESM4::EFI_BAGA) || effect.mRange != 0
+                    || effect.mArea != 0 || effect.mScriptEffect || !duration || effect.mDuration != duration)
+                    return std::nullopt;
+                grant.mItems.push_back(boundItem(store, key, effect.mId, static_cast<std::uint32_t>(grant.mItems.size())));
+            }
+            return grant;
+        }
+
+        void publishBoundInventory(WorldModel& world, const Ptr& actor, InventoryStore& contents)
+        {
+            auto& target = actor.getClass().getInventoryStore(actor);
+            std::vector<Ptr> removed, inserted;
+            for (auto it = target.begin(); it != target.end(); ++it)
+                if (it->mRef->mWorldModel) removed.push_back(*it);
+            for (auto it = contents.begin(); it != contents.end(); ++it)
+            {
+                Ptr item = *it;
+                item.setContainerStore(&target);
+                inserted.push_back(item);
+            }
+            auto registry = world.preparePtrReplacement(removed, inserted);
+            if (!registry.isValid()) throw std::logic_error("stale bound equipment registry publication");
+            registry.commit();
+            target.swapPreparedContents(contents);
+            target.setPtr(actor);
+        }
+
         constexpr char remainingKey[] = "native.bound_power.remaining_seconds";
 
         // Select an independently castable, self-only equipment set. Mixed or competing
@@ -111,45 +188,12 @@ namespace MWWorld
                 const auto& effect = spell->mEffects[index];
                 if (!admittedBoundEffect(effect.mId) || effect.mRange != 0 || effect.mArea != 0 || effect.mScriptEffect)
                     throw std::invalid_argument("unsupported native bound ability effect class, range or area");
-                const ESM4::EffectSetting* definition = nullptr;
-                for (const auto& candidate : store.get<ESM4::EffectSetting>())
-                    if (candidate.mEffectCode == effect.mId)
-                    {
-                        if (definition) throw std::invalid_argument("ambiguous native bound effect code");
-                        definition = &candidate;
-                    }
-                if (!definition || !definition->mData || !definition->mData->mAssociatedForm
-                    || definition->mFlags & ESM4::Rec_Deleted)
-                    throw std::invalid_argument("native bound effect has no winning associated item");
-                const auto& itemKey = *definition->mData->mAssociatedForm;
-                const bool weapon = boundWeaponEffect(effect.mId);
-                std::optional<ESM4::InventoryItemDefinition> item;
-                if (weapon)
-                {
-                    const auto* record = store.get<ESM4::Weapon>().searchStatic(itemKey);
-                    if (record && !(record->mFlags & ESM4::Rec_Deleted))
-                        item = OblivionProfileServices::itemDefinition(store, ESM::RefId(record->mId));
-                }
-                else
-                {
-                    const auto* record = store.get<ESM4::Armor>().searchStatic(itemKey);
-                    if (record && !(record->mFlags & ESM4::Rec_Deleted))
-                        item = OblivionProfileServices::itemDefinition(store, ESM::RefId(record->mId));
-                }
-                const std::uint32_t association = definition->mData->mFlags & 0x70000u;
-                if (!item || !itemKey.isContent() || association != (weapon ? 0x10000u : 0x20000u)
-                    || item->mType != (weapon ? ESM4::InventoryItemType::Weapon : ESM4::InventoryItemType::Armor)
-                    || item->mSlots == 0 || item->mChooseOneSlot || item->mMaxCondition <= 0)
-                    throw std::invalid_argument("native bound effect has an incompatible associated item");
-                if (weapon && weaponSpell && id != *weaponSpell)
+                if (boundWeaponEffect(effect.mId) && weaponSpell && id != *weaponSpell)
                     continue;
-                if (occupiedSlots & item->mSlots)
+                auto grant = boundItem(store, *key, effect.mId, static_cast<std::uint32_t>(index));
+                if (occupiedSlots & grant.mEquippedSlots)
                     throw std::invalid_argument("overlapping native bound equipment abilities are not admitted");
-                occupiedSlots |= item->mSlots;
-                ESM4::RuntimeInventoryItem grant;
-                grant.mBase = itemKey; grant.mCount = 1; grant.mCondition = item->mMaxCondition;
-                grant.mCharge = item->mMaxCharge; grant.mEquippedSlots = item->mSlots;
-                grant.mBoundSource = ESM4::BoundItemSource{*key, static_cast<std::uint32_t>(index)};
+                occupiedSlots |= grant.mEquippedSlots;
                 ability.mEffects.push_back({static_cast<std::uint32_t>(index),effect.mId,std::move(grant)});
             }
             if (!ability.mEffects.empty())
@@ -166,6 +210,21 @@ namespace MWWorld
                 throw std::invalid_argument("timed bound equipment has no owner");
         for (const auto& [actor, abilities] : state.mNativeBoundAbilities)
         {
+            if (actor == state.mPlayer.mReference)
+            {
+                std::vector<ESM4::BoundEquipmentGrant> grants;
+                for (const auto& ability : abilities)
+                {
+                    unsigned int duration = 0;
+                    auto grant = scriptedBoundGrant(store, ability.mSpell, duration);
+                    if (!grant || ability.mRemainingSeconds <= 0 || ability.mRemainingSeconds > duration)
+                        throw std::invalid_argument("invalid player bound spell or duration");
+                    OblivionProfileServices::prepareActorInventory(store, resolver, ability.mDisplacedEquipment, incoming);
+                    grants.push_back(std::move(*grant));
+                }
+                ESM4::prepareBoundEquipmentUpdate(state.mPlayer.mInventory, abilities, grants);
+                continue;
+            }
             const auto reference = std::find_if(state.mReferences.begin(), state.mReferences.end(),
                 [&](const auto& ref) { return ref.mKey == actor; });
             if (reference == state.mReferences.end())
@@ -262,35 +321,91 @@ namespace MWWorld
         if (dead || expirePower) custom.erase(remainingKey);
         else if (duration && !activePower) custom[remainingKey] = double(duration);
 
-        auto& target = actor.getClass().getInventoryStore(actor);
-        std::vector<Ptr> removed, inserted;
-        for (auto it = target.begin(); it != target.end(); ++it)
-            if (it->mRef->mWorldModel) removed.push_back(*it);
-        for (auto it = contents->begin(); it != contents->end(); ++it)
-        {
-            Ptr item = *it;
-            item.setContainerStore(&target);
-            inserted.push_back(item);
-        }
-        auto registry = mWorldModel.preparePtrReplacement(removed, inserted);
-        if (!registry.isValid()) throw std::logic_error("stale bound equipment registry publication");
-        registry.commit();
-        target.swapPreparedContents(*contents);
-        target.setPtr(actor);
+        publishBoundInventory(mWorldModel, actor, *contents);
         reference->mInventory.swap(update.mInventory);
         reference->mCustomState.swap(custom);
         state.mNativeBoundAbilities.swap(abilities);
         if (initial) mOblivionRuntimeState.swap(initial);
         MWClass::ESM4Npc::refreshNativeEquipment(actor);
-        target.notifyPreparedEquipmentChange();
+        actor.getClass().getInventoryStore(actor).notifyPreparedEquipmentChange();
+    }
+
+    bool World::updateOblivionPlayerBoundSpells(const ESM::FormKey& cast, double elapsed)
+    {
+        if (!mOblivionRuntimeState)
+            return false;
+        auto& state = *mOblivionRuntimeState;
+        const auto key = state.mPlayer.mReference;
+        auto& owners = state.mNativeBoundAbilities;
+        auto active = owners.find(key);
+        if (cast.isNull() && active == owners.end())
+            return false;
+        if (cast.isNull() && std::all_of(active->second.begin(), active->second.end(),
+                [&](const auto& entry) { return entry.mRemainingSeconds > elapsed; }))
+        {
+            for (auto& entry : active->second)
+                entry.mRemainingSeconds -= elapsed;
+            return true;
+        }
+
+        std::vector<ESM4::BoundEquipmentGrant> grants;
+        std::map<ESM::FormKey, double> timers;
+        std::uint32_t replacedSlots = 0;
+        if (!cast.isNull())
+        {
+            unsigned int duration = 0;
+            auto grant = scriptedBoundGrant(mStore, cast, duration);
+            if (!grant)
+                return false;
+            for (const auto& item : grant->mItems)
+                replacedSlots |= item.mEquippedSlots;
+            grants.push_back(std::move(*grant));
+            timers.emplace(cast, duration);
+        }
+        const std::vector<ESM4::RuntimeBoundAbility> empty;
+        const auto& old = active == owners.end() ? empty : active->second;
+        for (const auto& entry : old)
+        {
+            if (entry.mRemainingSeconds <= elapsed || entry.mSpell == cast)
+                continue;
+            unsigned int duration = 0;
+            auto grant = scriptedBoundGrant(mStore, entry.mSpell, duration);
+            if (!grant)
+                throw std::invalid_argument("active player bound spell is missing its grant");
+            if (std::any_of(grant->mItems.begin(), grant->mItems.end(),
+                    [&](const auto& item) { return (item.mEquippedSlots & replacedSlots) != 0; }))
+                continue;
+            timers.emplace(entry.mSpell, entry.mRemainingSeconds - elapsed);
+            grants.push_back(std::move(*grant));
+        }
+
+        const auto player = getPlayerPtr();
+        auto update = ESM4::prepareBoundEquipmentUpdate(captureOblivionInventory(player), old, grants);
+        for (auto& entry : update.mAbilities)
+            entry.mRemainingSeconds = timers.at(entry.mSpell);
+        auto contents = OblivionProfileServices::stageActorInventory(OblivionProfileServices::prepareActorInventory(
+            mStore, ESM::FormKeyResolver(mContentFiles), update.mInventory));
+        auto next = owners;
+        if (update.mAbilities.empty())
+            next.erase(key);
+        else
+            next.insert_or_assign(key, std::move(update.mAbilities));
+        publishBoundInventory(mWorldModel, player, *contents);
+        state.mPlayer.mInventory.swap(update.mInventory);
+        owners.swap(next);
+        player.getClass().getInventoryStore(player).notifyPreparedEquipmentChange();
+        return true;
     }
 
     void World::advanceOblivionBoundEquipment(double seconds)
     {
         if (!mOblivionRuntimeState || !mOblivionCombat) return;
+        updateOblivionPlayerBoundSpells({}, seconds);
         std::vector<ESM::FormKey> remove;
         for (const auto& [actor, abilities] : mOblivionRuntimeState->mNativeBoundAbilities)
         {
+            if (actor == mOblivionRuntimeState->mPlayer.mReference)
+                continue;
             if (const auto* life = mOblivionCombat->findActorLife(actor);
                 life && life->mPhase == ESM4::ActorLifePhase::Dead)
                 remove.push_back(actor);

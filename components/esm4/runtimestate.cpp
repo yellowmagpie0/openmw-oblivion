@@ -2941,6 +2941,9 @@ namespace ESM4
                     || !spells.insert(ability.mSpell).second)
                     throw std::runtime_error("Invalid or duplicate bound ability spell");
                 validateInventory(ability.mDisplacedEquipment, "displaced bound equipment", false);
+                if (!std::isfinite(ability.mRemainingSeconds) || ability.mRemainingSeconds < 0
+                    || (ability.mRemainingSeconds > 0 && (mVersion < 111 || actor != mPlayer.mReference)))
+                    throw std::runtime_error("Invalid bound spell timer");
                 for (const auto& item : ability.mDisplacedEquipment)
                     if (item.mBoundSource || item.mCount != 1 || !item.mEquippedSlots)
                         throw std::runtime_error("Invalid displaced bound equipment instance");
@@ -4361,6 +4364,8 @@ namespace ESM4
                 {
                     writeKey(writer, ability.mSpell);
                     writeInventory(writer, ability.mDisplacedEquipment, mVersion >= 97 ? mVersion : 82);
+                    if (mVersion >= 111 && actor == mPlayer.mReference)
+                        writer.floating(ability.mRemainingSeconds);
                 }
             }
         }
@@ -5920,6 +5925,8 @@ namespace ESM4
                 {
                     const auto spell = readKey(reader);
                     abilities.push_back({spell, readInventory(reader, result.mVersion >= 97 ? result.mVersion : 82)});
+                    if (result.mVersion >= 111 && actor == result.mPlayer.mReference)
+                        abilities.back().mRemainingSeconds = reader.float64();
                 }
                 result.mNativeBoundAbilities.emplace(actor, std::move(abilities));
             }
@@ -7711,6 +7718,11 @@ namespace ESM4
                     stream << "{\"spell\":\"" << escapeJson(abilities[i].mSpell.serialize())
                         << "\",\"displaced_inventory\":";
                     writeJsonInventory(stream, abilities[i].mDisplacedEquipment, mVersion >= 97 ? mVersion : 82);
+                    if (abilities[i].mRemainingSeconds > 0)
+                    {
+                        stream << ",\"remaining_seconds\":";
+                        writeJsonDouble(stream, abilities[i].mRemainingSeconds);
+                    }
                     stream << '}';
                 }
                 stream << "]}";
