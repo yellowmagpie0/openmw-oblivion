@@ -374,6 +374,8 @@ namespace MWMechanics
         void invalidateOverlayRoutes(const std::set<ESM::FormKey>& changedPathgrids);
         float unloadedMovementSpeed(const LiveActor& live) const;
         float travelArrivalRadius(const LiveActor& live) const;
+        osg::Vec3f clearDiningPosition(const MWWorld::Ptr& actor, const LiveActor& live,
+            const osg::Vec3f& position) const;
         bool refreshMovingTargetRoute(LiveActor& live, const ESM4::AIPackage& current,
             const MWWorld::Ptr& residentActor = {});
         bool shouldRunPackage(const LiveActor& live, const ESM4::AIPackage* current,

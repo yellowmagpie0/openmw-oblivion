@@ -1210,7 +1210,8 @@ namespace MWRender
         auto* state = mInsert->getOrCreateStateSet();
         if (!state->getUniform("nifEmbeddedLightAmbient"))
         {
-            mDialogueAmbient = new osg::Uniform("nifEmbeddedLightAmbient", osg::Vec4f(0.65f, 0.61f, 0.57f, 0.f));
+            // This fill adds to the room lights and the head mesh's own lighting.
+            mDialogueAmbient = new osg::Uniform("nifEmbeddedLightAmbient", osg::Vec4f(0.22f, 0.21f, 0.20f, 0.f));
             state->addUniform(mDialogueAmbient, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
         }
     }

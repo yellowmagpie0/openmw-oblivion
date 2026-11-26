@@ -241,6 +241,20 @@ namespace
             key(1), destination, key(1), destination, 64.f, AIPackageType::Travel, -1.f));
     }
 
+    TEST(OblivionAiTest, DinersCanStopWithinTheirSharedRoomOnTheSameFloor)
+    {
+        const osg::Vec3f marker(121, 187, -175);
+        const auto reached = [&](const ESM::FormKey& cell, const osg::Vec3f& offset, float radius) {
+            return MWMechanics::oblivionDestinationReached(cell, marker + offset, key(1), marker,
+                64.f, AIPackageType::Eat, radius);
+        };
+        EXPECT_TRUE(reached(key(1), { 300, 400, 5 }, 500));
+        EXPECT_FALSE(reached(key(1), { 301, 400, 5 }, 500));
+        EXPECT_FALSE(reached(key(1), { 0, 0, 128 }, 500));
+        EXPECT_FALSE(reached(key(2), {}, 500));
+        EXPECT_FALSE(reached(key(1), { 150, 0, 0 }, 0));
+    }
+
     TEST(OblivionAiTest, TravelArrivalSeparatesStandingSlotFromVerticalMarkerOffset)
     {
         const osg::Vec3f destination(230.50577f, -91.31252f, -32.12009f);

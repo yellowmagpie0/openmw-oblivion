@@ -4785,6 +4785,12 @@ namespace MWMechanics
 
     float OblivionAiService::travelArrivalRadius(const LiveActor& live) const
     {
+        if (live.mState.mPackageType == ESM4::AIPackageType::Eat)
+        {
+            const auto* current = package(live.mState.mPackage);
+            return current && current->mLocationData.mKind == ESM4::PackageLocationKind::NearReference
+                ? static_cast<float>(std::max(0, current->mLocationData.mRadius)) : 0.f;
+        }
         if (live.mState.mPackageType != ESM4::AIPackageType::Travel
             && live.mState.mPackageType != ESM4::AIPackageType::UseItemAt)
             return 0.f;
@@ -4802,6 +4808,38 @@ namespace MWMechanics
         }
         return current && live.mState.mPackageType == ESM4::AIPackageType::Travel
             ? static_cast<float>(current->mLocationData.mRadius) : 0.f;
+    }
+
+    osg::Vec3f OblivionAiService::clearDiningPosition(const MWWorld::Ptr& actor, const LiveActor& live,
+        const osg::Vec3f& position) const
+    {
+        // Offscreen diners can share a pathgrid node. Keep the package and its
+        // action state when placing them back in the occupied dining area.
+        if (live.mState.mPackageType != ESM4::AIPackageType::Eat || !live.mState.mHasDestination
+            || actor.getType() != ESM::REC_NPC_4 || !mWorld.mPhysics)
+            return position;
+        const float radius = travelArrivalRadius(live);
+        const auto inArea = [&](const osg::Vec3f& feet) {
+            return oblivionDestinationReached(live.mState.mCell, feet, live.mState.mDestinationCell,
+                live.mState.mDestinationPosition.asVec3(), sArrivalTolerance, ESM4::AIPackageType::Eat, radius);
+        };
+        if (radius <= 0.f || !inArea(position))
+            return position;
+        const auto clear = mWorld.findClearDoorArrival(actor, position);
+        if (!clear || *clear == position || !inArea(*clear))
+            return position;
+        // Placement adjusts a resident transform. Cell transitions belong to
+        // the package route and cannot run inside the actor update iteration.
+        const auto* cell = mWorld.mStore.search<ESM4::Cell>(live.mState.mCell);
+        if (!cell)
+            return position;
+        if (cell->isExterior())
+        {
+            const auto grid = ESM::positionToExteriorCellLocation(clear->x(), clear->y(), cell->mParent);
+            if (grid.mX != cell->mX || grid.mY != cell->mY)
+                return position;
+        }
+        return *clear;
     }
 
     float OblivionAiService::unloadedMovementSpeed(const LiveActor& live) const
@@ -4892,7 +4930,7 @@ namespace MWMechanics
         if ((live.mState.mPackageType == ESM4::AIPackageType::Travel
                 || live.mState.mPackageType == ESM4::AIPackageType::Sleep
                 || live.mState.mPackageType == ESM4::AIPackageType::Follow
-                || (live.mState.mPackageType == ESM4::AIPackageType::UseItemAt && radius > 0.f))
+                || radius > 0.f)
             && oblivionDestinationReached(live.mState.mCell, live.mState.mLastValidPosition.asVec3(),
                 live.mDestinationCell, *live.mDestination, sArrivalTolerance, live.mState.mPackageType, radius))
         {
@@ -6213,6 +6251,13 @@ namespace MWMechanics
                 const osg::Vec3f destination(live.mState.mDestinationPosition.pos[0],
                     live.mState.mDestinationPosition.pos[1], live.mState.mDestinationPosition.pos[2]);
                 valid = distanceSquared(abstractPosition, destination) <= validationDistance;
+                // A diner can finish the offscreen route at the edge of an
+                // authored room. Validate that arrival against the same area
+                // as the movement executor when promoting it to the scene.
+                if (!valid && live.mState.mPackageType == ESM4::AIPackageType::Eat)
+                    valid = oblivionDestinationReached(live.mState.mCell, abstractPosition,
+                        live.mState.mDestinationCell, destination, sArrivalTolerance,
+                        live.mState.mPackageType, travelArrivalRadius(live));
             }
             else if (!live.mState.mPathgrid.isNull())
             {
@@ -6285,6 +6330,8 @@ namespace MWMechanics
                     logEvent("door-arrival-clearance", live,
                         "door=" + live.mState.mLastTransitionDoor.serialize());
             }
+            if (!doorLanding && mWorld.mWorldScene && mWorld.mWorldScene->isCellActive(destinationCell))
+                position = clearDiningPosition(actor, live, position);
             const MWWorld::Ptr moved = mWorld.moveObject(actor, &destinationCell, position, true, false);
             if (moved.isEmpty())
                 throw std::runtime_error("moveObject returned an empty actor pointer");
@@ -6510,7 +6557,7 @@ namespace MWMechanics
         if ((live.mState.mPackageType == ESM4::AIPackageType::Travel
                 || live.mState.mPackageType == ESM4::AIPackageType::Sleep
                 || live.mState.mPackageType == ESM4::AIPackageType::Follow
-                || (live.mState.mPackageType == ESM4::AIPackageType::UseItemAt && radius > 0.f))
+                || radius > 0.f)
             && oblivionDestinationReached(live.mState.mCell, position,
                 live.mDestinationCell.isNull() ? live.mState.mCell : live.mDestinationCell,
                 destination, sArrivalTolerance, live.mState.mPackageType, radius))
@@ -7225,10 +7272,19 @@ namespace MWMechanics
                     > sPhysicalDoorReleaseDistance * sPhysicalDoorReleaseDistance)
                 releasePhysicalDoorCollision(actor, live);
         }
-        const osg::Vec3f observedPosition = actor.getRefData().getPosition().asVec3();
         if (highProcess && (!live.mHasObservedPosition || live.mState.mTier != ESM4::ProcessTier::High)
             && actor.getType() == ESM::REC_NPC_4 && !actor.getClass().getCreatureStats(actor).isDead())
+        {
             equipMissingOutfit(actor, mWorld.mStore);
+            if (!live.mAbstractPositionDirty && cellKey(actor) == live.mState.mCell)
+            {
+                const auto feet = actor.getRefData().getPosition().asVec3();
+                const auto clear = clearDiningPosition(actor, live, feet);
+                if (clear != feet)
+                    mWorld.moveObject(actor, clear);
+            }
+        }
+        const osg::Vec3f observedPosition = actor.getRefData().getPosition().asVec3();
         const bool madeProgress = !live.mHasObservedPosition
             || (observedPosition - live.mLastObservedPosition).length2() > 0.25f;
         const bool observedCellChanged = live.mHasObservedPosition && live.mLastObservedCell != cellKey(actor);

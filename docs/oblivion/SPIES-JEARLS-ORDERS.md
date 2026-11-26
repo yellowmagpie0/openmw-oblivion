@@ -12,6 +12,8 @@ The first basement visit exposed a script failure when the saved reference cache
 
 ## Continuation
 
+The [report to Jauffre](SPIES-REPORT-TO-JAUFFRE.md) continues from the basement checkpoint.
+
 Run `build-windows/Continue-After-Finding-Jearls-Orders.cmd`. The checkpoint is `build-windows/temple-player-ready/checkpoints/Spies-Jearls-Orders.omwsave`. It leaves the player in the searched basement with the document.
 
 The approach from the runestone uses assisted walking and ordinary door activations. The final dialogue replay resumes that walk in the barracks from `build-windows/sponsor-burd01/BeforeBurd.omwsave`. Burd’s permission is captured in `build-windows/sponsor-burd-final02/SearchAuthorized.png`. The basement replay in `build-windows/sponsor-burd-basement-final` starts from the subsequent barracks save. Its `ReadOrders.png` and `OrdersSignature.png` captures show both ends of the scroll. The continuation uses stock controls. Its save SHA-256 is `33343a33ac6edeb4ac1e21b7be696823077c082482cfa13d9d271c316ec28c4d`.
