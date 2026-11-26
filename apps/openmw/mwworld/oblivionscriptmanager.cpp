@@ -2131,6 +2131,37 @@ namespace MWWorld
         return mWorld.findOblivionSavedReference(key);
     }
 
+    void OblivionScriptManager::activateFromScript(const ESM::FormKey& key, const Ptr& target, const Ptr& activator)
+    {
+        const bool inserted = mSuppressedActivations.insert(key).second;
+        try
+        {
+            if (auto action = target.getClass().activate(target, activator))
+                action->execute(activator, true);
+        }
+        catch (...)
+        {
+            if (inserted) mSuppressedActivations.erase(key);
+            throw;
+        }
+        if (inserted) mSuppressedActivations.erase(key);
+    }
+
+    bool OblivionScriptManager::isUnconscious(const ESM::FormKey& actor) const
+    {
+        if (!mWorld.mOblivionRuntimeState) return false;
+        if (actor == ESM::FormKey::dynamic("player", 1))
+        {
+            const auto& values = mWorld.mOblivionRuntimeState->mPlayer.mActorValues;
+            const auto found = values.find("obscript.unconscious");
+            return found != values.end() && found->second != 0;
+        }
+        const auto* state = referenceState(actor);
+        if (!state) return false;
+        const auto found = state->mCustomState.find("obscript.unconscious");
+        return found != state->mCustomState.end() && found->second == ESM4::RuntimeValue(true);
+    }
+
     ObScript::Value OblivionScriptManager::resolveName(
         std::string_view name, const ObScript::RuntimeContext& context)
     {
@@ -2606,14 +2637,7 @@ namespace MWWorld
                 trace("activate-script ref=" + key.serialize() + " activator=" + activator.serialize());
                 return std::int64_t(0);
             }
-            if (!ptr.isEmpty())
-            {
-                mSuppressedActivations.insert(key);
-                std::unique_ptr<Action> action = ptr.getClass().activate(ptr, actor);
-                if (action)
-                    action->execute(actor, true);
-                mSuppressedActivations.erase(key);
-            }
+            activateFromScript(key, ptr, actor);
             trace("activate-default ref=" + key.serialize());
             return std::int64_t(0);
         }
@@ -3410,6 +3434,27 @@ namespace MWWorld
             trace(name + " actor=" + objectKey().serialize() + " threat=" + threat->serialize()
                 + " applied=" + (applied ? "true" : "false"));
             return std::int64_t(applied);
+        }
+        if (name == "getunconscious")
+            return std::int64_t(isUnconscious(objectKey()));
+        if (name == "setunconscious")
+        {
+            const auto key = objectKey();
+            const bool value = ObScript::asInteger(argument(0)) != 0;
+            if (key == ESM::FormKey::dynamic("player", 1))
+            {
+                if (!mWorld.mOblivionRuntimeState)
+                    mWorld.mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(mWorld.captureOblivionRuntimeState());
+                mWorld.mOblivionRuntimeState->mPlayer.mActorValues["obscript.unconscious"] = value;
+            }
+            else if (const auto base = mWorld.getOblivionReferenceBaseKey(key);
+                base && (mStore.search<ESM4::Npc>(*base) || mStore.search<ESM4::Creature>(*base)))
+            {
+                if (auto* state = referenceState(key))
+                    state->mCustomState["obscript.unconscious"] = value;
+            }
+            trace(name + " actor=" + key.serialize() + " value=" + (value ? "true" : "false"));
+            return std::int64_t(0);
         }
         if (name == "setrestrained")
         {
@@ -4308,8 +4353,7 @@ namespace MWWorld
         // retain deterministic control-flow compatibility for M7 scripts.
         static const std::set<std::string, std::less<>> deferred{
             "cast", "addspell", "removespell",
-            "modfactionrank",
-            "setunconscious" };
+            "modfactionrank" };
         if (deferred.contains(name))
         {
             trace("deferred command=" + name + " unit=" + context.mUnit.serialize());
@@ -4631,12 +4675,7 @@ namespace MWWorld
             const Ptr target = ptrFor(targetKey);
             const Ptr actor = ptrFor(actorKey);
             if (!dispatchObjectEvent(targetKey, "onactivate", actorKey) && !target.isEmpty())
-            {
-                mSuppressedActivations.insert(targetKey);
-                std::unique_ptr<Action> action = target.getClass().activate(target, actor);
-                if (action) action->execute(actor, true);
-                mSuppressedActivations.erase(targetKey);
-            }
+                activateFromScript(targetKey, target, actor);
         }
         else if (kind == "event" && event.mWords.size() >= 3)
             dispatchObjectEvent(key(1), event.mWords[2], event.mWords.size() >= 4 ? key(3) : ESM::FormKey{});

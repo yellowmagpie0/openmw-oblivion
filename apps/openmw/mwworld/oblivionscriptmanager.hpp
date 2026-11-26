@@ -103,6 +103,8 @@ namespace MWWorld
         void markTalkedToPlayer(const ESM::FormKey& actor);
         std::uint32_t playerMiscStat(std::int64_t index) const;
         bool playerIsMurderer() const;
+        bool isUnconscious(const ESM::FormKey& actor) const;
+        bool isScriptActivating(const ESM::FormKey& key) const { return mSuppressedActivations.contains(key); }
         std::int64_t playerInfamy() const;
         // Admission/classification belongs to the caller, as at Original600949.
         void notifyPlayerMurder();
@@ -248,6 +250,7 @@ namespace MWWorld
         std::filesystem::path mShaderReportPath;
         std::uint64_t mSequence = 0;
         std::uint32_t mDepth = 0;
+        void activateFromScript(const ESM::FormKey& key, const Ptr& target, const Ptr& activator);
         double mElapsed = 0;
         std::size_t mCompiledUnits = 0;
         std::size_t mCompilationFailures = 0;

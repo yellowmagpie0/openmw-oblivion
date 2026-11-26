@@ -2497,6 +2497,7 @@ namespace MWWorld
                         || reference.mCustomState.contains("native.fire.spell")
                         || reference.mCustomState.contains("native.charm.spell")
                         || reference.mCustomState.contains("native.package.lock_projection_pending")
+                        || reference.mCustomState.contains("obscript.unconscious")
                         || reference.mCustomState.contains("native.levelled_actor.level"))
                     && !captured.contains(reference.mKey))
                     state.mReferences.push_back(reference);
@@ -3944,7 +3945,10 @@ namespace MWWorld
         // Initial restore is observational. A pending contact must retain its
         // exact saved owner until the first advancing frame applies the force.
         if (pendingHit && duration == 0) return true;
-        const bool incapacitated = dead || ESM4::requiresIncapacitation(fatigue, paralysis != 0,
+        // A sleeper already has an authored full-body furniture pose.
+        const bool scriptDown = mOblivionScriptManager && mOblivionScriptManager->isUnconscious(key)
+            && getOblivionSitting(key, actor) != 1;
+        const bool incapacitated = dead || scriptDown || ESM4::requiresIncapacitation(fatigue, paralysis != 0,
             life->mPhase == ESM4::ActorLifePhase::EssentialUnconscious);
         if (!raw && !incapacitated) return false;
         const auto previous = service.actorRagdoll(key);
@@ -4210,7 +4214,8 @@ namespace MWWorld
         const auto savedGraph = service.getUpPlayback(key);
         if (duration == 0 && !savedGraph) return false;
         const float fatigue = actor == getPlayerPtr() ? service.getPlayerValue(10) : service.getNonPlayerValue(actor, 10);
-        const bool incapacitated = ESM4::requiresIncapacitation(fatigue, service.getProcessParalysis(key) != 0,
+        const bool incapacitated = (mOblivionScriptManager && mOblivionScriptManager->isUnconscious(key))
+            || ESM4::requiresIncapacitation(fatigue, service.getProcessParalysis(key) != 0,
             life->mPhase == ESM4::ActorLifePhase::EssentialUnconscious);
         MWMechanics::OblivionCombatService::GetUpPlaybackUpdate next;
         next.mPlayback = savedGraph.value_or(ESM4::RuntimeGetUpPlayback{});

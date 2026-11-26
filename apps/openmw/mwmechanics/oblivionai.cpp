@@ -1989,7 +1989,7 @@ namespace MWMechanics
                 return value(0.0);
             }
             if (function == "GetCurrentAIPackage" || function == "GetCurrentAIProcedure"
-                || function == "GetIsCurrentPackage" || function == "GetRestrained" || function == "IsRidingHorse"
+                || function == "GetIsCurrentPackage" || function == "GetRestrained" || function == "GetUnconscious" || function == "IsRidingHorse"
                 || function == "GetSleeping" || function == "GetSitting")
             {
                 const ESM4::RuntimeActorAiState* ai = subjectState();
@@ -2007,6 +2007,8 @@ namespace MWMechanics
                     return value(!controller && ai != nullptr && !parameterKey.isNull() && ai->mPackage == parameterKey ? 1.0 : 0.0);
                 if (function == "GetRestrained")
                     return value(ai != nullptr && ai->mRestrained ? 1.0 : 0.0);
+                if (function == "GetUnconscious")
+                    return value(mWorld.getOblivionScriptManager() && mWorld.getOblivionScriptManager()->isUnconscious(subjectKey));
                 if (function == "GetSitting")
                     return value(mWorld.getOblivionSitting(subjectKey, loadedPtrFor(subjectKey)));
                 const bool sleeping = ai != nullptr && ai->mPackageType == ESM4::AIPackageType::Sleep
@@ -2864,6 +2866,8 @@ namespace MWMechanics
             }
             if (function == "GetIsAlerted")
                 return value(mWorld.getOblivionAlerted(actorKey(subjectPtr)) ? 1.0 : 0.0);
+            if (function == "GetUnconscious")
+                return value(mWorld.getOblivionScriptManager() && mWorld.getOblivionScriptManager()->isUnconscious(actorKey(subjectPtr)));
             if (function == "GetRestrained")
                 return value(currentAi.mRestrained ? 1.0 : 0.0);
             if (function == "IsMoving")
@@ -3399,7 +3403,10 @@ namespace MWMechanics
             || record.mPackageType == ESM4::AIPackageType::Accompany
             || record.mPackageType == ESM4::AIPackageType::Pursue;
         const bool escort = record.mPackageType == ESM4::AIPackageType::Escort;
-        const bool flee = record.mPackageType == ESM4::AIPackageType::FleeNotCombat;
+        // A target names a threat to flee from. Location-only flee packages
+        // instead name a place of safety and use the normal location route.
+        const bool flee = record.mPackageType == ESM4::AIPackageType::FleeNotCombat
+            && record.mTargetData.mKind != ESM4::PackageTargetKind::None;
         const bool targetFallback = record.mPackageType == ESM4::AIPackageType::Find
             || record.mPackageType == ESM4::AIPackageType::Ambush;
         std::optional<StableLocation> target;
@@ -3823,7 +3830,8 @@ namespace MWMechanics
             || record.mPackageType == ESM4::AIPackageType::Accompany
             || record.mPackageType == ESM4::AIPackageType::Pursue;
         const bool escort = record.mPackageType == ESM4::AIPackageType::Escort;
-        const bool flee = record.mPackageType == ESM4::AIPackageType::FleeNotCombat;
+        const bool flee = record.mPackageType == ESM4::AIPackageType::FleeNotCombat
+            && record.mTargetData.mKind != ESM4::PackageTargetKind::None;
         const bool targetFallback = record.mPackageType == ESM4::AIPackageType::Find
             || record.mPackageType == ESM4::AIPackageType::Ambush;
         std::optional<osg::Vec3f> targetPosition;
@@ -5421,6 +5429,36 @@ namespace MWMechanics
                         .value_or(false);
                 if (!enabled)
                     continue;
+                // An unloaded sleeper can already be due at their own bed when
+                // the player enters its cell. Realize the assigned furniture
+                // if intervening locked doors prevented abstract travel.
+                if (live.mState.mPackageType == ESM4::AIPackageType::Sleep
+                    && live.mState.mCell != live.mState.mDestinationCell && live.mState.mHasDestination
+                    && visibleCells.contains(live.mState.mDestinationCell) && !visibleCells.contains(live.mState.mCell)
+                    && live.mState.mInterruptionReason == "route-unavailable")
+                {
+                    const auto* pack = package(live.mState.mPackage);
+                    const auto bed = mUnloadedLocationByReference.find(live.mState.mTarget);
+                    if (pack && pack->mLocationData.mKind == ESM4::PackageLocationKind::NearReference
+                        && pack->mLocationData.mRadius == 0 && pack->mLocationData.mReferenceKey == live.mState.mTarget
+                        && bed != mUnloadedLocationByReference.end())
+                    {
+                        const auto& location = mUnloadedLocations[bed->second];
+                        if (location.mType == ESM::REC_FURN4 && location.mOwner == live.mState.mBase
+                            && location.mCell == live.mState.mDestinationCell
+                            && mWorld.getOblivionReferenceEnabled(location.mReference, mLowProcessReferenceIndex).value_or(false))
+                        {
+                            live.mRoute.clear();
+                            live.mState.mCell = live.mState.mLastValidCell = location.mCell;
+                            live.mState.mLastValidPosition = live.mState.mDestinationPosition;
+                            live.mAbstractPositionDirty = true;
+                            live.mPendingRealization = true;
+                            live.mState.mInterruptionReason.clear();
+                            setPhase(live, ESM4::PackagePhase::Act);
+                            continue;
+                        }
+                    }
+                }
                 live.mState.mTier = ESM4::ProcessTier::Low;
                 if (!std::isfinite(live.mState.mNextLowProcessTick)
                     || live.mState.mNextLowProcessTick < 0.f)
@@ -7132,6 +7170,11 @@ namespace MWMechanics
         }
         if (live.mNeedsSelection)
             select(actor, live);
+        if (const auto* scripts = mWorld.getOblivionScriptManager(); scripts && scripts->isUnconscious(live.mState.mActor))
+        {
+            stopMovement(actor);
+            return false;
+        }
         if (live.mState.mRestrained)
         {
             stopMovement(actor);

@@ -43,6 +43,7 @@
 #include "../mwworld/oblivioninteraction.hpp"
 #include "../mwworld/oblivionlevelled.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
+#include "../mwworld/oblivionscriptmanager.hpp"
 #include "../mwworld/obliviontrespass.hpp"
 #include "../mwworld/worldimp.hpp"
 
@@ -609,8 +610,13 @@ namespace MWClass
                 if (actor == world->getPlayerPtr())
                     MWBase::Environment::get().getWindowManager()->messageBox("Key used");
             }
-            // Keep ordinary key use first; the exit exemption preserves the lock.
-            else if (!MWWorld::oblivionPlayerHasDoorExitPermission(*world, ptr, actor))
+            // Scripts can send a named NPC through their own locked portal.
+            // Keep the lock for subsequent activators.
+            else if (const auto* scripts = world->getOblivionScriptManager();
+                !(ptr.getCellRef().getTeleport() && scripts && scripts->isScriptActivating(ptr.getCellRef().getFormKey())
+                    && !actor.isEmpty() && actor != world->getPlayerPtr() && !ptr.getCellRef().getOwner().empty()
+                    && ptr.getCellRef().getOwner() == actor.getCellRef().getRefId())
+                && !MWWorld::oblivionPlayerHasDoorExitPermission(*world, ptr, actor))
             {
                 Log(Debug::Info) << "M5 door activation: result=locked ref="
                                  << ptr.getCellRef().getFormKey().serialize() << " level="

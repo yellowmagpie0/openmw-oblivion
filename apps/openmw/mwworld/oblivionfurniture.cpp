@@ -43,6 +43,10 @@ namespace MWWorld
             "chair_rightenter.kf", "dynamicidle_sit.kf", "chair_rightexit.kf"};
         constexpr std::array<std::string_view, 3> BackClips{
             "chair_backenter.kf", "dynamicidle_sit.kf", "chair_backexit.kf"};
+        constexpr std::array<std::string_view, 3> BedLeftClips{
+            "bedleft_enter.kf", "dynamicidle_sleep.kf", "bedleft_exit.kf"};
+        constexpr std::array<std::string_view, 3> BedRightClips{
+            "bedright_enter.kf", "dynamicidle_sleep.kf", "bedright_exit.kf"};
         std::string hexHash(std::string_view bytes)
         {
             constexpr char digits[] = "0123456789abcdef";
@@ -72,7 +76,8 @@ namespace MWWorld
                 return nullptr;
             const auto* ref = store.search<ESM4::Reference>(pack->mLocationData.mReferenceKey);
             const auto* chair = ref ? store.search<ESM4::Furniture>(ref->mBaseKey) : nullptr;
-            return chair && (chair->mActiveMarkerFlags & 0x40000000u) ? ref : nullptr;
+            const auto flag = pack->mPackageType == ESM4::AIPackageType::Sleep ? 0x80000000u : 0x40000000u;
+            return chair && (chair->mActiveMarkerFlags & flag) ? ref : nullptr;
         }
     }
 
@@ -134,10 +139,15 @@ namespace MWWorld
     {
         if (seat.mPhase < 2 || seat.mPhase > 4) throw std::invalid_argument("Invalid Player furniture phase");
         const auto* base = mStore.search<ESM4::Furniture>(seat.mBase);
-        if (!base || (base->mFlags & ESM4::Rec_Deleted) || !(base->mActiveMarkerFlags & 0x40000000u)
-            || (base->mActiveMarkerFlags & 0x80000000u) || seat.mMarker >= 30
+        const auto type = base ? (base->mActiveMarkerFlags & 0xc0000000u) : 0u;
+        const bool bed = type == 0x80000000u;
+        // Saved furniture identities belong to the player's chair. NPC beds
+        // are reconstructed from their sleep package on every scene load.
+        if (!base || (base->mFlags & ESM4::Rec_Deleted)
+            || (type != 0x40000000u && !(bed && !verifyHashes))
+            || seat.mMarker >= 30
             || !(base->mActiveMarkerFlags & (1u << seat.mMarker)))
-            throw std::invalid_argument("Player furniture requires a winning active sit marker");
+            throw std::invalid_argument("Furniture requires a supported active marker");
         const auto model = Misc::ResourceHelpers::correctMeshPath(base->mModel.getNormalized());
         const auto file = mResourceSystem->getNifFileManager()->get(model);
         const Nif::FileView view(*file);
@@ -154,10 +164,10 @@ namespace MWWorld
         // PositionRef selects the entrance clip. The NIF stores its orientation
         // separately in thousandths of a radian. A rotated stool uses the same
         // forward entry as a chair with a different local heading.
-        const bool forward = marker.mPositionRef == 13;
-        const bool left = marker.mPositionRef == 11;
-        const bool right = marker.mPositionRef == 12;
-        const bool back = marker.mPositionRef == 14;
+        const bool forward = !bed && marker.mPositionRef == 13;
+        const bool left = marker.mPositionRef == (bed ? 1 : 11);
+        const bool right = marker.mPositionRef == (bed ? 2 : 12);
+        const bool back = !bed && marker.mPositionRef == 14;
         if ((!forward && !left && !right && !back) || marker.mOrientation > 6284
             || seat.mPlacement.rot[0] != 0 || seat.mPlacement.rot[1] != 0)
             throw std::invalid_argument("Unsupported chair entry marker");
@@ -172,7 +182,8 @@ namespace MWWorld
         result->mEntryYaw = std::remainder(std::abs(entry - quarterTurns * osg::PI_2f) < 0.001f
             ? quarterTurns * osg::PI_2f : entry, 2.f * osg::PIf);
         result->mIdleYaw = std::remainder(result->mEntryYaw - clipHeading, 2.f * osg::PIf);
-        const auto& clips = forward ? ForwardClips : left ? LeftClips : right ? RightClips : BackClips;
+        const auto& clips = bed ? (left ? BedLeftClips : BedRightClips)
+            : forward ? ForwardClips : left ? LeftClips : right ? RightClips : BackClips;
         const auto actorModel = VFS::Path::normalizeFilename(seat.mActorModel);
         const auto slash = actorModel.rfind('/');
         if (slash == std::string::npos || actorModel.find("..") != std::string::npos)
@@ -275,6 +286,7 @@ namespace MWWorld
             || actor.getClass().getCreatureStats(actor).isDead()) return false;
         const auto* physics = mPhysics->getActor(actor);
         if (!physics || physics->isMovementSuspended() || physics->isCollisionSuspended()) return false;
+        if ((furniture.get<ESM4::Furniture>()->mBase->mActiveMarkerFlags & 0xc0000000u) != 0x40000000u) return false;
         const auto authored = getOblivionReferenceBaseKey(ESM::FormKey::dynamic("player", 1));
         const auto* playerBase = authored ? mStore.search<ESM4::Npc>(*authored) : nullptr;
         if (!playerBase || !playerBase->mIsTES4) return false;
@@ -379,7 +391,11 @@ namespace MWWorld
             return getOblivionPlayerSitting();
         const auto* view = resident.isEmpty() ? nullptr
             : dynamic_cast<const MWRender::ESM4NpcAnimation*>(getAnimation(ConstPtr(resident)));
-        if (view && view->mPackageSeat) return view->mPackageSeat->mPhase;
+        if (view && view->mPackageSeat)
+        {
+            const auto* base = mStore.search<ESM4::Furniture>(view->mPackageSeat->mResources->mIdentity.mBase);
+            return base && (base->mActiveMarkerFlags & 0x80000000u) ? 1 : view->mPackageSeat->mPhase;
+        }
         const auto* ai = mOblivionAi ? mOblivionAi->state(actor) : nullptr;
         if (!ai || (ai->mPhase != ESM4::PackagePhase::Act && ai->mPhase != ESM4::PackagePhase::Wait
             && ai->mPhase != ESM4::PackagePhase::Complete))
@@ -401,7 +417,7 @@ namespace MWWorld
         if (!view) return false;
         auto& seat = view->mPackageSeat;
         const auto* ai = mOblivionAi->state(actor);
-        const bool atLocation = ai && usesLocationChair(ai->mPackageType)
+        const bool atLocation = ai && (usesLocationChair(ai->mPackageType) || ai->mPackageType == ESM4::AIPackageType::Sleep)
             && (ai->mPhase == ESM4::PackagePhase::Arrive || ai->mPhase == ESM4::PackagePhase::Act
                 || ai->mPhase == ESM4::PackagePhase::Wait || ai->mPhase == ESM4::PackagePhase::Complete);
         if (!seat && !atLocation) return false;
@@ -414,8 +430,7 @@ namespace MWWorld
         const Ptr chair = placed && !hasOblivionCombatController(ai->mActor).value_or(false)
             ? mWorldModel.getPtr(placed->mId) : Ptr();
         const bool eligible = !chair.isEmpty() && chair.getType() == ESM::REC_FURN4
-            && chair.getCell() == actor.getCell() && chair.getRefData().isEnabled() && !chair.mRef->isDeleted()
-            && (chair.get<ESM4::Furniture>()->mBase->mActiveMarkerFlags & 0x40000000u);
+            && chair.getCell() == actor.getCell() && chair.getRefData().isEnabled() && !chair.mRef->isDeleted();
         if (!seat)
         {
             if (!eligible || (actor.getRefData().getPosition().asVec3() - chair.getRefData().getPosition().asVec3()).length2() > 128.f * 128.f
@@ -442,7 +457,8 @@ namespace MWWorld
             seat = std::make_shared<OblivionPackageSeat>();
             seat->mResources = resources;
             // Actors promoted while waiting are already using the chair.
-            seat->mPhase = ai->mPhase == ESM4::PackagePhase::Wait || ai->mPhase == ESM4::PackagePhase::Complete ? 3 : 2;
+            seat->mPhase = ai->mPhase == ESM4::PackagePhase::Wait || ai->mPhase == ESM4::PackagePhase::Complete
+                || (ai->mPackageType == ESM4::AIPackageType::Sleep && ai->mPhase == ESM4::PackagePhase::Act) ? 3 : 2;
             actor.getClass().getCreatureStats(actor).setDrawState(MWMechanics::DrawState::Nothing);
             view->showWeapons(false);
             Log(Debug::Info) << "Native NPC furniture: actor=" << ai->mActor.serialize()

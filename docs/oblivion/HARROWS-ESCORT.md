@@ -22,4 +22,4 @@ python scripts/verify_harrow_escort.py "$checkpoints/Dagon-Shrine-Doorkeepers-Pa
 
 On a fresh launch with stock controls, the save retained the gear transfer, robe, door unlock and both characters' positions. See `build-windows/sponsor-harrow-stock07/Checkpoint.png`. A separate run walked forward to start the voiced sermon. The compass kept Dagon Shrine on screen when Harrow's marker disappeared, as shown in `build-windows/sponsor-harrow-scene06/Greeting.png`. Final game SHA-256 is `1ace5d9c0a0725e69ab0441545aa6abc01d12f69cfc43f968aede84e98866079`. All 2,361 engine, 3,328 component and 212 portable Python tests passed. The Windows inventories and XML are in `build-windows/checks-1a249ede11bf4c51b7f95f9ff65e0afe`.
 
-The next chunk is the ceremony around Mankar, Ruma and the captive Jeelius. The stage 45 script calls `SetUnconscious` on Jeelius. The replay logged that operation as deferred, so the captive's pose and subsequent choices still need runtime acceptance.
+The [shrine ceremony](DAGON-SHRINE-CEREMONY.md) continues from this save through Mankar's departure, Ruma's demand and the choice at Jeelius's altar.

@@ -1784,6 +1784,29 @@ namespace
         EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
     }
 
+    TEST(OblivionWorldTest, ScriptUnconsciousnessCanBeClearedWithoutChangingHealthOrThePlayer)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto actor = addNativeNpc(fixture, 0x900);
+        world.getWorldModel().registerPtr(actor);
+        acceptNativeSnapshot(fixture, captureNativeActorState(fixture, actor));
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context;
+        context.mSelf = actor.getCellRef().getFormKey();
+        const auto health = actor.getClass().getCreatureStats(actor).getHealth().getCurrent();
+        for (const std::int64_t input : {2, 1, 0})
+        {
+            const std::vector<ObScript::Value> args{input};
+            host.call("SetUnconscious", {}, args, context, {});
+            EXPECT_EQ(ObScript::asInteger(host.call("GetUnconscious", {}, {}, context, {})), input != 0);
+            EXPECT_FALSE(host.isUnconscious(ESM::FormKey::dynamic("player", 1)));
+            EXPECT_EQ(actor.getClass().getCreatureStats(actor).getHealth().getCurrent(), health);
+        }
+    }
+
     TEST(OblivionWorldTest, RemoveAllItemsTransfersWornGearWithoutEquippingTheRecipient)
     {
         NativeWorldFixture fixture;
