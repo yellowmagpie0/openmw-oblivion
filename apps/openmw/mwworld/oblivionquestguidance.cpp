@@ -72,10 +72,18 @@ namespace MWMechanics
         ESM::FormKey cellKey = location.mCell;
         osg::Vec3f position = location.mPosition;
         const auto ptr = loadedPtrFor(reference);
-        if (!ptr.isEmpty() && ptr.isInCell())
+        if (!ptr.isEmpty() && ptr.getBase()->isDeleted())
+            return result;
+        // An actor can finish a scheduled trip while its old cell still retains a Ptr.
+        // Use the same logical position as package targeting until promotion reconciles it.
+        if (const auto logical = mActors.find(reference); logical != mActors.end() && logical->second.mAbstractPositionDirty
+            && !logical->second.mState.mLastValidCell.isNull())
         {
-            if (ptr.getBase()->isDeleted())
-                return result;
+            cellKey = logical->second.mState.mLastValidCell;
+            position = logical->second.mState.mLastValidPosition.asVec3();
+        }
+        else if (!ptr.isEmpty() && ptr.isInCell())
+        {
             const auto* cell = store.get<ESM4::Cell>().search(ptr.getCell()->getCell()->getId());
             if (!cell)
                 return result;

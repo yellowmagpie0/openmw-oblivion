@@ -437,6 +437,30 @@ end
         EXPECT_EQ(report.mDiagnostics[0].mUnit, id);
     }
 
+    TEST(ObScriptVm, compilesDisjunctionsBeforeConjunctionsUnlessParenthesized)
+    {
+        const auto compiled = ObScript::CompilationCache{}.compile(makeUnit(8, R"(
+        begin gamemode
+            if 1 || 0 && 0
+                player.bump 1
+            endif
+            if 0 && 0 || 1
+                player.bump 2
+            endif
+            if (0 && 0) || 1
+                player.bump 3
+            endif
+        end
+        )"));
+        ASSERT_TRUE(compiled.mProgram);
+        TestRuntimeHost host;
+        auto locals = ObScript::VirtualMachine::makeLocals(*compiled.mProgram);
+        auto report = ObScript::VirtualMachine{}.execute(*compiled.mProgram, compiled.mProgram->mEntryPoints.front(),
+            locals, host, {});
+        ASSERT_TRUE(report.mCompleted);
+        EXPECT_EQ(host.mArguments, (std::vector<std::vector<ObScript::Value>>{{std::int64_t(3)}}));
+    }
+
     TEST(ObScriptVm, commandStatementsPassSignedArgumentsAndPreserveExpressionSubtraction)
     {
         const auto unit = makeUnit(8,

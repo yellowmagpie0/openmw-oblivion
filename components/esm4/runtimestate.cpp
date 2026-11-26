@@ -2956,7 +2956,8 @@ namespace ESM4
                     if (owner == mNativeBoundAbilities.end() || !sources.insert(*item.mBoundSource).second
                         || std::none_of(owner->second.begin(), owner->second.end(), [&](const auto& ability) {
                             return ability.mSpell == item.mBoundSource->mSpell;
-                        })) throw std::runtime_error("Orphan or duplicate bound item instance");
+                        })) throw std::runtime_error("Orphan or duplicate bound item instance for "
+                            + actor.serialize() + " from " + item.mBoundSource->mSpell.serialize());
                 }
             if (owner != mNativeBoundAbilities.end())
                 for (const auto& ability : owner->second)

@@ -306,8 +306,10 @@ namespace MWWorld
         for (const auto& key : remove)
         {
             const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key);
+            // A streamed-out NPC can retain a live inventory in its cell store
+            // after leaving the registry. Expire that inventory and its owners together.
             const Ptr actor = key.isDynamic() ? mWorldModel.getDynamicNativePtr(key)
-                : id ? mWorldModel.getPtr(*id) : Ptr{};
+                : id ? mWorldModel.getResidentPtr(*id) : Ptr{};
             if (!actor.isEmpty())
             {
                 updateOblivionBoundEquipment(actor, false, true);
@@ -315,11 +317,15 @@ namespace MWWorld
             }
             auto* reference = findOblivionSavedReference(key);
             if (!reference) throw std::invalid_argument("bound equipment owner has no saved reference");
+            const auto* life = mOblivionCombat->findActorLife(key);
+            const bool dead = life && life->mPhase == ESM4::ActorLifePhase::Dead;
             auto update = ESM4::prepareBoundEquipmentUpdate(
-                reference->mInventory, mOblivionRuntimeState->mNativeBoundAbilities.at(key), {}, true);
+                reference->mInventory, mOblivionRuntimeState->mNativeBoundAbilities.at(key),
+                grantsFor(mStore, reference->mBase), dead);
             reference->mInventory = std::move(update.mInventory);
             reference->mCustomState.erase(remainingKey);
-            mOblivionRuntimeState->mNativeBoundAbilities.erase(key);
+            if (update.mAbilities.empty()) mOblivionRuntimeState->mNativeBoundAbilities.erase(key);
+            else mOblivionRuntimeState->mNativeBoundAbilities.at(key) = std::move(update.mAbilities);
         }
     }
 }

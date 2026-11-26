@@ -2,6 +2,8 @@
 
 Run `build-windows/Continue-After-Escaping-the-Shrine.cmd` to resume outside Lake Arrius. The player carries the Xarxes, Jeelius survived, and the active journal objective is to bring the book to Martin. The [previous checkpoint](DAGON-SHRINE-CEREMONY.md) starts with the cult hostile and the book still on its lectern.
 
+The [return to Martin](MARTINS-XARXES-HANDOFF.md) continues through the book handoff and the start of Spies.
+
 ## Playthrough
 
 Open the Xarxes and take it from the reading window. The statue collapses and the upper gate opens. Cross into the living quarters and protect Jeelius on the way to the rear door. Turn the handle in the caverns to open the rock wall, then follow the passage to daylight. Jeelius uses the doors himself. One trial reached stage 70 with Jeelius dead in the living quarters, so the journal alone cannot confirm the rescue.

@@ -75,7 +75,7 @@ namespace MWWorld
         bool dispatchInventoryAdd(const Ptr& actor, const Ptr& item);
         bool canRetireConsumedInventoryOwner() const { return !mDepth && !mRetainedRuntime; }
         // Caller validates idle admission before publishing its inventory debit.
-        void retireConsumedInventoryOwner(const ESM::FormKey& owner) noexcept;
+        void retireConsumedInventoryOwner(const ESM::FormKey& owner);
         // Move existing item locals between inventory and native world identity.
         // Preparation allocates; publication neither dispatches nor allocates.
         // Explicit initialization admits only stateless OnAdd/OnEquip programs

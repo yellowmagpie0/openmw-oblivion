@@ -667,8 +667,27 @@ namespace MWWorld
         const auto definition = OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*id));
         if (!definition) return 0;
         const auto shared = OblivionProfileServices::sharedItemId(mStore, ESM::RefId(*id));
+        // A scripted singleton carries its instance through transfers. A
+        // destructive removal retires only owners whose stacks actually left.
+        auto& store = actor.getClass().getContainerStore(actor);
+        std::vector<ESM::FormKey> scriptOwners;
+        if (mOblivionScriptManager)
+            for (auto it = store.begin(); it != store.end(); ++it)
+                if (it->getCellRef().getRefId() == shared && !it->getCellRef().getNativeScriptOwner().isNull())
+                    scriptOwners.push_back(it->getCellRef().getNativeScriptOwner());
+        const auto retireRemovedOwners = [&] {
+            for (const auto& owner : scriptOwners)
+                if (std::none_of(store.begin(), store.end(), [&](const Ptr& stack) {
+                    return stack.getCellRef().getNativeScriptOwner() == owner;
+                }))
+                    mOblivionScriptManager->retireConsumedInventoryOwner(owner);
+        };
         if (actor.getType() == ESM::REC_CONT4)
-            return actor.getClass().getContainerStore(actor).remove(shared, count);
+        {
+            const int removed = store.remove(shared, count);
+            retireRemovedOwners();
+            return removed;
+        }
         auto& inventory = actor.getClass().getInventoryStore(actor);
         auto removal = inventory.prepareItemRemoval(shared, count);
         const int removed = removal->getCount();
@@ -697,6 +716,7 @@ namespace MWWorld
             }
         }
         if (!current() || !removal->commit()) return 0;
+        retireRemovedOwners();
         std::exception_ptr observerFailure;
         try { removal->notify(); }
         catch (...) { observerFailure = std::current_exception(); }

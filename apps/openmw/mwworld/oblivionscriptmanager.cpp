@@ -1431,10 +1431,15 @@ namespace MWWorld
         return execute(program, key, key, event, keyFor(actionReference));
     }
 
-    void OblivionScriptManager::retireConsumedInventoryOwner(const ESM::FormKey& owner) noexcept
+    void OblivionScriptManager::retireConsumedInventoryOwner(const ESM::FormKey& owner)
     {
-        // No script frame survives this UI consumption boundary. Erasure has
-        // no allocation/callback; other ingredient instances retain locals.
+        // RemoveItem can run from the removed item's own script. Its locals
+        // remain borrowed by the VM until the outermost dispatch returns.
+        if (mDepth)
+        {
+            mDiscardedItemScripts.push_back(owner);
+            return;
+        }
         for (auto it = mInstances.begin(); it != mInstances.end(); )
             if (it->first.mContext == owner) it = mInstances.erase(it);
             else ++it;
@@ -2588,18 +2593,8 @@ namespace MWWorld
                 if (const auto id = mResolver.toFormId(key))
                     ptr = mWorld.mWorldModel.getResidentPtr(*id);
             const bool enabled = name == "enable";
-            bool changed = false;
-            if (!ptr.isEmpty())
-            {
-                changed = ptr.getRefData().isEnabled() != enabled;
-                if (changed)
-                {
-                    if (enabled)
-                        mWorld.enable(ptr);
-                    else
-                        mWorld.disable(ptr);
-                }
-            }
+            const bool liveChanged = !ptr.isEmpty() && ptr.isInCell() && ptr.getRefData().isEnabled() != enabled;
+            bool changed = liveChanged;
             if (ESM4::RuntimeReferenceState* state = referenceState(key))
             {
                 changed = changed || state->mEnabled != enabled;
@@ -2608,7 +2603,14 @@ namespace MWWorld
             // GameMode scripts commonly repeat Enable/Disable every frame.
             // Only a changed root can change its enable-parent descendants;
             // a no-op must not scan all resident cells and saved references.
-            if (changed)
+            if (liveChanged)
+            {
+                if (enabled)
+                    mWorld.enable(ptr);
+                else
+                    mWorld.disable(ptr);
+            }
+            else if (changed)
                 mWorld.synchronizeOblivionEnableParents();
             if (changed)
                 trace(name + " ref=" + key.serialize());
@@ -2844,7 +2846,17 @@ namespace MWWorld
                 ESM4::addInventoryItem(state->mInventory, std::move(added));
             }
             else
+            {
+                std::vector<ESM::FormKey> owners;
+                for (const auto& stack : state->mInventory)
+                    if (stack.mBase == *item && !stack.mScriptOwner.isNull())
+                        owners.push_back(stack.mScriptOwner);
                 ESM4::removeInventoryItem(state->mInventory, *item, count);
+                for (const auto& script : owners)
+                    if (std::ranges::find(state->mInventory, script, &ESM4::RuntimeInventoryItem::mScriptOwner)
+                        == state->mInventory.end())
+                        retireConsumedInventoryOwner(script);
+            }
             trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
                 + " count=" + std::to_string(count));
             if (name == "additem")

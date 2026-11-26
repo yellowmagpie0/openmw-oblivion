@@ -361,22 +361,23 @@ namespace ObScript
 
     Expression Parser::parseExpression()
     {
-        return parseOr();
+        return parseAnd();
     }
 
     Expression Parser::parseOr()
     {
-        Expression result = parseAnd();
+        Expression result = parseComparison();
         while (std::optional<Token> op = accept(TokenKind::Operator, "||"))
-            result = binary(std::move(*op), std::move(result), parseAnd());
+            result = binary(std::move(*op), std::move(result), parseComparison());
         return result;
     }
 
     Expression Parser::parseAnd()
     {
-        Expression result = parseComparison();
+        // TES4 compiles disjunctions within conjunctions (MS06Script and MS04DoorScript).
+        Expression result = parseOr();
         while (std::optional<Token> op = accept(TokenKind::Operator, "&&"))
-            result = binary(std::move(*op), std::move(result), parseComparison());
+            result = binary(std::move(*op), std::move(result), parseOr());
         return result;
     }
 

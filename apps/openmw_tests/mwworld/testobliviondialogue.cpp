@@ -3354,6 +3354,8 @@ TEST(OblivionBoundItems, CombatPowerStartsOnceAndExpiresWithItsSavedLifetime)
     EXPECT_NO_THROW(MWWorld::validateOblivionBoundEquipment(
         saved, store, ESM::FormKeyResolver(world.getContentFiles())));
     world.updateOblivionBoundEquipment(f.mActor, true);
+    world.getWorldModel().deregisterLiveCellRef(*f.mActor.mRef);
+    ASSERT_TRUE(world.getWorldModel().getPtr(f.mActor.getCellRef().getRefNum()).isEmpty());
     world.advanceOblivionBoundEquipment(4);
     EXPECT_EQ(world.captureOblivionInventory(f.mActor), ordinary);
     EXPECT_FALSE(world.captureOblivionRuntimeState().mNativeBoundAbilities.contains(actor));
