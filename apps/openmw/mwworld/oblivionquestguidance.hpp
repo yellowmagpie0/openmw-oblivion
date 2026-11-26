@@ -37,6 +37,7 @@ namespace MWWorld
         std::string mLabel;
         std::optional<QuestMarker> mNearby;
         std::optional<QuestMarker> mWorldMap;
+        bool mInCurrentInterior = false;
     };
 
     struct QuestObjective

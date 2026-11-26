@@ -32,6 +32,9 @@ void paintAtmosphereNight(inout vec4 color)
 {
     color = texture2D(diffuseMap, diffuseMapUV);
     color.a *= passColor.a * opacity;
+#if @oblivionSky
+    color.a *= smoothstep(0.0, 0.12, skyElevation);
+#endif
 }
 
 void paintClouds(inout vec4 color)

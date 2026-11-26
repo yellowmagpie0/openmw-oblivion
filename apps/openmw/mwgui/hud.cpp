@@ -1,5 +1,9 @@
 #include "hud.hpp"
 
+#include <algorithm>
+#include <limits>
+#include <utility>
+
 #include <MyGUI_Button.h>
 #include <MyGUI_EditBox.h>
 #include <MyGUI_ImageBox.h>
@@ -396,7 +400,22 @@ namespace MWGui
             std::string caption = objective->mTitle;
             if (!objective->mDestinations.empty())
             {
-                const auto& destination = objective->mDestinations.front();
+                const auto player = MWBase::Environment::get().getWorld()->getPlayerPtr();
+                const auto& destinations = objective->mDestinations;
+                auto nearest = destinations.begin();
+                if (destinations.size() > 1 && !player.isEmpty() && player.isInCell())
+                {
+                    const auto position = player.getRefData().getPosition().asVec3();
+                    // Finish a lead in this room before suggesting an exit. Outside,
+                    // guide the player to the closest available approach.
+                    const auto rank = [&](const MWWorld::QuestDestination& lead) {
+                        return std::pair{ !lead.mInCurrentInterior, lead.mNearby
+                            ? (lead.mNearby->mPosition - position).length2() : std::numeric_limits<float>::infinity() };
+                    };
+                    nearest = std::min_element(destinations.begin(), destinations.end(),
+                        [&](const auto& left, const auto& right) { return rank(left) < rank(right); });
+                }
+                const auto& destination = *nearest;
                 mQuestBearingMarker = destination.mNearby;
                 if (!destination.mLabel.empty())
                     caption = destination.mLabel;

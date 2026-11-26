@@ -2,6 +2,8 @@
 
 Run `build-windows/Continue-After-Giving-Martin-the-Xarxes.cmd` to resume at Cloud Ruler Temple. Martin has the book and asks the player to speak with Jauffre about reports of spies in Bruma.
 
+The [spy briefings](SPIES-BRIEFING.md) continue this save through Steffan's sighting.
+
 From the [Lake Arrius checkpoint](DAGON-SHRINE-ESCAPE.md), use the world map to fast travel to the discovered temple. Walk up the stairs, enter the Great Hall and take the east wing door. Martin was in the east wing at the arrival time of this playthrough. Tell him you have the Xarxes, then ask whether it can lead you to Camoran. The last response starts Spies. The original quest enables a study copy of the book in the Great Hall.
 
 ## Runtime and content checks

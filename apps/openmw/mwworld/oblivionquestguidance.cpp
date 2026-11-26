@@ -209,7 +209,10 @@ namespace MWMechanics
         const Stop start = origin ? stopAt(*origin, player.getRefData().getPosition().asVec3()) : Stop{};
         const Stop goal = stopAt(*targetCell, position);
         if (playerSpace == targetSpace && canWalk(start, goal))
+        {
             result.mNearby = MWWorld::QuestMarker{ targetSpace, position };
+            result.mInCurrentInterior = !playerCell->isExterior();
+        }
         if (targetCell->isExterior())
             setExterior({ targetSpace, position });
 
