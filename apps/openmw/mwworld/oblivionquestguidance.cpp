@@ -745,6 +745,8 @@ namespace MWWorld
 
         const auto& store = world.getStore();
         const auto context = questConditionContext(world, *scripts);
+        const auto* interior = player.getCell()->isExterior() ? nullptr
+            : store.get<ESM4::Cell>().search(player.getCell()->getCell()->getId());
         const auto inPlayerCell = [&](const ESM4::PackageCondition& condition) {
             if (condition.mFunction != 67 && (condition.mFunction != ESM4::FUN_GetInCellParam
                     || ESM4::runtimeReferenceKey(condition.mParameter2.mReferenceKey) != ESM::FormKey::dynamic("player", 1)))
@@ -807,18 +809,24 @@ namespace MWWorld
                         arrived = ESM4::evaluateNativeConditions(target.mConditions, outside) == ESM4::ConditionResult::True;
                     // Entering a targeted door can advance the journal to an
                     // exploration stage with no marker until the next conversation.
-                    if (!arrived && !candidate.mText.empty() && !player.getCell()->isExterior()
+                    if (!arrived && !candidate.mText.empty() && interior
                         && stage != state->mCompletedStages.begin())
                     {
                         const auto* door = store.search<ESM4::Reference>(target.mReference);
                         const auto* landing = door && !door->mDoor.destDoor.isZeroOrUnset()
                             ? store.get<ESM4::Reference>().search(door->mDoor.destDoor) : nullptr;
-                        if (landing && landing->mParent == player.getCell()->getCell()->getId())
+                        const auto* actor = ai->state(target.mReference);
+                        const bool joinedActor = actor && actor->mCell == interior->mFormKey;
+                        if ((landing && landing->mParent == interior->mId) || joinedActor)
                         {
+                            // A scene can advance several silent stages while the
+                            // actor named by the last journal entry is still here.
+                            const int previousStage = joinedActor && journal.mSteps.back().mStage < state->mStage
+                                ? journal.mSteps.back().mStage : *std::prev(stage);
                             auto beforeEntry = context;
                             beforeEntry.mResolve = [&](const auto& condition, auto subject, bool opposite) {
                                 if (condition.mFunction == 58 && condition.mParameter1.mReferenceKey == quest.mFormKey)
-                                    return ESM4::ConditionValue::value(*std::prev(stage));
+                                    return ESM4::ConditionValue::value(previousStage);
                                 return context.mResolve(condition, subject, opposite);
                             };
                             arrived = ESM4::evaluateNativeConditions(target.mConditions, beforeEntry) == ESM4::ConditionResult::True;

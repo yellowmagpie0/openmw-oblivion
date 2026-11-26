@@ -264,6 +264,8 @@ namespace MWWorld
 
         void compileCorpus();
         void discoverMapMarkers();
+        void removeAllItems(const Ptr& source, const Ptr& destination, bool retainOwnership);
+        std::vector<ESM::FormKey> mDiscardedItemScripts;
         void indexNativeVoices();
         NativeVoice findNativeVoice(const ESM::FormKey& info, const Ptr& actor, const ESM::FormKey& voiceType,
             bool firstResponseOnly = false) const;

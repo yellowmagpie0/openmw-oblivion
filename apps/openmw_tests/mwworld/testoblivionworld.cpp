@@ -1784,6 +1784,37 @@ namespace
         EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
     }
 
+    TEST(OblivionWorldTest, RemoveAllItemsTransfersWornGearWithoutEquippingTheRecipient)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto actor = addNativeNpc(fixture, 0x900);
+        world.getWorldModel().registerPtr(actor);
+        const auto player = world.getPlayerPtr();
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = addEquipmentWeapon(fixture);
+        item.mCount = 1;
+        item.mCondition = 37.5f;
+        item.mEquippedSlots = ESM4::InventorySlotWeapon;
+        item.mOwner = ESM::FormKey::content("headless.esm", 0x800);
+        auto saved = captureNativeActorState(fixture, actor);
+        saved.mPlayer.mInventory = {item};
+        acceptNativeSnapshot(fixture, saved);
+        installEquipmentInventory(fixture, player, {item});
+        MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+        ObScript::RuntimeContext context;
+        context.mSelf = ESM::FormKey::dynamic("player", 1);
+        const std::vector<ObScript::Value> args{ObScript::ReferenceValue{actor.getCellRef().getFormKey(), {}},
+            std::int64_t(1)};
+        host.call("RemoveAllItems", {}, args, context, {});
+        host.call("RemoveAllItems", {}, args, context, {});
+        EXPECT_TRUE(world.captureOblivionInventory(player).empty());
+        item.mEquippedSlots = 0;
+        EXPECT_EQ(world.captureOblivionInventory(actor), (std::vector{item}));
+    }
+
     TEST(OblivionWorldTest, NativeScriptRemoveItemNonpositiveCountPreservesPhysicalAndSavedInventory)
     {
         NativeWorldFixture fixture;

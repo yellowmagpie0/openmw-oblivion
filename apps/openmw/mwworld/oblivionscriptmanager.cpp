@@ -1274,6 +1274,12 @@ namespace MWWorld
                 recordDiagnostic(diagnostic);
         }
         --mDepth;
+        if (!mDepth && !mDiscardedItemScripts.empty())
+        {
+            for (const auto& owner : mDiscardedItemScripts)
+                retireConsumedInventoryOwner(owner);
+            mDiscardedItemScripts.clear();
+        }
         return handled;
     }
 
@@ -1638,6 +1644,126 @@ namespace MWWorld
                 if (const auto it = ref.mCustomState.find(mapMarkerRevealKey); it != ref.mCustomState.end())
                     result.emplace(ref.mKey, static_cast<std::uint8_t>(std::get<std::int64_t>(it->second)));
         return result;
+    }
+
+    void OblivionScriptManager::removeAllItems(const Ptr& source, const Ptr& destination, bool retainOwnership)
+    {
+        const auto player = mWorld.getPlayerPtr();
+        const auto isOwner = [&](const Ptr& ptr) {
+            return !ptr.isEmpty() && (ptr == player || ptr.getType() == ESM::REC_CONT4 || nativeInventoryOwner(ptr));
+        };
+        if (!isOwner(source) || source == destination || (!destination.isEmpty() && !isOwner(destination)))
+            return;
+        const auto sourceKey = keyFor(source);
+        const auto destinationKey = keyFor(destination);
+        auto& from = source.getClass().getContainerStore(source);
+        auto* to = destination.isEmpty() ? nullptr : &destination.getClass().getContainerStore(destination);
+        if (!mWorld.mOblivionRuntimeState)
+            mWorld.mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(mWorld.captureOblivionRuntimeState());
+        for (const auto& ptr : {source, destination})
+            if (!ptr.isEmpty() && ptr != player && !referenceState(keyFor(ptr)))
+                throw std::runtime_error("RemoveAllItems inventory owner has no native state");
+        auto before = mWorld.captureOblivionInventory(source);
+        auto received = to ? mWorld.captureOblivionInventory(destination) : std::vector<ESM4::RuntimeInventoryItem>{};
+        std::vector<ESM4::RuntimeInventoryItem> kept;
+        std::vector<ESM::FormKey> discarded;
+        ESM::FormKey owner;
+        if (to && retainOwnership)
+        {
+            if (source.getClass().isActor())
+            {
+                const auto factions = mWorld.getOblivionReferenceFactions(sourceKey);
+                const bool evil = !factions.empty() && std::ranges::all_of(factions, [&](const auto& entry) {
+                    const auto* faction = mStore.get<ESM4::Faction>().search(ESM::FormId::fromUint32(entry.faction));
+                    return faction && faction->has(ESM4::FactionFlag::Evil);
+                });
+                if (!evil) owner = mWorld.getOblivionReferenceBaseKey(sourceKey).value_or(ESM::FormKey{});
+            }
+            else
+            {
+                const auto containerOwner = source.getCellRef().getOwner();
+                if (const auto* id = containerOwner.getIf<ESM::FormId>())
+                    owner = mResolver.toFormKey(*id);
+            }
+        }
+        const auto gold = mStore.findEsm4FormKey("Gold001");
+        bool removedWeapon = false;
+        for (auto item : before)
+        {
+            const auto id = mResolver.toFormId(item.mBase);
+            const auto def = id ? OblivionProfileServices::itemDefinition(mStore, ESM::RefId(*id), &mWorld) : std::nullopt;
+            const auto* armor = id ? mStore.get<ESM4::Armor>().search(*id) : nullptr;
+            const auto* clothing = id ? mStore.get<ESM4::Clothing>().search(*id) : nullptr;
+            const bool nonPlayable = (armor && (armor->mGeneralFlags & ESM4::Armor::TES4_NonPlayable))
+                || (clothing && ((clothing->mClothingFlags >> 16) & ESM4::Armor::TES4_NonPlayable));
+            if (nonPlayable || item.mBoundSource || (source == player && def && def->mQuestItem))
+            {
+                kept.push_back(std::move(item));
+                continue;
+            }
+            removedWeapon |= (item.mEquippedSlots & (ESM4::InventorySlotWeapon | ESM4::Armor::TES4_Shield)) != 0;
+            if (to)
+            {
+                item.mEquippedSlots = 0;
+                item.mHotkey = -1;
+                item.mNegativeCount = false;
+                if (item.mOwner.isNull() && !owner.isNull() && item.mBase != gold
+                    && (!def || def->mType != ESM4::InventoryItemType::Ammunition))
+                    item.mOwner = owner;
+                received.push_back(std::move(item));
+            }
+            else if (!item.mScriptOwner.isNull())
+                discarded.push_back(item.mScriptOwner);
+        }
+        if (kept.size() == before.size()) return;
+        if (removedWeapon)
+            if (auto* mechanics = MWBase::Environment::get().getMechanicsManagerOrNull())
+                mechanics->cancelOblivionCombatInput(source);
+
+        // Build both stores and register their replacement items as a single change.
+        // Script identities and their locals travel with each exact stack.
+        std::vector<Ptr> removed, inserted;
+        const auto stage = [&](ContainerStore& target, const auto& items) {
+            auto staged = OblivionProfileServices::stageActorInventory(
+                OblivionProfileServices::prepareActorInventory(mStore, mResolver, items));
+            for (auto ptr : target)
+                if (ptr.mRef->mWorldModel) removed.push_back(ptr);
+            for (auto ptr : *staged)
+            {
+                ptr.setContainerStore(&target);
+                inserted.push_back(ptr);
+            }
+            return staged;
+        };
+        auto sourceAfter = stage(from, kept);
+        auto targetAfter = to ? stage(*to, received) : nullptr;
+        auto registry = mWorld.getWorldModel().preparePtrReplacement(removed, inserted);
+        if (!registry.isValid()) throw std::logic_error("Stale RemoveAllItems inventory");
+        mDiscardedItemScripts.reserve(mDiscardedItemScripts.size() + discarded.size());
+        const auto publish = [](const Ptr& actor, ContainerStore& target, InventoryStore& staged) {
+            if (actor.getClass().isActor()) actor.getClass().getInventoryStore(actor).swapPreparedContents(staged);
+            else target.swapPreparedContents(staged);
+        };
+        publish(source, from, *sourceAfter);
+        if (to) publish(destination, *to, *targetAfter);
+        registry.commit();
+        const auto save = [&](const Ptr& ptr, auto& items) {
+            if (ptr == player) mWorld.mOblivionRuntimeState->mPlayer.mInventory.swap(items);
+            else if (auto* ref = referenceState(keyFor(ptr))) ref->mInventory.swap(items);
+        };
+        save(source, kept);
+        if (to) save(destination, received);
+        for (auto& key : discarded)
+        {
+            if (mDepth) mDiscardedItemScripts.push_back(std::move(key));
+            else retireConsumedInventoryOwner(key);
+        }
+        if (source.getClass().isActor())
+            source.getClass().getInventoryStore(source).notifyPreparedEquipmentChange();
+        if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
+            windows->inventoryUpdated(player);
+        trace("removeallitems source=" + sourceKey.serialize() + " destination="
+            + (to ? destinationKey.serialize() : "none"));
     }
 
     void OblivionScriptManager::discoverMapMarkers()
@@ -2561,6 +2687,15 @@ namespace MWWorld
             return std::int64_t(combat->drawNativeRandom() % 100);
         }
 
+        if (name == "removeallitems")
+        {
+            const auto targetKey = keyFromValue(argument(0));
+            const auto destination = targetKey ? ptrFor(*targetKey) : Ptr{};
+            if (targetKey && destination.isEmpty())
+                throw ObScript::RuntimeError("OBSV118", "RemoveAllItems destination could not be resolved", name);
+            removeAllItems(objectPtr(), destination, ObScript::asInteger(argument(1)) != 0);
+            return std::int64_t(0);
+        }
         if (name == "additem" || name == "removeitem" || name == "getitemcount")
         {
             const std::size_t itemArg = 0;

@@ -6,6 +6,8 @@ The checkpoint is `build-windows/temple-player-ready/checkpoints/Dagon-Shrine-Do
 
 ## Gameplay and checks
 
+The [Harrow escort checkpoint](HARROWS-ESCORT.md) continues from this passage through the handover and into the shrine.
+
 From the tomb save, the player fast-travelled to Cheydinhal's west gate, exited to the stables, waited until daylight and ran to Lake Arrius, joining the eastern approach road. A camera and movement aid steered the player. The map, Wait menu, doors, dialogue choices and quicksaves used game inputs. Approaching the lake upgraded the cave from a visible marker to a discovered fast-travel destination and incremented Places Found once. Inside, stage 20 kept the Dagon Shrine objective while the player sought the doorkeeper. The replay and the dressed doorkeeper screenshot are in `build-windows/sponsor-arrius-final02`.
 
 The final gate replay in `build-windows/sponsor-arrius-gate04` began at the stage 20 quicksave from that journey. The player answered “Dawn is breaking” with “Greet the new day.” The doorkeeper delivered all three voiced responses, walked to the door, invoked its original activation script and opened it. The player crossed the threshold and Harrow approached. `Passage.png` shows the checkpoint viewpoint. Two stock-control restarts ran the five-line greeting. `build-windows/sponsor-arrius-stock05/Harrow-choices.png` shows both answers. The resave in `build-windows/sponsor-arrius-stock06` retained the open animation at its endpoint, the robe and hood, the discovered marker and the player's Mythic Dawn rank. The final game SHA-256 is `060c043d1c839481cfbba3d68369b02accabd20df8036ef132175121b92e9836`.

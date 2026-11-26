@@ -7000,6 +7000,16 @@ namespace MWMechanics
         const ESM::FormKey playerKey = ESM::FormKey::dynamic("player", 1);
         const MWWorld::Ptr player = mWorld.getPlayerPtr();
         const bool ready = live.mState.mPhase == ESM4::PackagePhase::ReadyForDialogue;
+        // The player has finished the force-greeting. Its result may have
+        // enabled the next package, including an escort by this same actor.
+        if (ready && live.mState.mPackageType == ESM4::AIPackageType::Ambush
+            && ESM4::runtimeReferenceKey(live.mState.mTarget) == playerKey)
+        {
+            const auto previous = live.mState.mPackage;
+            select(actor, live, false);
+            if (live.mState.mPackage != previous)
+                return true;
+        }
         const bool eligiblePackage = live.mState.mPackageType == ESM4::AIPackageType::Unknown
             || live.mState.mPackageType == ESM4::AIPackageType::Wander;
         if (!actor.getClass().isNpc() || player.isEmpty() || !eligiblePackage

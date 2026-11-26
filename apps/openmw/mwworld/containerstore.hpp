@@ -309,6 +309,7 @@ namespace MWWorld
         // World publishes native merchant stock together with its prepared
         // Player debit/addition and registry replacement, before observers.
         friend class World;
+        friend class OblivionScriptManager;
         std::shared_ptr<const char> mPreparedAdditionIdentity;
 
         mutable float mCachedWeight = 0;
