@@ -112,7 +112,7 @@ namespace MWGui
         bool shrinkTextAtLastTag = book.getType() == ESM::REC_BOOK
             && MWBase::Environment::get().getWorld()->getGameProfile() != ESM::GameProfile::Oblivion;
 
-        Formatting::BookFormatter formatter;
+        Formatting::BookFormatter formatter(book.getType() == ESM::REC_BOOK4);
         mPages = formatter.markupToWidget(mLeftPage, *text, shrinkTextAtLastTag);
         formatter.markupToWidget(mRightPage, *text, shrinkTextAtLastTag);
 

@@ -1042,7 +1042,7 @@ namespace MWWorld
             result.mType = ESM4::InventoryItemType::Key;
             result.mValue = clampInteger<std::int32_t>(key->mData.value);
             result.mWeight = key->mData.weight;
-            result.mQuestItem = (key->mFlags & ESM4::Rec_Persistent) != 0;
+            result.mQuestItem = world ? world->isOblivionQuestKey(*key) : (key->mFlags & ESM4::Rec_Persistent) != 0;
         }
         else if (const ESM4::Light* light = store.get<ESM4::Light>().search(id))
         {

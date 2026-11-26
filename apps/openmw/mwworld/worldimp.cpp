@@ -8245,8 +8245,9 @@ namespace MWWorld
         for (const auto& [base, flag] : state.mQuestBookFlags)
         {
             const auto* book = mStore.search<ESM4::Book>(base);
-            if (!book || (book->mFlags & ESM4::Rec_Deleted))
-                throw std::runtime_error("Quest book override has no winning book: " + base.serialize());
+            const auto* key = mStore.search<ESM4::Key>(base);
+            if ((!book || (book->mFlags & ESM4::Rec_Deleted)) && (!key || (key->mFlags & ESM4::Rec_Deleted)))
+                throw std::runtime_error("Quest item override has no winning book or key: " + base.serialize());
         }
         validateOblivionScrollChameleon(mStore, state);
         validateOblivionPotionAttributes(mStore, state);

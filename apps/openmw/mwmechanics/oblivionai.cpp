@@ -211,6 +211,13 @@ namespace MWMechanics
             return item.mConsumable || item.mType == ESM4::InventoryItemType::Book;
         }
 
+        bool wandersAtEditorLocation(const ESM4::AIPackage& package)
+        {
+            return package.mPackageType == ESM4::AIPackageType::Wander
+                && package.mLocationData.mKind == ESM4::PackageLocationKind::EditorLocation
+                && package.mLocationData.mReferenceKey.isNull();
+        }
+
         bool returnsToEditorLocation(const ESM4::AIPackage& package)
         {
             return package.mPackageType == ESM4::AIPackageType::Travel
@@ -275,11 +282,17 @@ namespace MWMechanics
                     && state.mPackageType == ESM4::AIPackageType::Wander);
         }
 
+        bool stageSensitiveAction(const ESM4::RuntimeActorAiState& state)
+        {
+            return waitingForPackageAction(state) || state.mPackageType == ESM4::AIPackageType::FleeNotCombat;
+        }
+
         bool canReevaluateAfterStage(const ESM4::RuntimeActorAiState& state, const ESM4::AIPackage* package)
         {
             return package && !package->mPackageFlags.has(ESM4::PackageFlag::MustComplete)
                 && (waitingForPackageAction(state)
-                    || (state.mPackageType == ESM4::AIPackageType::Travel
+                    || ((state.mPackageType == ESM4::AIPackageType::Travel
+                            || state.mPackageType == ESM4::AIPackageType::FleeNotCombat)
                         && !package->mPackageFlags.has(ESM4::PackageFlag::MustReachLocation)));
         }
 
@@ -3525,6 +3538,22 @@ namespace MWMechanics
         {
             ESM::FormKey centreCell = live.mState.mCell;
             osg::Vec3f origin = actorPosition;
+            if (wandersAtEditorLocation(record))
+            {
+                const auto home = mUnloadedLocationByReference.find(live.mState.mActor);
+                if (home != mUnloadedLocationByReference.end())
+                {
+                    const auto& placement = mUnloadedLocations[home->second];
+                    // Travel home before choosing a local wander point. The actor may have
+                    // finished a quest package several doors away from its editor placement.
+                    if (placement.mCell != centreCell)
+                    {
+                        live.mDestinationCell = placement.mCell;
+                        return placement.mPosition;
+                    }
+                    origin = placement.mPosition;
+                }
+            }
             if (record.mLocationData.mKind == ESM4::PackageLocationKind::InCell)
                 centreCell = record.mLocationData.mReferenceKey;
             else if (record.mLocationData.mKind == ESM4::PackageLocationKind::NearReference
@@ -4022,6 +4051,8 @@ namespace MWMechanics
 
         if (record.mPackageType == ESM4::AIPackageType::Wander)
         {
+            if (wandersAtEditorLocation(record))
+                return resolveUnloadedDestination(record, live);
             if (const auto node = chooseWanderNode(actor, record, live))
             {
                 const ESM4::PathgridGraph* graph
@@ -4293,8 +4324,17 @@ namespace MWMechanics
             if (lowerBound > bestCost + 1.f) break;
             const auto& door = mUnloadedLocations[index];
             const auto& node = mDoorEndpoints[index]->first;
-            const auto route = service.route(start, node);
-            if (!route) continue;
+            auto route = service.route(start, node);
+            // A city gate can be dozens of exterior grids away. When shortest-path
+            // search exhausts its budget, prefer progress toward that connected exit.
+            if (route.mFailure == ESM4::PathgridRouteFailure::SearchLimit && start.mPathgrid != node.mPathgrid)
+                route = service.route(start, node, 2.f);
+            if (!route)
+            {
+                if (mEventStream.is_open())
+                    logEvent("door-approach-unavailable", live, door.mReference.serialize() + " " + route.mDiagnostic);
+                continue;
+            }
             const auto point = service.graph(node.mPathgrid)->worldPoint(node.mNode);
             const osg::Vec3f approach(point.mX, point.mY, point.mZ);
             const float cost = route.mRoute->mCost + (approach - door.mPosition).length();
@@ -4452,21 +4492,29 @@ namespace MWMechanics
             const bool localExterior = !exit.isEmpty() && exit.isInCell() && exit.getCell()->isExterior()
                 && exit.getCell()->getCell()->getWorldSpace() == actor.getCell()->getCell()->getWorldSpace();
             hasContinuousRoute = localExterior && prepareContinuousRoute(live.mRouteDoorPosition, {});
+            std::size_t endCursor = live.mRoute.size();
             if (!hasContinuousRoute)
             {
                 std::vector<osg::Vec3f> checkpoints;
+                osg::Vec3f segmentEnd = live.mRouteDoorPosition;
                 for (std::size_t index = live.mRouteCursor; index < live.mRoute.size(); ++index)
                 {
                     const auto* routeGraph = service.graph(live.mRoute[index].mPathgrid);
-                    if (!routeGraph || routeGraph->cellKey() != live.mState.mCell)
+                    if (!routeGraph)
                         break;
                     const auto point = routeGraph->worldPoint(live.mRoute[index].mNode);
+                    if (routeGraph->cellKey() != live.mState.mCell)
+                    {
+                        endCursor = index;
+                        segmentEnd.set(point.mX, point.mY, point.mZ);
+                        break;
+                    }
                     checkpoints.emplace_back(point.mX, point.mY, point.mZ);
                 }
-                hasContinuousRoute = prepareContinuousRoute(live.mRouteDoorPosition, checkpoints);
+                hasContinuousRoute = prepareContinuousRoute(segmentEnd, checkpoints);
             }
             if (hasContinuousRoute)
-                live.mContinuousRouteEndCursor = live.mRoute.size();
+                live.mContinuousRouteEndCursor = endCursor;
             if (mEventStream.is_open())
             {
                 std::ostringstream detail;
@@ -8280,7 +8328,7 @@ namespace MWMechanics
         const auto bases = mQuestPackageBases.find(quest);
         for (auto& [key, live] : mActors)
             if (live.mState.mPackageType == ESM4::AIPackageType::Travel
-                || (waitingForPackageAction(live.mState) && bases != mQuestPackageBases.end()
+                || (stageSensitiveAction(live.mState) && bases != mQuestPackageBases.end()
                     && bases->second.contains(live.mState.mBase)))
                 live.mCheckPackageAfterStage = true;
     }
@@ -9154,7 +9202,7 @@ namespace MWMechanics
             live.mState = saved;
             live.mPendingArmorEquip = dressing.contains(saved.mActor);
             live.mCheckPackageAfterStage = saved.mPackageType == ESM4::AIPackageType::Travel
-                || (waitingForPackageAction(saved) && std::ranges::any_of(state.mQuests,
+                || (stageSensitiveAction(saved) && std::ranges::any_of(state.mQuests,
                     [&](const auto& quest) {
                         const auto bases = mQuestPackageBases.find(quest.mQuest);
                         return bases != mQuestPackageBases.end() && bases->second.contains(saved.mBase);
@@ -9170,6 +9218,13 @@ namespace MWMechanics
             live.mNeedsSelection = saved.mSelectionGeneration == 0
                 && saved.mSource == ESM4::PackageSource::None
                 && saved.mPackage.isNull() && saved.mScriptPackage.isNull();
+            if (const auto* current = package(saved.mPackage); current && wandersAtEditorLocation(*current)
+                && saved.mPhase == ESM4::PackagePhase::Wait && saved.mDestinationCell == saved.mCell)
+            {
+                const auto home = mUnloadedLocationByReference.find(saved.mActor);
+                if (home != mUnloadedLocationByReference.end() && mUnloadedLocations[home->second].mCell != saved.mCell)
+                    live.mNeedsSelection = true;
+            }
             if (!saved.mScriptPackage.isNull())
                 live.mScriptPackage = packageCandidate(saved.mScriptPackage);
             live.mSelectedWindow = saved.mScheduleWindow;

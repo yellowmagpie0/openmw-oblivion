@@ -56,6 +56,7 @@ namespace SceneUtil
 
 namespace ESM
 {
+    struct Miscellaneous;
     struct Book;
     struct Position;
     class RefId;
@@ -64,6 +65,7 @@ namespace ESM
 namespace ESM4
 {
     struct Book;
+    struct Key;
     struct ActorFaction;
     enum class ActorDrawState : std::uint8_t;
     enum class MeleeReactionKind : std::uint8_t;
@@ -493,10 +495,12 @@ namespace MWWorld
         std::optional<std::int32_t> getOblivionFactionReaction(
             const ESM::FormKey& from, const ESM::FormKey& to) const;
         bool setOblivionFactionReaction(const ESM::FormKey& from, const ESM::FormKey& to, std::int32_t value);
-        const std::map<ESM::FormKey, bool>& oblivionQuestBookFlags() const;
+        const std::map<ESM::FormKey, bool>& oblivionQuestItemFlags() const;
         bool isOblivionQuestBook(const ESM4::Book& book) const;
         float oblivionBookWeight(const ESM::Book& projected) const;
-        bool setOblivionQuestBook(const ESM::FormKey& base, bool flag);
+        bool isOblivionQuestKey(const ESM4::Key& key) const;
+        float oblivionKeyWeight(const ESM::Miscellaneous& projected) const;
+        bool setOblivionQuestItem(const ESM::FormKey& base, bool flag);
         bool setOblivionEssential(const ESM::FormKey& base, bool essential);
         std::optional<bool> getOblivionEssentialOverride(const ESM::FormKey& base) const;
         std::vector<ESM4::ActorFaction> getOblivionReferenceFactions(const ESM::FormKey& actor) const;

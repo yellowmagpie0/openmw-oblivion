@@ -3125,7 +3125,7 @@ namespace MWWorld
         {
             const auto base = keyFromValue(argument(0));
             const bool flag = ObScript::asInteger(argument(1)) > 0;
-            if (base && mWorld.setOblivionQuestBook(*base, flag))
+            if (base && mWorld.setOblivionQuestItem(*base, flag))
                 trace("setquestobject base=" + base->serialize() + " flag=" + (flag ? "1" : "0"));
             else
                 trace("deferred command=setquestobject unit=" + context.mUnit.serialize());

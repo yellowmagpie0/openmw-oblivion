@@ -100,6 +100,24 @@ TEST(ESM4PathgridData, BoundsLargeRouteSearch)
     EXPECT_EQ(route.mFailure, ESM4::PathgridRouteFailure::SearchLimit);
 }
 
+TEST(ESM4PathgridData, GoalDirectedSearchFindsAConnectedExitWithinTheExpansionBudget)
+{
+    auto grid = makeGrid(12, {point(0), point(90, 10), point(100)}, {{0, 1}, {1, 2}});
+    for (int i = 0; i < 8200; ++i)
+    {
+        grid.mLinks.push_back({0, static_cast<std::int16_t>(grid.mNodes.size())});
+        grid.mNodes.push_back(point(1));
+    }
+    grid.mData = static_cast<std::int16_t>(grid.mNodes.size());
+    ESM4::PathgridService service;
+    service.registerPathgrid(grid, key(112));
+    const ESM4::PathgridNodeKey start{key(12), 0}, end{key(12), 2};
+    EXPECT_EQ(service.route(start, end).mFailure, ESM4::PathgridRouteFailure::SearchLimit);
+    const auto approach = service.route(start, end, 2.f);
+    ASSERT_TRUE(approach);
+    EXPECT_EQ(approach.mRoute->mNodes, (std::vector<ESM4::PathgridNodeKey>{start, {key(12), 1}, end}));
+}
+
 TEST(ESM4PathgridData, ResolvesForeignCoordinatesAndReportsMissingEdges)
 {
     ESM4::Pathgrid first = makeGrid(3, { point(0), point(10) });

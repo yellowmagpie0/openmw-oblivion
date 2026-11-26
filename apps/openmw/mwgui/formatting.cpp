@@ -7,6 +7,7 @@
 #include <MyGUI_EditText.h>
 #include <MyGUI_Gui.h>
 #include <MyGUI_ImageBox.h>
+#include <MyGUI_TextureUtility.h>
 
 #include <components/debug/debuglog.hpp>
 #include <components/fontloader/fontloader.hpp>
@@ -23,7 +24,7 @@
 namespace MWGui::Formatting
 {
     /* BookTextParser */
-    BookTextParser::BookTextParser(const std::string& text, bool shrinkTextAtLastTag)
+    BookTextParser::BookTextParser(const std::string& text, bool shrinkTextAtLastTag, bool oblivion)
         : mIndex(0)
         , mText(text)
         , mIgnoreNewlineTags(true)
@@ -56,6 +57,8 @@ namespace MWGui::Formatting
         else
             mPlainTextEnd = mText.size();
 
+        if (oblivion)
+            registerTag("hr", Event_PageBreak);
         registerTag("br", Event_BrTag);
         registerTag("p", Event_PTag);
         registerTag("img", Event_ImgTag);
@@ -243,7 +246,7 @@ namespace MWGui::Formatting
             MyGUI::IntCoord(0, 0, pag.getPageWidth(), pag.getPageHeight()), MyGUI::Align::Left | MyGUI::Align::Top);
         paper->setNeedMouseFocus(false);
 
-        BookTextParser parser(markup, shrinkTextAtLastTag);
+        BookTextParser parser(markup, shrinkTextAtLastTag, mOblivion);
 
         bool brBeforeLastTag = false;
         bool isPrevImg = false;
@@ -273,6 +276,11 @@ namespace MWGui::Formatting
                     }
                 }
             }
+
+            // TES4 image pages often have whitespace between the picture and its page break.
+            if (mOblivion && (isPrevImg || event == BookTextParser::Event_ImgTag)
+                && plainText.find_first_not_of(" \t\n") == std::string::npos)
+                plainText.clear();
 
             if (plainText.empty())
                 brBeforeLastTag = true;
@@ -334,6 +342,7 @@ namespace MWGui::Formatting
                     auto vfs = MWBase::Environment::get().getResourceSystem()->getVFS();
 
                     VFS::Path::Normalized correctedSrc;
+                    MyGUI::IntSize sourceSize{};
 
                     constexpr std::string_view imgPrefix = "img://";
                     if (src.starts_with(imgPrefix))
@@ -350,10 +359,21 @@ namespace MWGui::Formatting
                     }
                     else
                     {
-                        if (width == 0 || height == 0)
+                        if (width <= 0 || height <= 0)
                             continue;
-                        correctedSrc = Misc::ResourceHelpers::correctBookartPath(
-                            VFS::Path::toNormalized(src), width, height, *vfs);
+                        const auto image = VFS::Path::toNormalized(src);
+                        if (mOblivion)
+                            correctedSrc = VFS::Path::NormalizedView("textures/menus") / image;
+                        if (mOblivion && vfs->exists(correctedSrc))
+                            sourceSize = { width, height };
+                        else
+                            correctedSrc = Misc::ResourceHelpers::correctBookartPath(image, width, height, *vfs);
+                        if (mOblivion && (width > pageWidth || height > pageHeight) && pageWidth > 0 && pageHeight > 0)
+                        {
+                            const double scale = std::min(double(pageWidth) / width, double(pageHeight) / height);
+                            width = std::max(1, static_cast<int>(width * scale));
+                            height = std::max(1, static_cast<int>(height * scale));
+                        }
                     }
 
                     if (!vfs->exists(correctedSrc))
@@ -364,7 +384,7 @@ namespace MWGui::Formatting
 
                     pag.setIgnoreLeadingEmptyLines(false);
 
-                    ImageElement elem(paper, pag, mBlockStyle, correctedSrc, width, height);
+                    ImageElement elem(paper, pag, mBlockStyle, correctedSrc, width, height, sourceSize);
                     elem.paginate();
                     break;
                 }
@@ -527,7 +547,7 @@ namespace MWGui::Formatting
 
     /* ImageElement */
     ImageElement::ImageElement(MyGUI::Widget* parent, Paginator& pag, const BlockStyle& blockStyle,
-        const std::string& src, int width, int height)
+        const std::string& src, int width, int height, MyGUI::IntSize sourceSize)
         : GraphicElement(parent, pag, blockStyle)
         , mImageHeight(height)
     {
@@ -544,6 +564,14 @@ namespace MWGui::Formatting
             parent->getName() + MyGUI::utility::toString(parent->getChildCount()));
 
         mImageBox->setImageTexture(src);
+        // TES4 menu textures can include power-of-two padding beyond the authored image rectangle.
+        if (sourceSize.width > 0 && sourceSize.height > 0)
+        {
+            const auto size = MyGUI::texture_utility::getTextureSize(src);
+            if (size.width > 0 && size.height > 0)
+                mImageBox->setImageCoord({ 0, 0, std::min(sourceSize.width, size.width),
+                    std::min(sourceSize.height, size.height) });
+        }
         mImageBox->setProperty("NeedMouse", "false");
     }
 

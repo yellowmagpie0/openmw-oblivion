@@ -17,6 +17,7 @@
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace
 {
@@ -769,7 +770,7 @@ namespace ESM4
     }
 
     PathgridRouteResult PathgridService::route(
-        const PathgridNodeKey& start, const PathgridNodeKey& destination) const
+        const PathgridNodeKey& start, const PathgridNodeKey& destination, float heuristicWeight) const
     {
         const PathgridGraph* startGraph = graph(start.mPathgrid);
         const PathgridGraph* destinationGraph = graph(destination.mPathgrid);
@@ -799,6 +800,26 @@ namespace ESM4
             }
         }
 
+        // For a long-distance approach, guide the fine search along connected
+        // grids. Straight-line distance alone leads into dead ends around lakes
+        // and walled cities. Only real directed node edges can enter the result.
+        std::map<ESM::FormKey, unsigned> gridHops;
+        if (heuristicWeight > 1.f && start.mPathgrid != destination.mPathgrid)
+        {
+            std::queue<ESM::FormKey> pending;
+            gridHops.emplace(destination.mPathgrid, 0);
+            pending.push(destination.mPathgrid);
+            while (!pending.empty())
+            {
+                const auto grid = pending.front();
+                pending.pop();
+                const auto next = gridHops.at(grid) + 1;
+                for (const auto& neighbour : mCoarseGraphAdjacency.at(grid))
+                    if (gridHops.emplace(neighbour, next).second)
+                        pending.push(neighbour);
+            }
+        }
+        std::unordered_set<PathgridNodeKey, PathgridNodeKeyHash> expanded;
         std::unordered_map<PathgridNodeKey, float, PathgridNodeKeyHash> distances;
         std::unordered_map<PathgridNodeKey, PathgridNodeKey, PathgridNodeKeyHash> previous;
         std::priority_queue<QueueEntry, std::vector<QueueEntry>, std::greater<>> queue;
@@ -814,6 +835,8 @@ namespace ESM4
             const auto distanceIt = distances.find(current.node);
             if (distanceIt == distances.end() || current.cost != distanceIt->second)
                 continue;
+            if (heuristicWeight > 1.f && !expanded.insert(current.node).second)
+                continue;
             if (++expandedNodes > sPathgridRouteExpansionBudget)
                 return failure(PathgridRouteFailure::SearchLimit,
                     "pathgrid route search budget exceeded");
@@ -826,19 +849,20 @@ namespace ESM4
             auto relax = [&](const PathgridNodeKey& target, float cost) {
                 const PathgridGraph* targetGraph = graph(target.mPathgrid);
                 if (targetGraph == nullptr || !targetGraph->contains(target.mNode)
-                    || !targetGraph->isEnabled(target.mNode))
+                    || !targetGraph->isEnabled(target.mNode) || (heuristicWeight > 1.f && expanded.contains(target)))
                     return;
                 const float candidate = current.cost + cost;
                 const auto found = distances.find(target);
-                const auto previousIt = previous.find(target);
-                if (found == distances.end() || candidate < found->second
-                    || (candidate == found->second
-                        && (previousIt == previous.end() || current.node < previousIt->second)))
+                // Adjacent exterior graphs can share a boundary point. Retain the
+                // first equal-cost predecessor to avoid cycles across zero-length links.
+                if (found == distances.end() || candidate < found->second)
                 {
                     distances[target] = candidate;
                     previous[target] = current.node;
                     const PathgridPoint targetPoint = targetGraph->worldPoint(target.mNode);
-                    queue.push({ candidate + distance(targetPoint, destinationPoint), candidate, target });
+                    const float gridDistance = gridHops.empty() ? 0.f : 4096.f * gridHops.at(target.mPathgrid);
+                    const float estimate = distance(targetPoint, destinationPoint) + gridDistance;
+                    queue.push({ candidate + heuristicWeight * estimate, candidate, target });
                 }
             };
 

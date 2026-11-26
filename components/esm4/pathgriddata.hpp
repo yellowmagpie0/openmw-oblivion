@@ -221,7 +221,8 @@ namespace ESM4
         std::uint64_t generation(const ESM::FormKey& pathgrid) const;
         std::optional<PathgridNodeKey> nearestEnabledNode(
             const ESM::FormKey& pathgrid, PathgridPoint world, float maxDistance = -1.0f) const;
-        PathgridRouteResult route(const PathgridNodeKey& start, const PathgridNodeKey& destination) const;
+        PathgridRouteResult route(const PathgridNodeKey& start, const PathgridNodeKey& destination,
+            float heuristicWeight = 1.f) const;
         std::set<PathgridNodeKey> reachableComponent(const PathgridNodeKey& start) const;
 
         const std::map<ESM::FormKey, PathgridGraph>& graphs() const { return mGraphs; }

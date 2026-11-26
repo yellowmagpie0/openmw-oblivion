@@ -6,6 +6,8 @@ The course starts at [Harrow's shrine entrance checkpoint](HARROWS-ESCORT.md). F
 
 The playthrough accepted Ruma's instruction to remain undercover, then activated Jeelius on the altar and chose to release him. That choice turns the cult hostile. The next objective is to retrieve the Mysterium Xarxes and escape.
 
+The [escape playthrough](DAGON-SHRINE-ESCAPE.md) continues from that release through the cavern exit at Lake Arrius.
+
 ## Gameplay evidence
 
 The entrance save originally had Jeelius in another cell with an interrupted sleep package. His exact assigned bed is the sacrifice altar, which he owns. The low-process actor now reaches that furniture when its interior loads and the abstract route through locked doors has failed. The shrine altar's active NIF marker selects the right-hand bed entry, the lying idle and the exit. The actor stays on the marker while unconscious and can still be activated. The release script clears that state and selects a flee package with a destination marker.

@@ -544,6 +544,7 @@ namespace NifOsg
         int mFlags{ 0 };
         bool mNativeInterpolator{ false };
         unsigned int mFollowAxis{ 0 };
+        float mFrameSampleDistance{ 0.f };
         // Parameter and accumulated arc length. Immutable after construction;
         // each cloned callback retains its own interpolation cursor.
         std::vector<std::pair<float, double>> mArcLength;

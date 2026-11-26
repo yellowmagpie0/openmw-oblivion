@@ -985,6 +985,7 @@ namespace NifOsg
         , mFlags(copy.mFlags)
         , mNativeInterpolator(copy.mNativeInterpolator)
         , mFollowAxis(copy.mFollowAxis)
+        , mFrameSampleDistance(copy.mFrameSampleDistance)
         , mArcLength(copy.mArcLength)
     {
     }
@@ -1004,13 +1005,19 @@ namespace NifOsg
         if (interpolator->mPathData.empty() || interpolator->mPercentData.empty()
             || !interpolator->mPathData->mKeyList || !interpolator->mPercentData->mKeyList)
             throw std::runtime_error("NiPathInterpolator requires path and percent data");
-        // Bank and AllowFlip need a curvature-frame implementation. Do not
-        // silently treat those authored modes as a tangent-only rotation.
+        // Banking adds a separate angle about the path tangent.
         constexpr unsigned supported = Nif::NiPathController::Flag_CVDataNeedsUpdate
             | Nif::NiPathController::Flag_OpenCurve | Nif::NiPathController::Flag_ConstVelocity
-            | Nif::NiPathController::Flag_Follow | Nif::NiPathController::Flag_FlipFollowAxis;
+            | Nif::NiPathController::Flag_Follow | Nif::NiPathController::Flag_FlipFollowAxis
+            | Nif::NiPathController::Flag_AllowFlip;
         if ((mFlags & ~supported) != 0)
-            throw std::runtime_error("Unsupported NiPathInterpolator banking or flip-avoidance flags");
+            throw std::runtime_error("Unsupported NiPathInterpolator flags");
+        if ((mFlags & Nif::NiPathController::Flag_Follow) && (mFlags & Nif::NiPathController::Flag_AllowFlip))
+        {
+            if (!std::isfinite(interpolator->mSmoothing))
+                throw std::runtime_error("NiPathInterpolator frame smoothing is non-finite");
+            mFrameSampleDistance = std::clamp(interpolator->mSmoothing, 0.001f, 0.25f);
+        }
         if ((mFlags & Nif::NiPathController::Flag_Follow) && mFollowAxis > 2)
             throw std::runtime_error("NiPathInterpolator follow axis is outside X/Y/Z");
         const auto& path = interpolator->mPathData->mKeyList;
@@ -1130,21 +1137,12 @@ namespace NifOsg
         if (mNativeInterpolator && (mFlags & Nif::NiPathController::Flag_Follow))
         {
             constexpr float epsilon = 0.0001f;
-            float before = parameter - epsilon;
-            float after = parameter + epsilon;
-            if (mFlags & Nif::NiPathController::Flag_OpenCurve)
-            {
-                before = std::max(before, 0.f);
-                after = std::min(after, 1.f);
-            }
-            else
-            {
-                if (before < 0.f)
-                    before += 1.f;
-                if (after > 1.f)
-                    after -= 1.f;
-            }
-            osg::Vec3f tangent = mPath.interpKey(after) - mPath.interpKey(before);
+            const auto sample = [&](float offset) {
+                const float u = parameter + offset;
+                return mPath.interpKey((mFlags & Nif::NiPathController::Flag_OpenCurve)
+                    ? std::clamp(u, 0.f, 1.f) : u - std::floor(u));
+            };
+            osg::Vec3f tangent = sample(epsilon) - sample(-epsilon);
             if (!isValidTransformVector(tangent))
                 throw std::runtime_error("NiPathInterpolator tangent is non-finite");
             if (tangent.normalize() > 0.f)
@@ -1153,6 +1151,26 @@ namespace NifOsg
                 axis[mFollowAxis] = (mFlags & Nif::NiPathController::Flag_FlipFollowAxis) ? -1.f : 1.f;
                 osg::Quat rotation;
                 rotation.makeRotate(axis, tangent);
+                if (mFrameSampleDistance > 0.f)
+                {
+                    // With AllowFlip the second axis tracks the curve normal, including through loops.
+                    const osg::Vec3f center = *result.mTranslation;
+                    osg::Vec3f incoming = center - sample(-mFrameSampleDistance);
+                    osg::Vec3f outgoing = sample(mFrameSampleDistance) - center;
+                    if (incoming.normalize() > 0.f && outgoing.normalize() > 0.f)
+                    {
+                        osg::Vec3f normal = outgoing - incoming;
+                        normal -= tangent * (normal * tangent);
+                        if (normal.normalize() > 1e-5f)
+                        {
+                            osg::Vec3f secondary;
+                            secondary[(mFollowAxis + 1) % 3] = 1.f;
+                            const osg::Vec3f initialNormal = rotation * secondary;
+                            const float roll = std::atan2((initialNormal ^ normal) * tangent, initialNormal * normal);
+                            rotation *= osg::Quat(roll, tangent);
+                        }
+                    }
+                }
                 result.mRotation = rotation;
             }
         }

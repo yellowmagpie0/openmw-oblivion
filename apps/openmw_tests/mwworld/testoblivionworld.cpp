@@ -66,6 +66,7 @@
 #include <cstring>
 #include <new>
 #include <components/esm4/loadbook.hpp>
+#include <components/esm4/loadkeym.hpp>
 #include <components/esm4/loadweap.hpp>
 #include "apps/openmw/mwclass/book.hpp"
 #include "apps/openmw/mwclass/weapon.hpp"
@@ -1765,6 +1766,28 @@ namespace
         change(1);
         EXPECT_TRUE(world.isOblivionQuestBook(book));
         EXPECT_FLOAT_EQ(world.oblivionBookWeight(projected), 0.f);
+    }
+
+    TEST(OblivionWorldTest, ClearingQuestKeyFlagRestoresKeyWeightAndPersistsTheOverride)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        auto& store = world.getStore();
+        ESM4::Key key{};
+        key.mId = {0x942, 0};
+        key.mFlags = ESM4::Rec_Persistent;
+        key.mData.weight = 2.f;
+        const auto base = ESM::FormKey::content("headless.esm", 0x942);
+        store.getWritable<ESM4::Key>().insertStatic(key, base);
+        acceptNativeSnapshot(fixture, captureNativeActorState(fixture, actor));
+        ASSERT_TRUE(world.isOblivionQuestKey(key));
+        ASSERT_TRUE(world.setOblivionQuestItem(base, false));
+        const auto effective = MWWorld::OblivionProfileServices::itemDefinition(store, ESM::RefId(key.mId), &world);
+        ASSERT_TRUE(effective);
+        EXPECT_FALSE(effective->mQuestItem);
+        EXPECT_FLOAT_EQ(effective->mWeight, 2.f);
+        EXPECT_FALSE(world.oblivionQuestItemFlags().at(base));
     }
 
     TEST(OblivionWorldTest, NativeActorAddNegativeDeltaFailsExplicitlyWithoutAuthorityBirth)

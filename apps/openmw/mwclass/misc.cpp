@@ -19,6 +19,7 @@
 #include "../mwworld/nullaction.hpp"
 #include "../mwworld/oblivionmiscconsumables.hpp"
 #include "../mwworld/worldmodel.hpp"
+#include "../mwworld/worldimp.hpp"
 
 #include "../mwgui/tooltips.hpp"
 
@@ -254,6 +255,9 @@ namespace MWClass
     float Miscellaneous::getWeight(const MWWorld::ConstPtr& ptr) const
     {
         const MWWorld::LiveCellRef<ESM::Miscellaneous>* ref = ptr.get<ESM::Miscellaneous>();
+        if ((ref->mBase->mData.mFlags & ESM::Miscellaneous::Key) && ref->mBase->mId.getIf<ESM::FormId>())
+            if (const auto* world = dynamic_cast<const MWWorld::World*>(MWBase::Environment::get().getWorldOrNull()))
+                return world->oblivionKeyWeight(*ref->mBase);
         return ref->mBase->mData.mWeight;
     }
 

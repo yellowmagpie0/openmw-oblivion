@@ -50,7 +50,7 @@ namespace MWGui
                 Event_PageBreak,
             };
 
-            BookTextParser(const std::string& text, bool shrinkTextAtLastTag);
+            BookTextParser(const std::string& text, bool shrinkTextAtLastTag, bool oblivion);
 
             Events next();
 
@@ -121,11 +121,14 @@ namespace MWGui
         class BookFormatter
         {
         public:
+            explicit BookFormatter(bool oblivion) : mOblivion(oblivion) {}
+
             Paginator::Pages markupToWidget(MyGUI::Widget* parent, const std::string& markup, const int pageWidth,
                 const int pageHeight, bool shrinkTextAtLastTag);
             Paginator::Pages markupToWidget(MyGUI::Widget* parent, const std::string& markup, bool shrinkTextAtLastTag);
 
         private:
+            bool mOblivion;
             void resetFontProperties();
 
             void handleDiv(const BookTextParser::Attributes& attr);
@@ -168,7 +171,7 @@ namespace MWGui
         {
         public:
             ImageElement(MyGUI::Widget* parent, Paginator& pag, const BlockStyle& blockStyle, const std::string& src,
-                int width, int height);
+                int width, int height, MyGUI::IntSize sourceSize);
             int getHeight() override;
             int pageSplit() override;
 

@@ -1230,13 +1230,18 @@ float MWWorld::ContainerStore::getWeight() const
     }
 
     // The cached sum uses projected base weights. A script may later change a
-    // book's flag across all inventories, including an already resolved store.
+    // book or key's flag across all inventories, including an already resolved store.
     float weight = mCachedWeight;
-    if (!mLists.mBooks.mList.empty() && !getPtr().isEmpty())
+    if ((!mLists.mBooks.mList.empty() || !mLists.mMiscItems.mList.empty()) && !getPtr().isEmpty())
         if (const auto* world = dynamic_cast<const World*>(MWBase::Environment::get().getWorldOrNull());
-            world && !world->oblivionQuestBookFlags().empty())
+            world && !world->oblivionQuestItemFlags().empty())
+        {
             for (const auto& book : mLists.mBooks.mList)
                 weight += book.mRef.getCount() * (world->oblivionBookWeight(*book.mBase) - book.mBase->mData.mWeight);
+            for (const auto& item : mLists.mMiscItems.mList)
+                if (item.mBase->mData.mFlags & ESM::Miscellaneous::Key)
+                    weight += item.mRef.getCount() * (world->oblivionKeyWeight(*item.mBase) - item.mBase->mData.mWeight);
+        }
     return weight;
 }
 

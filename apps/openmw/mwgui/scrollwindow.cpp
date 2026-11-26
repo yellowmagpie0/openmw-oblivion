@@ -62,7 +62,7 @@ namespace MWGui
             text = &scroll.get<ESM4::Book>()->mBase->mText;
         bool shrinkTextAtLastTag = scroll.getType() == ESM::REC_BOOK;
 
-        Formatting::BookFormatter formatter;
+        Formatting::BookFormatter formatter(scroll.getType() == ESM::REC_BOOK4);
         formatter.markupToWidget(mTextView, *text, 390, mTextView->getHeight(), shrinkTextAtLastTag);
         MyGUI::IntSize size = mTextView->getChildAt(0)->getSize();
 

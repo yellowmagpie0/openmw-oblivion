@@ -455,6 +455,22 @@ osg::Group {
         EXPECT_FALSE(result.mRotation);
     }
 
+    TEST(NifOsgControllerTest, flippedPathFrameFollowsTangentAndTurnsTowardCurvature)
+    {
+        NativePathFixture fixture;
+        fixture.interpolator.mFlags = Nif::NiPathController::Flag_AllowFlip | Nif::NiPathController::Flag_Follow
+            | Nif::NiPathController::Flag_OpenCurve;
+        fixture.interpolator.mSmoothing = 0.02f;
+        fixture.interpolator.mFollowAxis = 2;
+        fixture.path->mKeys = { { 0.f, { { 0.f, 1.f, 0.f }, {}, { 2.f, -4.f, 0.f } } },
+            { 1.f, { { 2.f, 1.f, 0.f }, { 2.f, 4.f, 0.f }, {} } } };
+        PathController controller(&fixture.interpolator);
+        const auto transform = controller.evaluate(0.5f);
+        ASSERT_TRUE(transform.mRotation);
+        EXPECT_NEAR(((*transform.mRotation) * osg::Vec3f(0, 0, 1)).x(), 1.f, 0.001f);
+        EXPECT_NEAR(((*transform.mRotation) * osg::Vec3f(1, 0, 0)).y(), 1.f, 0.001f);
+    }
+
     TEST(NifOsgControllerTest, pathRejectsMissingMalformedAndUnsupportedData)
     {
         NativePathFixture fixture;

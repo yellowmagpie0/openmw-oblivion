@@ -763,6 +763,7 @@ namespace MWWorld
                 && mOblivionScriptManager && mOblivionScriptManager->hasStatelessInventoryEvents(*base);
             const auto questItem = [&] {
                 if constexpr (isBook) return isOblivionQuestBook(*baseDefinition);
+                else if constexpr (isKey) return isOblivionQuestKey(*baseDefinition);
                 else return (baseDefinition->mFlags & ESM4::Rec_Persistent) != 0;
             };
             if ((!script().isZeroOrUnset() && !transferScript) || !enchantment().isZeroOrUnset()
