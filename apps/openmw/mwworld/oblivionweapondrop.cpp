@@ -720,7 +720,7 @@ namespace MWWorld
                     || baseDefinition->mData.weight < 0) return std::nullopt;
             // Takeable books use one counted world reference. Skill awards
             // belong to the player's book-base history, not the dropped reference.
-            // Scrolls and scripted books retain their existing path.
+            // Scrolls retain their own enchantment policy.
             if constexpr (isBook)
                 if (baseDefinition->mData.flags != 0
                     || baseDefinition->mData.bookSkill < ESM4::Book::BookSkill_None
@@ -759,10 +759,14 @@ namespace MWWorld
             // Other records retain singleton admission; equipment, scripts and
             // associated bound/enchantment effects retain their own policies.
             const auto base = mStore.get<Record>().findFormKey(sourceId);
-            const bool scriptedEquipment = (isArmor || isWeapon) && !script().isZeroOrUnset() && base
+            const bool transferScript = (isArmor || isWeapon || isBook) && !script().isZeroOrUnset() && base
                 && mOblivionScriptManager && mOblivionScriptManager->hasStatelessInventoryEvents(*base);
-            if ((!script().isZeroOrUnset() && !scriptedEquipment) || !enchantment().isZeroOrUnset()
-                || (baseDefinition->mFlags & ESM4::Rec_Persistent)) return std::nullopt;
+            const auto questItem = [&] {
+                if constexpr (isBook) return isOblivionQuestBook(*baseDefinition);
+                else return (baseDefinition->mFlags & ESM4::Rec_Persistent) != 0;
+            };
+            if ((!script().isZeroOrUnset() && !transferScript) || !enchantment().isZeroOrUnset()
+                || questItem()) return std::nullopt;
             if (!base || !base->isContent() || (baseDefinition->mFlags & ESM4::Rec_Deleted))
                 throw std::invalid_argument("native inventory loose item drop has no winning base");
             if (const auto* winner = mStore.getFormKeyIndex().winner(*base);
@@ -771,9 +775,9 @@ namespace MWWorld
             const int sourceCount = item.getCellRef().getCount();
             if (actor != getPlayerPtr() || !actor.isInCell() || sourceCount <= 0
                 || count == 0 || count > static_cast<size_t>(sourceCount)
-                || (!isStackable && (count != 1 || sourceCount != 1))
+                || ((!isStackable || transferScript) && (count != 1 || sourceCount != 1))
                 || item.getCellRef().getNativeBoundSource()
-                || (!scriptedEquipment && !item.getCellRef().getNativeScriptOwner().isNull())
+                || (!transferScript && !item.getCellRef().getNativeScriptOwner().isNull())
                 || item.getCellRef().getNativeItemScale() || item.getCellRef().getEnchantmentCharge() >= 0)
                 throw std::invalid_argument("native inventory loose item drop requires an ordinary supported quantity");
             auto& inventory = actor.getClass().getInventoryStore(actor);
@@ -790,7 +794,7 @@ namespace MWWorld
             const std::weak_ptr<const char> identity = mOblivionDynamicReferenceIdentity;
             const CellRef sourceBefore = item.getCellRef();
             std::unique_ptr<OblivionScriptManager::PreparedItemScriptTransfer> scriptTransfer;
-            if (scriptedEquipment)
+            if (transferScript)
                 scriptTransfer = mOblivionScriptManager->prepareItemScriptTransfer(*base,
                     sourceBefore.getNativeScriptOwner(), keys->key(), sourceBefore.getNativeScriptOwner().isNull());
             if constexpr (!isWeapon && !isArmor)
@@ -840,7 +844,7 @@ namespace MWWorld
                 // borrowed item dereference after a model/resource callback.
                 if (!keys->isValid() || getPlayerPtr() != actor || actor.getCell() != actorCell
                     || !removal->isValid() || (scriptTransfer && !scriptTransfer->isValid())
-                    || mStore.get<Record>().search(sourceId) != baseDefinition) return false;
+                    || mStore.get<Record>().search(sourceId) != baseDefinition || questItem()) return false;
                 const auto& live = item.getCellRef();
                 return modelState() == modelBefore && baseDefinition->mFlags == flagsBefore
                     && health() == healthBefore && script() == scriptBefore

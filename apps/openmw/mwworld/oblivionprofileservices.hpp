@@ -14,6 +14,7 @@
 namespace MWWorld
 {
     class ESMStore;
+    class World;
     class InventoryStore;
     class CellRef;
 
@@ -41,7 +42,7 @@ namespace MWWorld
     public:
         static OblivionProfileInstallReport install(ESMStore& store);
         static std::optional<ESM4::InventoryItemDefinition> itemDefinition(
-            const ESMStore& store, const ESM::RefId& id);
+            const ESMStore& store, const ESM::RefId& id, const World* world = nullptr);
         static ESM::RefId sharedItemId(const ESMStore& store, const ESM::RefId& nativeId);
         static void validateWeaponPoison(const ESMStore& store, const ESM::RefId& weapon,
             const ESM::FormKey& poison, const ESMStore* incoming = nullptr);

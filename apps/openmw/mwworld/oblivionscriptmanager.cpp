@@ -1642,10 +1642,16 @@ namespace MWWorld
     {
         requireMutableRuntime();
         ESM4::RuntimeQuestState& state = questState(quest);
+        const auto* definition = mStore.search<ESM4::Quest>(quest);
+        // A returned quest item may set an earlier stage again. The native
+        // command only restarts a finished quest if it allows repeat stages.
+        if (!state.mRunning)
+            state.mRunning = !definition || state.mCompletedStages.empty()
+                || (definition->mData.flags & ESM4::Quest::Flag_AllowRepeatStages)
+                || !isOblivionQuestFinished(mWorld, *this, *definition, state);
         // Native Quest+5C retains the highest reached stage, including while
         // a result script synchronously assures an earlier prerequisite.
         state.mStage = std::max(state.mStage, stage);
-        state.mRunning = true;
         const auto insert = std::lower_bound(state.mCompletedStages.begin(), state.mCompletedStages.end(), stage);
         const bool completed = insert != state.mCompletedStages.end() && *insert == stage;
         if (!completed)
@@ -1655,7 +1661,6 @@ namespace MWWorld
                 ai->questStageChanged(quest);
         }
         trace("setstage quest=" + quest.serialize() + " stage=" + std::to_string(stage));
-        const auto* definition = mStore.search<ESM4::Quest>(quest);
         if (completed && (!definition || !(definition->mData.flags & ESM4::Quest::Flag_AllowRepeatStages)))
             return;
         // Select entries before any result script can change another entry's conditions.
@@ -1975,6 +1980,10 @@ namespace MWWorld
                 // Calendar globals project the live clock owner. The runtime
                 // snapshot can predate ordinary time advance or a Wait jump.
                 const GlobalVariableName calendarName(global->mEditorId);
+                // GameHour is declared short in Oblivion.esm, but the native
+                // expression reader loads the clock's fractional float directly.
+                if (Misc::StringUtils::ciEqual(global->mEditorId, "GameHour"))
+                    return double(mWorld.getTimeStamp().getHour());
                 if (global->mType == 'f')
                     return double(mWorld.getGlobalFloat(calendarName));
                 return std::int64_t(mWorld.getGlobalInt(calendarName));
@@ -2909,6 +2918,16 @@ namespace MWWorld
             return std::int64_t(0);
         }
 
+        if (name == "setquestobject")
+        {
+            const auto base = keyFromValue(argument(0));
+            const bool flag = ObScript::asInteger(argument(1)) > 0;
+            if (base && mWorld.setOblivionQuestBook(*base, flag))
+                trace("setquestobject base=" + base->serialize() + " flag=" + (flag ? "1" : "0"));
+            else
+                trace("deferred command=setquestobject unit=" + context.mUnit.serialize());
+            return std::int64_t(0);
+        }
         if (name == "setessential")
         {
             if (arguments.size() != 2)
@@ -3498,7 +3517,7 @@ namespace MWWorld
             return std::int64_t(0);
         }
         if (name == "getcurrenttime")
-            return double(mWorld.mGlobalVariables[Globals::sGameHour].getFloat());
+            return double(mWorld.getTimeStamp().getHour());
         if (name == "getdayofweek")
         {
             // Original5051D0 ->402C40 truncates GameDaysPassed and takes the
@@ -4104,7 +4123,7 @@ namespace MWWorld
         // retain deterministic control-flow compatibility for M7 scripts.
         static const std::set<std::string, std::less<>> deferred{
             "cast", "addspell", "removespell",
-            "setquestobject", "modfactionrank",
+            "modfactionrank",
             "setunconscious" };
         if (deferred.contains(name))
         {

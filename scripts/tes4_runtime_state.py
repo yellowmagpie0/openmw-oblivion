@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 109
+CURRENT_VERSION = 110
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -683,6 +683,11 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     of relying on a successful struct.pack as validation.
     """
 
+    quest_books = state.get("quest_book_flags", {})
+    if (not isinstance(quest_books, dict) or len(quest_books) > MAX_COLLECTION
+            or (quest_books and state["schema_version"] < 110)
+            or any(not _canonical_content_key(key) or type(value) is not bool for key, value in quest_books.items())):
+        raise RuntimeStateError("Invalid quest book overrides")
     _validate_daily_packages(state)
     entries = state.get("package_waiting", [])
     if not isinstance(entries, list) or len(entries) > MAX_COLLECTION:
@@ -3929,6 +3934,18 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             seat["actor_model"] = reader.string(); seat["model_hash"] = reader.string()
             seat["clip_hashes"] = [reader.string() for _ in range(3)]
             result["native_player_furniture"] = seat
+    if version >= 110:
+        books = {}
+        previous = None
+        for _ in range(reader.count()):
+            base = reader.string()
+            flag = reader.unpack("<B")
+            order = _global_identity(base)
+            if flag > 1 or (previous is not None and order <= previous):
+                raise RuntimeStateError("Noncanonical quest book override")
+            books[base] = bool(flag)
+            previous = order
+        result["quest_book_flags"] = books
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -4884,6 +4901,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.string(seat["actor_model"]); writer.string(seat["model_hash"])
             for h in seat["clip_hashes"]:
                 writer.string(h)
+    if version >= 110:
+        books = state.get("quest_book_flags", {})
+        writer.pack("<I", len(books))
+        for base in sorted(books, key=_global_identity):
+            writer.string(base)
+            writer.pack("<B", books[base])
     return writer.finish()
 
 
@@ -5294,10 +5317,17 @@ def _upgrade_combat_controllers(state: dict[str, Any]) -> None:
     state.setdefault("combat_controllers", {})
 
 
+def _upgrade_quest_books(state: dict[str, Any]) -> None:
+    if state["schema_version"] < 110 and state.get("quest_book_flags"):
+        raise RuntimeStateError("Legacy runtime schema cannot contain quest book overrides")
+    state.setdefault("quest_book_flags", {})
+
+
 def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     data = source.read_bytes()
     start, end, _, _ = _find_runtime_record(data)
     state = copy.deepcopy(state)
+    _upgrade_quest_books(state)
     _upgrade_counter_melee(state)
     _upgrade_melee_phases(state)
     _upgrade_power_melee_phases(state)
@@ -5394,6 +5424,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     """Apply deterministic changes spanning every M4 state family."""
 
     result = copy.deepcopy(state)
+    _upgrade_quest_books(result)
     _upgrade_melee_phases(result)
     _upgrade_power_melee_phases(result)
     _upgrade_melee_reactions(result)

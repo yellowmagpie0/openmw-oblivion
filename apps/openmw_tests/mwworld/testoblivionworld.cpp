@@ -1729,6 +1729,44 @@ namespace
         EXPECT_FALSE(ordinary.front().mNegativeCount);
     }
 
+    TEST(OblivionWorldTest, ClearingAQuestBookRestoresItsAuthoredWeightForEveryCopy)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900);
+        auto& store = world.getStore();
+        MWClass::Book::registerSelf();
+        ESM4::Book book{};
+        book.mId = {0x942, 0};
+        const auto key = ESM::FormKey::content("headless.esm", 0x942);
+        book.mFlags = ESM4::Rec_Persistent;
+        book.mData.weight = 5.f;
+        store.getWritable<ESM4::Book>().insertStatic(book, key);
+        ESM::Book projected;
+        projected.blank();
+        projected.mId = ESM::RefId(book.mId);
+        store.insertStatic(projected);
+        acceptNativeSnapshot(fixture, captureNativeActorState(fixture, actor));
+        ASSERT_TRUE(world.isOblivionQuestBook(book));
+        EXPECT_FLOAT_EQ(world.oblivionBookWeight(projected), 0.f);
+        MWWorld::OblivionScriptManager host(world, store, {"headless.esm"});
+        ObScript::RuntimeContext context;
+        const auto change = [&](int flag) {
+            std::vector<ObScript::Value> args{ObScript::ReferenceValue{key, {}}, std::int64_t(flag)};
+            host.call("SetQuestObject", {}, args, context, {});
+        };
+        change(-1);
+        EXPECT_FALSE(world.isOblivionQuestBook(book));
+        EXPECT_FLOAT_EQ(world.oblivionBookWeight(projected), 5.f);
+        const auto effective = MWWorld::OblivionProfileServices::itemDefinition(store, projected.mId, &world);
+        ASSERT_TRUE(effective);
+        EXPECT_FALSE(effective->mQuestItem);
+        EXPECT_FLOAT_EQ(effective->mWeight, 5.f);
+        change(1);
+        EXPECT_TRUE(world.isOblivionQuestBook(book));
+        EXPECT_FLOAT_EQ(world.oblivionBookWeight(projected), 0.f);
+    }
+
     TEST(OblivionWorldTest, NativeActorAddNegativeDeltaFailsExplicitlyWithoutAuthorityBirth)
     {
         NativeWorldFixture fixture;

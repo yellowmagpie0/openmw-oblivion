@@ -2097,6 +2097,7 @@ namespace MWWorld
         ESM4::RuntimeState state;
         if (mOblivionRuntimeState)
         {
+            state.mQuestBookFlags = mOblivionRuntimeState->mQuestBookFlags;
             state.mIgnoreFriendlyHits = mOblivionRuntimeState->mIgnoreFriendlyHits;
             state.mPlayer.mAwardedSkillBooks = mOblivionRuntimeState->mPlayer.mAwardedSkillBooks;
             state.mDispositionModifiers = mOblivionRuntimeState->mDispositionModifiers;
@@ -2491,7 +2492,8 @@ namespace MWWorld
             for (const ESM4::RuntimeReferenceState& reference : state.mReferences)
                 captured.insert(reference.mKey);
             for (const ESM4::RuntimeReferenceState& reference : mOblivionRuntimeState->mReferences)
-                if ((reference.mKey.isDynamic() || reference.mCustomState.contains("native.fire.spell")
+                if ((reference.mKey.isDynamic() || reference.mCustomState.contains(mapMarkerRevealKey)
+                        || reference.mCustomState.contains("native.fire.spell")
                         || reference.mCustomState.contains("native.charm.spell")
                         || reference.mCustomState.contains("native.package.lock_projection_pending")
                         || reference.mCustomState.contains("native.levelled_actor.level"))
@@ -7449,6 +7451,12 @@ namespace MWWorld
             {
                 if (reference.mKey.isDynamic())
                     continue; // Retain unprojected dynamic state for its future MWClass.
+                // ShowMap can reveal a landmark whose CELL has never been visited.
+                // The map reads its reveal flags directly from the accepted snapshot.
+                if (reference.mCustomState.contains(mapMarkerRevealKey))
+                    if (const auto* marker = mStore.search<ESM4::Reference>(reference.mKey);
+                        marker && marker->mIsMapMarker && marker->mBaseKey == reference.mBase)
+                        continue;
                 throw std::runtime_error("TES4 runtime-state reference is not present: " + reference.mKey.serialize());
             }
             const auto baseId = resolver.toFormId(reference.mBase);
@@ -8216,6 +8224,12 @@ namespace MWWorld
         validateOblivionEnvironmentalFire(state);
         validateOblivionIngredientRestoration(mStore, state);
         validateOblivionAwardedSkillBooks(mStore, state);
+        for (const auto& [base, flag] : state.mQuestBookFlags)
+        {
+            const auto* book = mStore.search<ESM4::Book>(base);
+            if (!book || (book->mFlags & ESM4::Rec_Deleted))
+                throw std::runtime_error("Quest book override has no winning book: " + base.serialize());
+        }
         validateOblivionScrollChameleon(mStore, state);
         validateOblivionPotionAttributes(mStore, state);
         validateOblivionPotionLight(mStore, state);

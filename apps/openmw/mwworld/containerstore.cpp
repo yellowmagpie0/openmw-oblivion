@@ -31,6 +31,7 @@
 #include "preparedinitialinventory.hpp"
 #include "refdata.hpp"
 #include "worldmodel.hpp"
+#include "worldimp.hpp"
 
 namespace
 {
@@ -1228,7 +1229,15 @@ float MWWorld::ContainerStore::getWeight() const
         mWeightUpToDate = true;
     }
 
-    return mCachedWeight;
+    // The cached sum uses projected base weights. A script may later change a
+    // book's flag across all inventories, including an already resolved store.
+    float weight = mCachedWeight;
+    if (!mLists.mBooks.mList.empty() && !getPtr().isEmpty())
+        if (const auto* world = dynamic_cast<const World*>(MWBase::Environment::get().getWorldOrNull());
+            world && !world->oblivionQuestBookFlags().empty())
+            for (const auto& book : mLists.mBooks.mList)
+                weight += book.mRef.getCount() * (world->oblivionBookWeight(*book.mBase) - book.mBase->mData.mWeight);
+    return weight;
 }
 
 int MWWorld::ContainerStore::getType(const ConstPtr& ptr)

@@ -19,6 +19,7 @@ namespace ESM4
 {
     struct Quest;
     struct RuntimeQuestJournalStage;
+    struct RuntimeQuestState;
 }
 
 namespace MWWorld
@@ -62,6 +63,8 @@ namespace MWWorld
     };
 
     std::vector<OblivionJournalQuest> getOblivionJournal(const MWBase::World& world);
+    bool isOblivionQuestFinished(const World& world, const OblivionScriptManager& scripts,
+        const ESM4::Quest& quest, const ESM4::RuntimeQuestState& state);
     std::string getOblivionJournalDebug(const MWBase::World& world, const ESM::FormKey& quest);
     std::optional<QuestObjective> getOblivionQuestObjective(MWBase::World& world, const ESM::FormKey& tracked = {});
     std::optional<ESM4::RuntimeQuestJournalStage> evaluateOblivionStageEntries(World& world,

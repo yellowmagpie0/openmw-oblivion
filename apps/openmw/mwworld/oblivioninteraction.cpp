@@ -521,6 +521,39 @@ namespace MWWorld
         }
     }
 
+    const std::map<ESM::FormKey, bool>& World::oblivionQuestBookFlags() const
+    {
+        static const std::map<ESM::FormKey, bool> empty;
+        return mOblivionRuntimeState ? mOblivionRuntimeState->mQuestBookFlags : empty;
+    }
+
+    bool World::isOblivionQuestBook(const ESM4::Book& book) const
+    {
+        const auto& flags = oblivionQuestBookFlags();
+        const auto key = flags.empty() ? std::nullopt : mStore.get<ESM4::Book>().findFormKey(book.mId);
+        const auto it = key ? flags.find(*key) : flags.end();
+        return it != flags.end() ? it->second : (book.mFlags & ESM4::Rec_Persistent) != 0;
+    }
+
+    float World::oblivionBookWeight(const ESM::Book& projected) const
+    {
+        if (!oblivionQuestBookFlags().empty())
+            if (const auto* native = mStore.get<ESM4::Book>().search(projected.mId))
+                return isOblivionQuestBook(*native) ? 0.f : native->mData.weight;
+        return projected.mData.mWeight;
+    }
+
+    bool World::setOblivionQuestBook(const ESM::FormKey& base, bool flag)
+    {
+        const auto* book = mStore.search<ESM4::Book>(base);
+        if (mGameProfile != ESM::GameProfile::Oblivion || !book || (book->mFlags & ESM4::Rec_Deleted))
+            return false;
+        if (!mOblivionRuntimeState)
+            mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
+        mOblivionRuntimeState->mQuestBookFlags.insert_or_assign(base, flag);
+        return true;
+    }
+
     int World::oblivionAddNativeInventoryItem(const Ptr& actor, const ESM::FormKey& key, int count)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !nativeInventoryOwner(actor)
@@ -1007,7 +1040,8 @@ namespace MWWorld
         if (!owner.empty()) custom["ownership_checked"] = true;
         const bool transferredNirnroot = item.mBase == ESM::FormKey::content("oblivion.esm", 0x4e940)
             && key.isDynamic() && mOblivionScriptManager;
-        const bool transferredEquipment = (ptr.getType() == ESM::REC_ARMO4 || ptr.getType() == ESM::REC_WEAP4)
+        const bool transferredItem = (ptr.getType() == ESM::REC_ARMO4 || ptr.getType() == ESM::REC_WEAP4
+                || ptr.getType() == ESM::REC_BOOK4)
             && key.isDynamic()
             && sourceRelations.mDropper && !sourceRelations.mDropper->isNull()
             && mOblivionScriptManager && mOblivionScriptManager->hasStatelessInventoryEvents(item.mBase);
@@ -1018,7 +1052,7 @@ namespace MWWorld
             && mOblivionScriptManager && mOblivionScriptManager->hasStatelessInventoryEvents(item.mBase);
         std::unique_ptr<OblivionScriptManager::PreparedItemScriptTransfer> scriptTransfer;
         const auto scriptSerial = mNextOblivionDynamicSerial;
-        if (transferredNirnroot || transferredEquipment || initializedApparatus)
+        if (transferredNirnroot || transferredItem || initializedApparatus)
         {
             if (item.mCount != 1 || !scriptSerial || scriptSerial == std::numeric_limits<std::uint64_t>::max())
                 throw std::invalid_argument("scripted native pickup requires a singleton identity");

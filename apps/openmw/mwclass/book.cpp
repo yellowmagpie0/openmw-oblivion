@@ -11,6 +11,7 @@
 #include "../mwbase/world.hpp"
 
 #include "../mwworld/actionread.hpp"
+#include "../mwworld/worldimp.hpp"
 #include "../mwworld/oblivioncombatmagic.hpp"
 #include <components/esm4/loadbook.hpp>
 #include "../mwworld/cellstore.hpp"
@@ -142,7 +143,7 @@ namespace MWClass
         if (world->getGameProfile() == ESM::GameProfile::Oblivion)
         {
             const auto description = MWWorld::describeOblivionScroll(*world, ptr);
-            info.text = MWGui::ToolTips::getWeightString(ref->mBase->mData.mWeight, "#{Interface:Weight}")
+            info.text = MWGui::ToolTips::getWeightString(getWeight(ptr), "#{Interface:Weight}")
                 + MWGui::ToolTips::getValueString(ref->mBase->mData.mValue, "#{Interface:Value}");
             if (!description.empty()) info.text += "\n" + description;
             return info;
@@ -214,6 +215,9 @@ namespace MWClass
     float Book::getWeight(const MWWorld::ConstPtr& ptr) const
     {
         const MWWorld::LiveCellRef<ESM::Book>* ref = ptr.get<ESM::Book>();
+        if (ref->mBase->mId.getIf<ESM::FormId>())
+            if (const auto* world = dynamic_cast<const MWWorld::World*>(MWBase::Environment::get().getWorldOrNull()))
+                return world->oblivionBookWeight(*ref->mBase);
         return ref->mBase->mData.mWeight;
     }
 }

@@ -308,6 +308,7 @@ namespace MWMechanics
         // Package door policies address both the source and destination CELL.
         std::map<ESM::FormKey, std::vector<std::size_t>> mUnloadedDoorsByCell;
         std::map<ESM::FormKey, std::vector<std::size_t>> mUnloadedDoorsByDestinationCell;
+        std::map<ESM::RefId, std::vector<std::size_t>> mExteriorGatesByDestination;
         // Strongly connected walking regions preserve disconnected components
         // inside one CELL. Directed PGRI edges and XTEL landings connect these
         // regions. Only topology is cached; access is checked for each plan.
@@ -351,6 +352,7 @@ namespace MWMechanics
 
         MWWorld::Ptr ptrFor(const ESM::FormKey& key) const;
         MWWorld::Ptr loadedPtrFor(const ESM::FormKey& key) const;
+        MWWorld::Ptr loadedActivatorFor(const ESM::FormKey& key) const;
         OblivionDoorState currentDoorState(const UnloadedLocation& door, DoorStateCache* cache = nullptr,
             const OblivionSavedReferenceIndex* references = nullptr) const;
         bool doorInterruptionResolved(const LiveActor& live, const MWWorld::Ptr* actor = nullptr) const;

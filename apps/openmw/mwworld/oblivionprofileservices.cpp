@@ -1,4 +1,5 @@
 #include "oblivionprofileservices.hpp"
+#include "worldimp.hpp"
 #include <components/esm4/weaponpoison.hpp>
 #include <components/esm4/loadweap.hpp>
 
@@ -972,7 +973,7 @@ namespace MWWorld
     }
 
     std::optional<ESM4::InventoryItemDefinition> OblivionProfileServices::itemDefinition(
-        const ESMStore& store, const ESM::RefId& id)
+        const ESMStore& store, const ESM::RefId& id, const World* world)
     {
         ESM4::InventoryItemDefinition result;
         if (const ESM4::Ammunition* ammunition = store.get<ESM4::Ammunition>().search(id))
@@ -1011,7 +1012,7 @@ namespace MWWorld
                 : ESM4::InventoryItemType::Book;
             result.mValue = clampInteger<std::int32_t>(book->mData.value);
             result.mWeight = book->mData.weight;
-            result.mQuestItem = (book->mFlags & ESM4::Rec_Persistent) != 0;
+            result.mQuestItem = world ? world->isOblivionQuestBook(*book) : (book->mFlags & ESM4::Rec_Persistent) != 0;
             const std::uint16_t capacity = enchantmentCapacity(book->mEnchantment, book->mEnchantmentPoints);
             result.mMaxCharge = capacity == 0 ? -1.f : capacity;
             result.mConsumable = result.mType == ESM4::InventoryItemType::Scroll;

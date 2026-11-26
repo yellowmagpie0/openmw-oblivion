@@ -258,8 +258,8 @@ TEST(OblivionScriptGlobals, CalendarReadsLiveOwnerWithoutRequiringSaveReload)
         world.setGlobalFloat(MWWorld::GlobalVariableName(std::string_view("TimeScale")), 60.f);
         const auto before = world.captureOblivionRuntimeState().serializeBinary();
         EXPECT_EQ(ObScript::asInteger(host.resolveName("GameDaysPassed", {})), 6);
-        EXPECT_DOUBLE_EQ(ObScript::asNumber(host.resolveName("GameHour", {})), floatCalendar ? 18.75 : 18.0);
-        EXPECT_EQ(std::holds_alternative<double>(host.resolveName("GameHour", {})), floatCalendar);
+        EXPECT_DOUBLE_EQ(ObScript::asNumber(host.resolveName("GameHour", {})), 18.75);
+        EXPECT_DOUBLE_EQ(ObScript::asNumber(host.call("getcurrenttime", {}, {}, {}, {})), 18.75);
         EXPECT_EQ(ObScript::asInteger(host.resolveName("GameDay", {})), 1);
         EXPECT_EQ(ObScript::asInteger(host.resolveName("GameMonth", {})), 8);
         EXPECT_EQ(ObScript::asInteger(host.resolveName("GameYear", {})), 434);

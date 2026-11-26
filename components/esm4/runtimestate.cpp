@@ -2114,6 +2114,12 @@ namespace ESM4
         for (const auto& info : mSpokenDialogueInfos)
             if (info.isNull() || ESM::FormKey::deserialize(info.serialize()) != info)
                 throw std::runtime_error("Invalid spoken dialogue INFO identity");
+        checkSize(mQuestBookFlags.size(), "quest book overrides");
+        if (mVersion < 110 && !mQuestBookFlags.empty())
+            throw std::runtime_error("Quest book overrides require runtime schema 110");
+        for (const auto& [base, flag] : mQuestBookFlags)
+            if (!base.isContent() || ESM::FormKey::deserialize(base.serialize()) != base)
+                throw std::runtime_error("Invalid quest book identity");
         checkSize(mPackageWaiting.size(), "package waiting overrides");
         if (mVersion < 91 && !mPackageWaiting.empty())
             throw std::runtime_error("Package waiting overrides require runtime schema91");
@@ -4442,6 +4448,15 @@ namespace ESM4
                 for (const auto& hash : seat.mClipHashes) writer.string(hash);
             }
         }
+        if (mVersion >= 110)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mQuestBookFlags.size()));
+            for (const auto& [base, flag] : mQuestBookFlags)
+            {
+                writeKey(writer, base);
+                writer.integer<std::uint8_t>(flag);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -6024,6 +6039,18 @@ namespace ESM4
                 seat.mMarker = reader.integer<std::uint8_t>(); seat.mPhase = reader.integer<std::uint8_t>();
                 seat.mElapsed = reader.float32(); seat.mLookYaw = reader.float32(); seat.mActorModel = reader.string(); seat.mModelHash = reader.string();
                 for (auto& hash : seat.mClipHashes) hash = reader.string();
+            }
+        }
+        if (result.mVersion >= 110)
+        {
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                auto base = readKey(reader);
+                const auto flag = reader.integer<std::uint8_t>();
+                if (flag > 1 || (i && !(result.mQuestBookFlags.rbegin()->first < base)))
+                    throw std::runtime_error("Noncanonical quest book override");
+                result.mQuestBookFlags.emplace_hint(result.mQuestBookFlags.end(), std::move(base), flag != 0);
             }
         }
         if (!reader.eof())
@@ -7879,6 +7906,14 @@ namespace ESM4
                     stream << (i ? ",\"" : "\"") << seat.mClipHashes[i] << '\"';
                 stream << "]}";
             }
+        }
+        if (mVersion >= 110)
+        {
+            stream << ",\"quest_book_flags\":{";
+            for (auto it = mQuestBookFlags.begin(); it != mQuestBookFlags.end(); ++it)
+                stream << (it == mQuestBookFlags.begin() ? "\"" : ",\"") << escapeJson(it->first.serialize())
+                       << "\":" << (it->second ? "true" : "false");
+            stream << '}';
         }
         stream << "}";
         return stream.str();

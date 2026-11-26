@@ -854,6 +854,20 @@ namespace MWMechanics
         return {};
     }
 
+    MWWorld::Ptr OblivionAiService::loadedActivatorFor(const ESM::FormKey& key) const
+    {
+        // Inventory actions carry book, food or equipment bases here. Reject
+        // those before looking through resident cells for a placed instance.
+        if (!key.isDynamic())
+        {
+            const auto* ref = mWorld.mStore.search<ESM4::Reference>(key);
+            if (!mWorld.mStore.search<ESM4::Activator>(ref ? ref->mBaseKey : key))
+                return {};
+        }
+        const auto ptr = loadedPtrFor(key);
+        return placedActivator(ptr) ? ptr : MWWorld::Ptr{};
+    }
+
     MWWorld::Ptr OblivionAiService::loadedPtrFor(const ESM::FormKey& key) const
     {
         if (key.isNull())
@@ -1066,6 +1080,7 @@ namespace MWMechanics
         mBedsByCell.clear();
         mUnloadedDoorsByCell.clear();
         mUnloadedDoorsByDestinationCell.clear();
+        mExteriorGatesByDestination.clear();
 
         const ESM::FormKeyResolver resolver(mWorld.mContentFiles);
         const auto ownerKey = [resolver](const ESM::RefId& owner) {
@@ -1150,6 +1165,10 @@ namespace MWMechanics
                 if (marker.mCell.isNull())
                     continue;
                 mUnloadedDoorsByDestinationCell[marker.mCell].push_back(index);
+                const auto* from = mWorld.mStore.search<ESM4::Cell>(door.mCell);
+                const auto* to = mWorld.mStore.search<ESM4::Cell>(marker.mCell);
+                if (from && to && from->isExterior() && to->isExterior() && from->mParent != to->mParent)
+                    mExteriorGatesByDestination[to->mParent].push_back(index);
             }
         const auto byReference = [this](std::size_t left, std::size_t right) {
             return mUnloadedLocations[left].mReference < mUnloadedLocations[right].mReference;
@@ -1553,7 +1572,7 @@ namespace MWMechanics
                         {
                             const ESM::FormId id = ESM::FormId::fromUint32(item.item);
                             if (const auto definition = MWWorld::OblivionProfileServices::itemDefinition(
-                                    mWorld.mStore, ESM::RefId(id)))
+                                    mWorld.mStore, ESM::RefId(id), &mWorld))
                                 encumbrance += definition->mWeight * ESM4::inventoryItemCount(item);
                         }
                     };
@@ -4722,7 +4741,7 @@ namespace MWMechanics
                     continue;
                 const ESM::FormId id = ESM::FormId::fromUint32(item.item);
                 const auto definition = MWWorld::OblivionProfileServices::itemDefinition(
-                    mWorld.mStore, ESM::RefId(id));
+                    mWorld.mStore, ESM::RefId(id), &mWorld);
                 if (definition)
                     encumbrance += definition->mWeight * static_cast<float>(ESM4::inventoryItemCount(item));
             }
@@ -5931,8 +5950,8 @@ namespace MWMechanics
                                                                            : ESM::FormKey{};
         // UseItemAt may name a placed activator rather than a consumable.
         // Its script runs after actor iteration, at the action commit boundary.
-        const auto target = loadedPtrFor(requested);
-        if (use && placedActivator(target))
+        const auto target = use ? loadedActivatorFor(requested) : MWWorld::Ptr{};
+        if (!target.isEmpty())
         {
             if (!canActivatePlacedObject(mWorld, actor, target)) return false;
             live.mState.mActionItem = requested;
@@ -7675,7 +7694,7 @@ namespace MWMechanics
             if (live.mState.mActionReserved && live.mState.mActionTimer <= std::max(0.f, duration))
             {
                 const bool activation = live.mState.mPackageType == ESM4::AIPackageType::UseItemAt
-                    && placedActivator(loadedPtrFor(live.mState.mActionItem));
+                    && !loadedActivatorFor(live.mState.mActionItem).isEmpty();
                 // Activation callbacks can replace the actor/package graph.
                 // Retain the reservation for commitPendingTransitions.
                 actionCompleted = !activation && completeAction(actor, live);
@@ -8010,12 +8029,12 @@ namespace MWMechanics
         {
             if (live.mState.mPackageType == ESM4::AIPackageType::UseItemAt
                 && live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mActionReserved
-                && live.mState.mActionTimer <= 0.f && placedActivator(loadedPtrFor(live.mState.mActionItem)))
+                && live.mState.mActionTimer <= 0.f && !loadedActivatorFor(live.mState.mActionItem).isEmpty())
                 activations.push_back(live.mState);
             else if (live.mState.mPackageType == ESM4::AIPackageType::Find
                 && live.mState.mPhase == ESM4::PackagePhase::Act
                 && live.mState.mTier == ESM4::ProcessTier::High
-                && placedActivator(loadedPtrFor(live.mState.mTarget)))
+                && !loadedActivatorFor(live.mState.mTarget).isEmpty())
                 activations.push_back(live.mState);
         }
         for (const auto& expected : activations)

@@ -1,5 +1,7 @@
 # Tar-Meena's cipher
 
+Continue this course with [the noon inscription on Green Emperor Way](GREEN-EMPEROR-WAY.md).
+
 From the [fourth-volume save](SPONSOR-MEETING.md), leave the Sponsor's meeting room, return to the Arcane University and ask Tar-Meena about the Mythic Dawn. Return on two subsequent days with all four Commentaries. On the third visit, tell her you have the last two volumes. She decodes the first letters of the paragraphs and directs you to Green Emperor Way at noon.
 
 Run `build-windows/Continue-After-Tar-Meenas-Clue.cmd` to resume at the Arch-Mage's Lobby exit. The checkpoint is `build-windows/temple-player-ready/checkpoints/Path-of-Dawn-Green-Emperor-Way.omwsave`. Path of Dawn is at stage 93. The player has all four books and the Sunken Sewers key. The next chunk starts with finding the Tomb of Prince Camarril and observing the noon inscription.

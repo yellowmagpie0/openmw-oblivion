@@ -34,7 +34,8 @@ namespace MWGui
         {
             const auto& store = world->getStore();
             const auto definition = MWWorld::OblivionProfileServices::itemDefinition(
-                store, MWWorld::OblivionProfileServices::nativeItemId(store, base.getCellRef().getRefId()));
+                store, MWWorld::OblivionProfileServices::nativeItemId(store, base.getCellRef().getRefId()),
+                dynamic_cast<const MWWorld::World*>(world));
             if (definition && definition->mQuestItem)
                 mFlags |= Flag_Quest;
         }

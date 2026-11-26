@@ -79,7 +79,7 @@ namespace ESM4
     // v94 retains each consumed potion's resolved timed attribute contributions.
     // v95 retains Player greater-power daily-use history, without inventing
     // uses for older snapshots.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 109;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 110;
 
     // v106: one Player-owned forward chair lifecycle. Clip clocks are independent
     // of actor locomotion; cold loading never replays entry or marker selection.
@@ -1005,6 +1005,8 @@ namespace ESM4
         std::vector<RuntimeScriptInstance> mScriptInstances;
         std::vector<RuntimeQuestState> mQuests;
         std::set<ESM::FormKey> mSpokenDialogueInfos;
+        // v110: SetQuestObject applies to every copy of a book, including unloaded inventories.
+        std::map<ESM::FormKey, bool> mQuestBookFlags;
         // v65: explicit per-reference flag overrides, including false. Absence
         // uses the authored flag; legacy script-manager globals are not state.
         std::map<ESM::FormKey, bool> mIgnoreFriendlyHits;

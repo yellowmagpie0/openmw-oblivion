@@ -149,6 +149,11 @@ namespace
         return bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + info.size()))
             + bytes(parent) + bytes(7u) + bytes(0u) + info;
     }
+    std::string cellGroup(unsigned kind, unsigned label, const std::string& data)
+    {
+        return bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + data.size()))
+            + bytes(label) + bytes(kind) + bytes(0u) + data;
+    }
     std::string menuRecords(unsigned char flags)
     {
         return record(ESM4::REC_QUST, 0x900, sub(ESM::fourCC("EDID"), std::string("MenuQuest\0", 10))
@@ -1882,17 +1887,13 @@ namespace
 
 TEST(OblivionTutorialAction, FreshOffscreenActorsSpreadWorkAndRestoreTheirDeadlines)
 {
-    const auto group = [](unsigned kind, unsigned label, const std::string& data) {
-        return bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + data.size()))
-            + bytes(label) + bytes(kind) + bytes(0u) + data;
-    };
     std::string actors;
     for (unsigned id = 0xe00; id < 0xe20; ++id)
         actors += record(ESM4::REC_ACHR, id, sub(ESM::fourCC("NAME"), bytes(0x800u))
             + sub(ESM::fourCC("DATA"), bytes(std::array<float, 6>{})));
-    const auto extra = group(0, ESM4::REC_CELL, record(ESM4::REC_CELL, 0xe40,
+    const auto extra = cellGroup(0, ESM4::REC_CELL, record(ESM4::REC_CELL, 0xe40,
         sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior}))))
-        + group(6, 0xe40, group(9, 0xe40, actors));
+        + cellGroup(6, 0xe40, cellGroup(9, 0xe40, actors));
     for (bool shifted : {false, true})
     {
         SwitchFixture f(shifted, false, extra, 33, false);
@@ -2504,6 +2505,31 @@ TEST(OblivionMapTravel, ShowMapPersistsVisibilityAndTravelWithoutClearingAuthore
     ASSERT_NE(ref, snapshot.mReferences.end());
     ref->mCustomState[MWWorld::mapMarkerRevealKey] = std::int64_t(2);
     EXPECT_THROW(world.prepareOblivionSaveState(snapshot), std::invalid_argument);
+}
+
+TEST(OblivionMapTravel, ShowMapRestoresAnUnvisitedLandmark)
+{
+    const std::array<float, 6> position{1200.f, 1800.f, 24.f, 0.f, 0.f, 0.f};
+    const auto marker = record(ESM4::REC_REFR, 0xe41, sub(ESM::fourCC("NAME"), bytes(0xb00u))
+        + sub(ESM::fourCC("XMRK"), {}) + sub(ESM::fourCC("DATA"), bytes(position)));
+    const auto room = record(ESM4::REC_CELL, 0xe40, sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior})));
+    SwitchFixture fixture(false, false, cellGroup(0, ESM4::REC_CELL, room)
+        + cellGroup(6, 0xe40, cellGroup(9, 0xe40, marker)), 2);
+    auto& world = fixture.mFixture.mWorld;
+    auto* scripts = world.getOblivionScriptManager();
+    const auto* placed = world.getStore().search<ESM4::Reference>(key(0xe41));
+    ASSERT_NE(placed, nullptr);
+    ASSERT_TRUE(world.getWorldModel().getPtr(placed->mId).isEmpty());
+    scripts->call("ShowMap", {}, {ObScript::ReferenceValue{key(0xe41), {}}}, {}, {});
+    const auto saved = world.captureOblivionRuntimeState();
+    TestingOpenMW::readNativeSnapshot(fixture.mFixture, saved);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(MWWorld::oblivionMapMarkerFlags(*placed, scripts->revealedMapMarkers()), 1);
+    EXPECT_TRUE(world.getWorldModel().getPtr(placed->mId).isEmpty());
+    const auto resaved = world.captureOblivionRuntimeState();
+    const auto found = std::ranges::find(resaved.mReferences, key(0xe41), &ESM4::RuntimeReferenceState::mKey);
+    ASSERT_NE(found, resaved.mReferences.end());
+    EXPECT_EQ(found->mPosition.asVec3(), placed->mPos.asVec3());
 }
 
 TEST(OblivionTutorialDoor, RestoredAnimationOwnerReportsDoorTransitionAndEndpointWithoutReferenceRotation)

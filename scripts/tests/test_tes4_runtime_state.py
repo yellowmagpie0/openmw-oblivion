@@ -5520,6 +5520,27 @@ class ActorBaseNameAndLevelTests(unittest.TestCase):
                     state_io.encode_payload(state)
 
 
+class QuestBookStateTests(unittest.TestCase):
+    def test_base_flags_round_trip_and_legacy_admission(self):
+        state = make_state()
+        state.update(schema_version=110, ai_rng_state=1)
+        flags = {"content:oblivion.esm:022b07": False, "content:oblivion.esm:022b06": True}
+        state["quest_book_flags"] = flags
+        payload = state_io.encode_payload(state)
+        self.assertEqual(state_io.decode_payload(payload)["quest_book_flags"], flags)
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.decode_payload(payload[:-1] + b"\x02")
+        state["schema_version"] = 109
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io._upgrade_quest_books(state)
+        del state["quest_book_flags"]
+        legacy = state_io.decode_payload(state_io.encode_payload(state))
+        state_io._upgrade_quest_books(legacy)
+        self.assertEqual(legacy["quest_book_flags"], {})
+
+
 class PlayerFurnitureStateTests(unittest.TestCase):
     def make_seated(self):
         state = make_state(); state["schema_version"] = 106; state["ai_rng_state"] = 1

@@ -231,6 +231,47 @@ namespace MWMechanics
             }
         }
 
+        // Walled cities and their districts are separate exterior worldspaces.
+        // Their gates can land many grid cells from the quest's map marker.
+        if (playerCell->isExterior() && !result.mNearby && result.mWorldMap && result.mWorldMap->mSpace != playerSpace)
+        {
+            std::vector<ESM::RefId> frontier{ result.mWorldMap->mSpace };
+            std::set<ESM::RefId> seen{ frontier.front() };
+            const auto playerPosition = player.getRefData().getPosition().asVec3();
+            while (!frontier.empty() && !result.mNearby)
+            {
+                std::vector<ESM::RefId> next;
+                std::optional<std::pair<float, ESM::FormKey>> best;
+                for (const auto& space : frontier)
+                {
+                    const auto gates = mExteriorGatesByDestination.find(space);
+                    if (gates == mExteriorGatesByDestination.end())
+                        continue;
+                    for (const auto index : gates->second)
+                    {
+                        const auto& door = mUnloadedLocations[index];
+                        const auto& landing = mUnloadedLocations[mUnloadedLocationByReference.at(door.mTeleportDoor)];
+                        const auto& from = *store.search<ESM4::Cell>(door.mCell);
+                        if (seen.contains(from.mParent) || !canUseDoor(door, from, *store.search<ESM4::Cell>(landing.mCell)))
+                            continue;
+                        if (from.mParent == playerSpace)
+                        {
+                            const auto marker = doorMarker(door, playerSpace);
+                            const auto cost = std::pair{ (marker.mPosition - playerPosition).length2(), door.mReference };
+                            if (!best || cost < *best)
+                            {
+                                best = cost;
+                                result.mNearby = marker;
+                            }
+                        }
+                        else if (seen.insert(from.mParent).second)
+                            next.push_back(from.mParent);
+                    }
+                }
+                frontier = std::move(next);
+            }
+        }
+
         // An interior on the far side of the map is a separate walk to the
         // exterior. Find the first usable door on that leg.
         if (playerCell->isExterior() || result.mNearby || !result.mWorldMap)
@@ -308,7 +349,11 @@ namespace MWWorld
         {
             const auto& store = world.getStore();
             if (const auto* global = store.search<ESM4::GlobalVariable>(key))
+            {
+                if (Misc::StringUtils::ciEqual(global->mEditorId, "GameHour"))
+                    return world.getTimeStamp().getHour();
                 return world.getGlobalFloat(GlobalVariableName(global->mEditorId));
+            }
             return std::nullopt;
         }
 
@@ -523,6 +568,12 @@ namespace MWWorld
                     out << "    Script guard: " << line.substr(first, last - first + 1) << '\n';
             }
         }
+    }
+
+    bool isOblivionQuestFinished(const World& world, const OblivionScriptManager& scripts,
+        const ESM4::Quest& quest, const ESM4::RuntimeQuestState& state)
+    {
+        return projectQuest(quest, state, questConditionContext(world, scripts)).mFinished;
     }
 
     std::optional<ESM4::RuntimeQuestJournalStage> evaluateOblivionStageEntries(World& world,

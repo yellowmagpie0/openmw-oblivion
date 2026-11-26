@@ -21,6 +21,20 @@
 
 namespace
 {
+    // Default wire fields following the spell cast table, in serialization order.
+    std::vector<std::uint8_t> emptyTailAfterSpellCasts(unsigned version)
+    {
+        std::vector<std::uint8_t> tail;
+        const std::array<std::uint8_t, 12> unusedProjectiles{ 1 }; // Next serial, then empty table.
+        if (version >= 88) tail.insert(tail.end(), unusedProjectiles.begin(), unusedProjectiles.end());
+        if (version >= 89) tail.insert(tail.end(), 4, 0); // Daily package completions.
+        if (version >= 91) tail.insert(tail.end(), 4, 0); // Package wait overrides.
+        if (version >= 96) tail.insert(tail.end(), unusedProjectiles.begin(), unusedProjectiles.end());
+        if (version >= 106) tail.push_back(0); // No furniture.
+        if (version >= 110) tail.insert(tail.end(), 4, 0); // Quest book overrides.
+        return tail;
+    }
+
     TEST(ESM4RuntimeState, nativeReferenceDefaultsToUnlocked)
     {
         ESM4::Reference reference;
@@ -1946,7 +1960,7 @@ namespace
             const auto bytes = state.serializeBinary();
             // Later schemas append empty ownership/melee/animation collections
             // and the combat seed. Locate the clock section, not payload end.
-            const unsigned suffix = (version >= 20 ? 4 : 0) + (version >= 21 ? 4 : 0)
+            const auto suffix = (version >= 20 ? 4 : 0) + (version >= 21 ? 4 : 0)
                 + (version >= 23 ? 4 : 0) + (version >= 27 ? 4 : 0)
                 + (version >= 30 ? 4 : 0) + (version >= 31 ? 4 : 0)
                 + (version >= 36 ? 1 : 0) + (version >= 37 ? 1 : 0) + (version >= 38 ? 4 : 0)
@@ -1954,7 +1968,8 @@ namespace
                 + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0)
                 + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0) + (version >= 71 ? 4 : 0)
                 + (version >= 72 ? 4 : 0) + (version >= 81 ? 4 : 0) + (version >= 83 ? 4 : 0)
-                + (version >= 85 ? 4 : 0) + (version >= 86 ? 4 : 0) + (version >= 87 ? 4 : 0) + (version >= 88 ? 12 : 0) + (version >= 89 ? 4 : 0) + (version >= 91 ? 4 : 0) + (version >= 96 ? 12 : 0) + (version >= 106 ? 1 : 0);
+                + (version >= 85 ? 4 : 0) + (version >= 86 ? 4 : 0) + (version >= 87 ? 4 : 0)
+                + emptyTailAfterSpellCasts(version).size();
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -6366,7 +6381,7 @@ TEST(ESM4RuntimeState, FactionReactions81PreserveDirectedZeroOverridesAndRejectL
     state.mFactionReactions[{b,a}] = 17;
     auto unordered = state.serializeBinary();
     const auto factionEnd = unordered.end() - (state.mVersion >= 83 ? 4 : 0)
-        - (state.mVersion >= 86 ? 4 : 0) - (state.mVersion >= 87 ? 4 : 0) - (state.mVersion >= 88 ? 12 : 0) - (state.mVersion >= 89 ? 4 : 0) - (state.mVersion >= 91 ? 4 : 0) - (state.mVersion >= 96 ? 12 : 0);
+        - (state.mVersion >= 86 ? 4 : 0) - (state.mVersion >= 87 ? 4 : 0) - emptyTailAfterSpellCasts(state.mVersion).size();
     std::swap_ranges(factionEnd-2*rowSize, factionEnd-rowSize, factionEnd-rowSize);
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(unordered), std::runtime_error);
     state.mFactionReactions.clear(); state.mVersion = 80;
@@ -6425,14 +6440,11 @@ TEST(ESM4RuntimeState, BoundEquipment83KeepsInstanceSourcesAndDisplacedEquipment
     std::vector<std::uint8_t> ownerTail{0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x31, 0x30, 0x30, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x32, 0x36, 0x32, 0x37, 0x34, 0x01, 0x00, 0x00, 0x00, 0x00, 0xf4, 0x82, 0x45, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x00, 0x01, 0x00, 0xff, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x36, 0x30, 0x30, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x04, 0x00, 0x00, 0x00, 0x6e, 0x75, 0x6c, 0x6c, 0x00};
     if (state.mVersion >= 97) ownerTail.insert(ownerTail.end(), {0, 0}); // Absent bound source and inventory script identity.
     if (state.mVersion >= 104) ownerTail.insert(ownerTail.end(), {4, 0, 0, 0, 'n', 'u', 'l', 'l'}); // Absent weapon coating.
-    const std::size_t furnitureSuffix = state.mVersion >= 106 ? 1 : 0;
-    const std::size_t contactSuffix = furnitureSuffix + (state.mVersion >= 86 ? 4 : 0) + (state.mVersion >= 87 ? 4 : 0) + (state.mVersion >= 88 ? 12 : 0) + (state.mVersion >= 89 ? 4 : 0) + (state.mVersion >= 91 ? 4 : 0) + (state.mVersion >= 96 ? 12 : 0);
-    ASSERT_GE(wire.size(),ownerTail.size() + contactSuffix);
-    EXPECT_TRUE(std::equal(ownerTail.rbegin(),ownerTail.rend(),wire.rbegin() + contactSuffix));
-    std::vector<std::uint8_t> emptySuffix(contactSuffix, 0);
-    if (state.mVersion >= 88) emptySuffix[contactSuffix - furnitureSuffix - 12 - (state.mVersion >= 89 ? 4 : 0) - (state.mVersion >= 91 ? 4 : 0) - (state.mVersion >= 96 ? 12 : 0)] = 1; // First unused magic projectile serial.
-    if (state.mVersion >= 96) emptySuffix[contactSuffix - furnitureSuffix - 12] = 1; // First unused arrow serial.
-    EXPECT_TRUE(std::equal(emptySuffix.begin(), emptySuffix.end(), wire.end() - contactSuffix));
+    auto emptySuffix = emptyTailAfterSpellCasts(state.mVersion);
+    emptySuffix.insert(emptySuffix.begin(), (state.mVersion >= 86 ? 4 : 0) + (state.mVersion >= 87 ? 4 : 0), 0);
+    ASSERT_GE(wire.size(), ownerTail.size() + emptySuffix.size());
+    EXPECT_TRUE(std::equal(ownerTail.rbegin(), ownerTail.rend(), wire.rbegin() + emptySuffix.size()));
+    EXPECT_TRUE(std::equal(emptySuffix.rbegin(), emptySuffix.rend(), wire.rbegin()));
     const std::vector<std::uint8_t> sourceWire{0x01, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x02, 0x00, 0x00, 0x00};
     EXPECT_NE(std::search(wire.begin(),wire.end(),sourceWire.begin(),sourceWire.end()),wire.end());
 
@@ -6638,8 +6650,7 @@ TEST(ESM4RuntimeState, NativeSpellCastRetainsReleaseBoundaryAndRejectsDanglingOw
     invalid = state; invalid.mNativeSpellCasts.at(actor).mSpell = {};
     EXPECT_THROW(invalid.serializeBinary(), std::invalid_argument);
     auto wire = state.serializeBinary();
-    const auto castTail = (state.mVersion >= 88 ? 12 : 0) + (state.mVersion >= 89 ? 4 : 0)
-        + (state.mVersion >= 91 ? 4 : 0) + (state.mVersion >= 96 ? 12 : 0) + (state.mVersion >= 106 ? 1 : 0);
+    const auto castTail = emptyTailAfterSpellCasts(state.mVersion).size();
     wire.at(wire.size() - castTail - 1) = 2; // Invalid released flag, before later schema tails.
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire), std::runtime_error);
 }
