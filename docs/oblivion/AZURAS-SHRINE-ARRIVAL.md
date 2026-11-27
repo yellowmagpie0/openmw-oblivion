@@ -6,7 +6,7 @@ Mels Maryon introduces the **Shrine of Azura** topic. On this save he initially 
 
 ## Continue playing
 
-Run `build-windows/Continue-At-Azuras-Shrine.cmd` to load `Blood-of-the-Daedra-At-Azuras-Shrine.omwsave` with stock controls. The player faces the statue. *Blood of the Daedra* remains at stage 15. The next prerequisite for this shrine is level 2. Its offering is glow dust at 5–7 a.m. or 5–7 p.m.
+Run `build-windows/Continue-At-Azuras-Shrine.cmd` to load `Blood-of-the-Daedra-At-Azuras-Shrine.omwsave` with stock controls. The player faces the statue. *Blood of the Daedra* remains at stage 15. The shrine requires level 2 and an offering of glow dust at 5–7 a.m. or 5–7 p.m. The [Bruma Mages Guild visit](AZURA-GLOW-DUST.md) obtains the offering.
 
 ## Verification
 

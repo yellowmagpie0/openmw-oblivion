@@ -2445,6 +2445,8 @@ namespace MWWorld
             const auto* windows = MWBase::Environment::get().getWindowManagerOrNull();
             return std::int64_t(windows && windows->isGuiMode());
         }
+        if (name == "isxbox")
+            return std::int64_t(0);
         if (name == "getsecondspassed")
             return context.mSecondsPassed;
         if (name == "getbuttonpressed")
