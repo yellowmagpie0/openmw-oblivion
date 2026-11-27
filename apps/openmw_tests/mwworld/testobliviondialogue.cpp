@@ -2069,14 +2069,16 @@ TEST(OblivionTutorialAction, UngroupedAnimationPollTracksLivePlayGroupCompletion
 {
     struct Playback : MWMechanics::MechanicsManager
     {
-        bool mPlaying = true;
+        bool mPlaying = false;
         bool playAnimationGroup(const MWWorld::Ptr&, std::string_view group, int, uint32_t, bool) override
         {
-            return group == "unequip";
+            if (group == "unequip")
+                mPlaying = true;
+            return group == "unequip" || group == "open";
         }
         bool checkAnimationPlaying(const MWWorld::Ptr&, std::string_view group) override
         {
-            return group == "unequip" && mPlaying;
+            return (group.empty() || group == "unequip") && mPlaying;
         }
     } playback;
     SwitchFixture fixture;
@@ -2087,6 +2089,7 @@ TEST(OblivionTutorialAction, UngroupedAnimationPollTracksLivePlayGroupCompletion
     const auto poll = [&] { return ObScript::asInteger(scripts.call("IsAnimPlaying", {}, {}, context, {})); };
     EXPECT_EQ(poll(), 0);
     scripts.call("PlayGroup", {}, {std::string("unequip"), std::int64_t(0)}, context, {});
+    scripts.call("PlayGroup", {}, {std::string("open"), std::int64_t(0)}, context, {});
     EXPECT_EQ(poll(), 1);
     EXPECT_EQ(ObScript::asInteger(scripts.call("IsAnimPlaying", {}, {std::string("open")}, context, {})), 0);
     playback.mPlaying = false;

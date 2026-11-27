@@ -4,7 +4,7 @@ After [reporting Jearl’s orders to Jauffre](SPIES-REPORT-TO-JAUFFRE.md), leave
 
 ## Continue playing
 
-Run `build-windows/Continue-After-Reading-Modern-Heretics.cmd` to load `Blood-of-the-Daedra-Azuras-Shrine-Lead.omwsave` with stock controls. The next leg is the journey to Azura’s Shrine.
+Run `build-windows/Continue-After-Reading-Modern-Heretics.cmd` to load `Blood-of-the-Daedra-Azuras-Shrine-Lead.omwsave` with stock controls. The next leg is [the journey to Azura’s Shrine](AZURAS-SHRINE-ARRIVAL.md).
 
 ## Runtime checks
 

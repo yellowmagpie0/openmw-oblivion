@@ -2678,11 +2678,14 @@ namespace MWWorld
         {
             const Ptr ptr = objectPtr();
             if (ptr.isEmpty()) return std::int64_t(0);
+            // An activator can queue two groups in one script tick. The last
+            // requested group may still be waiting for the first one to finish.
+            if (arguments.empty() && !ptr.getClass().isActor())
+                return std::int64_t(MWBase::Environment::get().getMechanicsManager()->checkAnimationPlaying(ptr, {}));
             std::string group;
             if (arguments.empty())
             {
-                // Activator scripts poll the group started by PlayGroup. The saved
-                // group identifies it, but only its live controller knows when it ends.
+                // Actor polls track the scripted group independently of locomotion.
                 const auto* state = std::as_const(*this).referenceState(objectKey());
                 if (!state) return std::int64_t(0);
                 const auto entry = state->mCustomState.find("obscript.animation_group");
@@ -2693,6 +2696,7 @@ namespace MWWorld
             }
             else
                 group = ObScript::valueString(arguments.front());
+            if (group.empty()) return std::int64_t(0);
             return std::int64_t(MWBase::Environment::get().getMechanicsManager()->checkAnimationPlaying(
                 ptr, Misc::StringUtils::lowerCase(group)));
         }

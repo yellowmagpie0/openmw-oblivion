@@ -90,6 +90,14 @@
 
 namespace
 {
+    bool nativeObjectSequenceLoops(const MWWorld::Ptr& object, MWRender::Animation& animation, std::string_view group)
+    {
+        if (!ESM::isESM4Rec(static_cast<ESM::RecNameInts>(object.getType())) || object.getClass().isActor())
+            return false;
+        const auto* sequence = animation.getControllerSequenceMetadata(group);
+        return sequence && sequence->mCycleType == 0;
+    }
+
     struct NativeMeleePlayback
     {
         float mBegin, mEnd, mFrequency, mTimelineBegin, mTimelineEnd;
@@ -5174,7 +5182,8 @@ namespace MWMechanics
                 entry.mGroup = animation.mGroup;
                 entry.mLoopCount = static_cast<uint32_t>(
                     std::min<uint64_t>(animation.mLoopCount, std::numeric_limits<uint32_t>::max()));
-                entry.mLooping = mAnimation->isLoopingAnimation(entry.mGroup);
+                entry.mLooping = mAnimation->isLoopingAnimation(entry.mGroup)
+                    || nativeObjectSequenceLoops(mPtr, *mAnimation, entry.mGroup);
                 entry.mScripted = true;
                 entry.mStartKey = "start";
                 entry.mStopKey = "stop";
@@ -5216,7 +5225,8 @@ namespace MWMechanics
         if (isScriptedAnimPlaying() && !scripted)
             return true;
 
-        bool looping = mAnimation->isLoopingAnimation(groupname);
+        const bool nativeLoop = scripted && nativeObjectSequenceLoops(mPtr, *mAnimation, groupname);
+        const bool looping = nativeLoop || mAnimation->isLoopingAnimation(groupname);
 
         // If this animation is a looped animation that is already playing
         // and has not yet reached the end of the loop, allow it to continue animating with its existing loop count
@@ -5247,7 +5257,8 @@ namespace MWMechanics
 
         AnimationQueueEntry entry;
         entry.mGroup = groupname;
-        entry.mLoopCount = count;
+        // A TES4 object sequence marked Cycle loops until another group takes over.
+        entry.mLoopCount = nativeLoop ? std::numeric_limits<uint32_t>::max() : count;
         entry.mTime = 0.f;
         // "PlayGroup idle" is a special case, used to remove to stop scripted animations playing
         entry.mScripted = (scripted && groupname != "idle");
@@ -5326,6 +5337,13 @@ namespace MWMechanics
             return mAnimQueue.front().mScripted;
 
         return false;
+    }
+
+    bool CharacterController::isObjectAnimationPlaying() const
+    {
+        // Scripts can poll after a one-frame group ends and before updateAnimQueue
+        // starts its successor. The object is still executing the queued sequence.
+        return mAnimation && (mAnimQueue.size() > 1 || mAnimation->isAnyGroupPlaying());
     }
 
     bool CharacterController::isAnimPlaying(std::string_view groupName) const

@@ -127,7 +127,9 @@ namespace MWMechanics
     bool Objects::checkAnimationPlaying(const MWWorld::Ptr& ptr, std::string_view groupName) const
     {
         const auto iter = mIndex.find(ptr.mRef);
-        return iter != mIndex.end() && iter->second->isAnimPlaying(groupName);
+        if (iter == mIndex.end())
+            return false;
+        return groupName.empty() ? iter->second->isObjectAnimationPlaying() : iter->second->isAnimPlaying(groupName);
     }
 
     bool Objects::playAnimationGroupLua(const MWWorld::Ptr& ptr, std::string_view groupName, uint32_t loops,

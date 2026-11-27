@@ -2131,6 +2131,11 @@ namespace MWRender
             state->second.mSpeedMult = speedmult;
     }
 
+    bool Animation::isAnyGroupPlaying() const
+    {
+        return std::ranges::any_of(mStates, [](const auto& entry) { return entry.second.mPlaying; });
+    }
+
     bool Animation::isPlaying(std::string_view groupname) const
     {
         AnimStateMap::const_iterator state(mStates.find(groupname));

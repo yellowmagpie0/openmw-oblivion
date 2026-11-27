@@ -333,6 +333,7 @@ namespace MWMechanics
         void enableLuaAnimations(bool enable);
         void skipAnim();
         bool isAnimPlaying(std::string_view groupName) const;
+        bool isObjectAnimationPlaying() const;
         bool isScriptedAnimPlaying() const;
         void clearAnimQueue(bool clearScriptedAnims = false);
 

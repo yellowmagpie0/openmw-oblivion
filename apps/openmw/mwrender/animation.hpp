@@ -583,6 +583,7 @@ namespace MWRender
 
         /** Returns true if the named animation group is playing. */
         bool isPlaying(std::string_view groupname) const;
+        bool isAnyGroupPlaying() const;
 
         /// Returns true if no important animations are currently playing on the upper body.
         bool upperBodyReady() const;
