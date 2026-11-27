@@ -299,15 +299,9 @@ namespace MWGui
         MWWorld::Ptr player = MWMechanics::getPlayer();
         const MWMechanics::NpcStats& pcstats = player.getClass().getNpcStats(player);
 
-        // Native skill progression/level-up belongs to M16. Do not execute
-        // Morrowind's progress counter or missing GMSTs after a native bed rest.
-        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
-            return;
-
-        // trigger levelup if possible
         const MWWorld::Store<ESM::GameSetting>& gmst
             = MWBase::Environment::get().getESMStore()->get<ESM::GameSetting>();
-        if (mSleeping && pcstats.getLevelProgress() >= gmst.find("iLevelUpTotal")->mValue.getInteger())
+        if (mSleeping && !pcstats.isDead() && pcstats.getLevelProgress() >= gmst.find("iLevelUpTotal")->mValue.getInteger())
         {
             MWBase::Environment::get().getWindowManager()->pushGuiMode(GM_Levelup);
         }

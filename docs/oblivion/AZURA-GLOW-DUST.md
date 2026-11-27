@@ -8,6 +8,8 @@ Take the west stairs down to the basement. Go through the door into the ingredie
 
 Run `build-windows/Continue-With-Glow-Dust.cmd`. The level-one Knight has the offering and has slept for an hour. The save records five of the ten major-skill increases needed for level 2. Earn five more, then sleep before returning to Azura’s Shrine at dawn or dusk. *Blood of the Daedra* remains at stage 15.
 
+The [level-up and offering](AZURAS-OFFERING.md) continue from this checkpoint.
+
 ## Verification
 
 The original PC executable (1.2.0416) implements `IsXbox` by returning zero. Jeanne’s enrollment result, `Oblivion.esm:02D286`, checks this command after recording the guild branch and before awarding an Xbox achievement. The first run reported an unsupported command at this point. The replay on the rebuilt executable played all three enrollment responses and completed the result script. The disassembly is in `build-windows/dust-platform-oracle.txt`.

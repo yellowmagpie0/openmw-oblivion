@@ -19,6 +19,7 @@ namespace MWGui
         std::string_view getWindowIdForLua() const override { return "Journal"; }
 
         const ESM::FormKey& trackedQuest() const { return mTracked; }
+        void restoreTrackedQuest(const ESM::FormKey& quest) { mTracked = quest; }
         void checkTrackedQuest(const std::optional<MWWorld::QuestObjective>& objective);
 
     private:

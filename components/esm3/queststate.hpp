@@ -2,6 +2,8 @@
 #define OPENMW_ESM_QUESTSTATE_H
 
 #include <components/esm/refid.hpp>
+#include <components/esm/formkey.hpp>
+#include <components/esm/fourcc.hpp>
 #include <string>
 
 namespace ESM
@@ -16,6 +18,15 @@ namespace ESM
         ESM::RefId mTopic; // lower case id
         int32_t mState;
         unsigned char mFinished;
+
+        void load(ESMReader& esm);
+        void save(ESMWriter& esm) const;
+    };
+
+    struct TrackedQuest
+    {
+        static constexpr auto sRecordId = fourCC("TQST");
+        FormKey mQuest;
 
         void load(ESMReader& esm);
         void save(ESMWriter& esm) const;

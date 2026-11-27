@@ -20,4 +20,14 @@ namespace ESM
         esm.writeHNT("QFIN", mFinished);
     }
 
+    void TrackedQuest::load(ESMReader& esm)
+    {
+        mQuest = FormKey::deserialize(esm.getHNString("ID__"));
+    }
+
+    void TrackedQuest::save(ESMWriter& esm) const
+    {
+        esm.writeHNString("ID__", mQuest.serialize());
+    }
+
 }

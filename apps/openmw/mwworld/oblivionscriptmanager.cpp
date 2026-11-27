@@ -3048,6 +3048,11 @@ namespace MWWorld
             {
                 if (name == "unlock") ptr.getCellRef().unlock();
                 else ptr.getCellRef().lock(arguments.empty() ? 0 : boundedCount(arguments.back()));
+                if (auto* saved = referenceState(objectKey()))
+                {
+                    saved->mLockLevel = ptr.getCellRef().getLockLevel();
+                    saved->mCustomState["locked"] = ptr.getCellRef().isLocked();
+                }
             }
             return std::int64_t(0);
         }
@@ -3729,11 +3734,11 @@ namespace MWWorld
         }
         if (name == "getlevel")
         {
-            if (objectKey() == ESM::FormKey::dynamic("player", 1) && mWorld.mOblivionRuntimeState)
+            if (ESM4::runtimeReferenceKey(objectKey()) == ESM::FormKey::dynamic("player", 1))
             {
-                const auto level = mWorld.mOblivionRuntimeState->mPlayer.mActorValues.find("level");
-                if (level != mWorld.mOblivionRuntimeState->mPlayer.mActorValues.end())
-                    return std::int64_t(level->second);
+                const auto player = mWorld.getPlayerPtr();
+                if (!player.isEmpty())
+                    return std::int64_t(player.getClass().getCreatureStats(player).getLevel());
             }
             return std::int64_t(1);
         }
@@ -4260,7 +4265,23 @@ namespace MWWorld
                 return double(0);
             }
             const Ptr listener = targetKey ? ptrFor(*targetKey) : mWorld.getPlayerPtr();
-            const auto selectedInfo = topic ? selectNativeDialogueInfo(*topic, speaker, listener) : std::nullopt;
+            // A talking object supplies the position for playback. The NPC in Say's voice
+            // argument supplies the speaker identity for INFO conditions such as GetIsID.
+            std::optional<LiveCellRef<ESM4::Npc>> voiceActor;
+            Ptr dialogueSubject = speaker;
+            if (!speaker.isEmpty() && !speaker.getClass().isActor() && voiceType)
+            {
+                if (const auto* npc = mStore.search<ESM4::Npc>(*voiceType))
+                {
+                    ESM4::ActorCharacter placement{};
+                    placement.mBaseObj = npc->mId;
+                    placement.mBaseKey = npc->mFormKey;
+                    placement.mPos = speaker.getRefData().getPosition();
+                    voiceActor.emplace(placement, npc);
+                    dialogueSubject = Ptr(&*voiceActor, speaker.getCell());
+                }
+            }
+            const auto selectedInfo = topic ? selectNativeDialogueInfo(*topic, dialogueSubject, listener) : std::nullopt;
             if (!selectedInfo)
             {
                 trace(name + " topic=" + (topic ? topic->serialize() : std::string("null"))

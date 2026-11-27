@@ -4645,16 +4645,24 @@ namespace MWMechanics
         std::int32_t requested, const ESM4::PlayerDynamicBaseSettings& settings)
     {
         validatePlayerQuery(value);
-        auto candidate = playerValues();
         const auto entry = ESM4::prepareActorBaseValueSet(ESM4::ActorBaseKind::Npc, value, requested);
-        if (!entry)
+        if (entry)
+            setPlayerBaseValues(player, { &*entry, 1 }, settings);
+    }
+
+    void OblivionCombatService::setPlayerBaseValues(MWWorld::Player& player,
+        std::span<const ESM4::ActorBaseValueSet> changes, const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        if (changes.empty())
             return;
+        auto candidate = playerValues();
         auto bases = mActorBases;
         auto [baseIt, inserted] = bases.try_emplace(candidate.mBase,
             ESM4::RuntimeActorBaseOverride{candidate.mBase, ESM4::ActorBaseKind::Npc, {}});
         if (baseIt->second.mKind != ESM4::ActorBaseKind::Npc)
             throw std::invalid_argument("native player base override kind mismatch");
-        setActorBaseEntry(baseIt->second, *entry);
+        for (const auto& entry : changes)
+            setActorBaseEntry(baseIt->second, entry);
         applyActorBase(candidate, &baseIt->second);
         // Publish on an isolated candidate authority so all preparation can
         // fail before the live base map, actor map or shared views change.

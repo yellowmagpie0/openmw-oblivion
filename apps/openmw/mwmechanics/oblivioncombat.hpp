@@ -993,6 +993,8 @@ namespace MWMechanics
             const ESM4::EssentialRecoverySettings& recovery = {}, bool godMode = false);
         void setPlayerBaseValue(MWWorld::Player& player, std::uint8_t value,
             std::int32_t requested, const ESM4::PlayerDynamicBaseSettings& settings);
+        void setPlayerBaseValues(MWWorld::Player& player,
+            std::span<const ESM4::ActorBaseValueSet> changes, const ESM4::PlayerDynamicBaseSettings& settings);
         // Typed command writers. Set shares a base transaction; Mod and Force
         // select Script/console Damage storage and preserve native eligibility.
         // Negative Health storage and its lifecycle reaction commit together.

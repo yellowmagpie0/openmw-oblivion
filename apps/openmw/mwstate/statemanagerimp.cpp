@@ -14,6 +14,7 @@
 #include <components/esm3/actoridconverter.hpp>
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
+#include <components/esm3/queststate.hpp>
 #include <components/esm3/loadcell.hpp>
 #include <components/esm3/loadclas.hpp>
 #include <components/esm3/fogstate.hpp>
@@ -872,6 +873,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
                     MWBase::Environment::get().getWindowManager()->readRecord(reader, n.toInt());
                     break;
                 case ESM::REC_ASPL:
+                case ESM::TrackedQuest::sRecordId:
                 case ESM::REC_MARK:
 
                     MWBase::Environment::get().getWindowManager()->readRecord(reader, n.toInt());

@@ -112,6 +112,7 @@ Range: "Range"
 Feet: "feet"
 Speed: "Speed"
 Weight: "Weight"
+LevelUpAttributes: "Choose the attributes to increase."
 Value: "Value"
 
 FindMapPlace: "Find a place"

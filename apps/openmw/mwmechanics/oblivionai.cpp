@@ -2979,6 +2979,8 @@ namespace MWMechanics
             }
             if (function == "GetIsID")
             {
+                if (actorKey(subjectPtr).isNull())
+                    return value(!parameterKey.isNull() && baseKey(subjectPtr) == parameterKey ? 1.0 : 0.0);
                 const auto base = mWorld.getOblivionReferenceBaseKey(actorKey(subjectPtr));
                 return value(base && !parameterKey.isNull() && *base == parameterKey ? 1.0 : 0.0);
             }

@@ -369,6 +369,10 @@ namespace
                 singleton();
                 reader.getHNRefId("ID__");
                 break;
+            case ESM::TrackedQuest::sRecordId:
+                singleton();
+                readSharedState<ESM::TrackedQuest>(reader);
+                break;
             case ESM::REC_MARK:
             {
                 const auto state = readSharedState<ESM::CustomMarker>(reader);

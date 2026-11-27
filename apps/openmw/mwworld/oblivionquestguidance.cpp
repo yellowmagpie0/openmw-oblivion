@@ -23,6 +23,7 @@
 
 #include "../mwbase/environment.hpp"
 #include "../mwmechanics/oblivionai.hpp"
+#include "../mwmechanics/oblivioncombat.hpp"
 
 #include "class.hpp"
 #include "oblivionscriptmanager.hpp"
@@ -194,10 +195,14 @@ namespace MWMechanics
                 doorPosition = resident.getRefData().getPosition().asVec3();
             return MWWorld::QuestMarker{ space, doorPosition };
         };
-        // Both walks read one snapshot. Index it once rather than scanning all saved references for each exit.
+        // Most exterior objectives use one entrance. Start with the world's cached
+        // lookup and index the snapshot only if the search expands to other doors.
         std::optional<OblivionSavedReferenceIndex> references;
+        const UnloadedLocation* firstDoor = nullptr;
         const auto canUseDoor = [&](const UnloadedLocation& door, const ESM4::Cell& source, const ESM4::Cell& destination) {
-            if (!references && mWorld.mOblivionRuntimeState)
+            if (!firstDoor)
+                firstDoor = &door;
+            else if (firstDoor != &door && !references && mWorld.mOblivionRuntimeState)
                 references.emplace(mWorld.mOblivionRuntimeState->mReferences);
             const auto state = currentDoorState(door, nullptr, references ? &*references : nullptr);
             if (!state.mAvailable)
@@ -215,7 +220,7 @@ namespace MWMechanics
             int level = placed->mLockLevel;
             if (const auto resident = loadedPtrFor(door.mReference); !resident.isEmpty())
                 level = resident.getCellRef().getLockLevel();
-            else if (const auto* saved = references ? references->find(door.mReference) : nullptr)
+            else if (const auto* saved = references ? references->find(door.mReference) : savedReferenceState(door.mReference))
                 level = saved->mLockLevel;
             const auto trespass = MWWorld::oblivionActorTrespassing(mWorld, player, {}, source.mFormKey);
             return ESM4::playerHasTrespassExitExemption({ trespass.value_or(false), true, true,
@@ -448,6 +453,10 @@ namespace MWWorld
                         if (const auto value = questConditionGlobal(world, key))
                             return Value::value(*value);
                         return Value::missing();
+                    case ESM4::FUN_GetDeadCount:
+                        if (const auto* native = getNativeWorld(world); native && native->getOblivionCombatService())
+                            return Value::value(native->getOblivionCombatService()->getDeadCount(key));
+                        return Value::missing();
                     case 53: // GetScriptVariable
                     case 79: // GetQuestVariable
                         if (const auto value = condition.mFunction == 53
@@ -562,6 +571,7 @@ namespace MWWorld
                     case 59:
                     case 74:
                     case 79:
+                    case ESM4::FUN_GetDeadCount:
                     case ESM4::FUN_GetInCellParam:
                     {
                         auto standalone = condition;

@@ -1301,9 +1301,12 @@ namespace MWWorld
         // Legacy UI and focus services still consume these two common runtime contracts.
         // Oblivion does not ship the identically named Morrowind settings.
         addInt("iMaxInfoDist", 150);
-        addInt("iLevelUpTotal", 10);
-        // Native compiled defaults used by the shared advancement tooltip.
-        // Winning TES4 GMST overrides were installed above. Full leveling stays separate.
+        const auto* levelThreshold = store.get<ESM::GameSetting>().search("iLevelUpSkillCount");
+        addInt("iLevelUpTotal", levelThreshold ? std::max(1, levelThreshold->mValue.getInteger()) : 10);
+        addFloat("fStatsHealthLevelMult", 0.1f);
+        addString("sMeditate", "You should rest and meditate on what you've learned.");
+        // Native compiled defaults for the advancement tooltip and the level-up menu.
+        // Winning TES4 GMST overrides were installed above.
         addInt("iLevelUp01Mult", 2);
         addInt("iLevelUp02Mult", 2);
         addInt("iLevelUp03Mult", 2);

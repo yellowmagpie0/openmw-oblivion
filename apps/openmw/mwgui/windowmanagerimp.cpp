@@ -28,6 +28,7 @@
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
+#include <components/esm3/queststate.hpp>
 #include <components/esm4/loadspel.hpp>
 
 #include <components/fontloader/fontloader.hpp>
@@ -2231,6 +2232,13 @@ namespace MWGui
 
         mRuntime->mQuickKeysMenu->write(writer);
 
+        if (const auto* journal = mRuntime->mOblivionJournal; journal && !journal->trackedQuest().isNull())
+        {
+            writer.startRecord(ESM::TrackedQuest::sRecordId);
+            ESM::TrackedQuest{ journal->trackedQuest() }.save(writer);
+            writer.endRecord(ESM::TrackedQuest::sRecordId);
+        }
+
         if (!mRuntime->mSelectedSpell.empty())
         {
             writer.startRecord(ESM::REC_ASPL);
@@ -2263,6 +2271,13 @@ namespace MWGui
             mRuntime->mMap->readRecord(reader, type);
         else if (type == ESM::REC_KEYS)
             mRuntime->mQuickKeysMenu->readRecord(reader, type);
+        else if (type == ESM::TrackedQuest::sRecordId)
+        {
+            ESM::TrackedQuest tracked;
+            tracked.load(reader);
+            if (auto* journal = mRuntime->mOblivionJournal)
+                journal->restoreTrackedQuest(tracked.mQuest);
+        }
         else if (type == ESM::REC_ASPL)
         {
             reader.getSubNameIs("ID__");
@@ -2283,7 +2298,8 @@ namespace MWGui
     {
         return 1 // Global map
             + 1 // QuickKeysMenu
-            + mRuntime->mCustomMarkers.size() + (!mRuntime->mSelectedSpell.empty() ? 1 : 0);
+            + mRuntime->mCustomMarkers.size() + (!mRuntime->mSelectedSpell.empty() ? 1 : 0)
+            + (mRuntime->mOblivionJournal && !mRuntime->mOblivionJournal->trackedQuest().isNull() ? 1 : 0);
     }
 
     bool WindowManager::isSavingAllowed() const

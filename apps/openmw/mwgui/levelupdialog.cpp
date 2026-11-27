@@ -8,6 +8,7 @@
 #include <MyGUI_UString.h>
 
 #include <components/fallback/fallback.hpp>
+#include <components/esm4/loadclas.hpp>
 #include <components/settings/values.hpp>
 #include <components/widgets/box.hpp>
 
@@ -18,6 +19,8 @@
 
 #include "../mwworld/class.hpp"
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/oblivionskilltraining.hpp"
+#include "../mwworld/worldimp.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
 #include "../mwmechanics/creaturestats.hpp"
@@ -47,6 +50,8 @@ namespace MWGui
 
         mOkButton->eventMouseButtonClick += MyGUI::newDelegate(this, &LevelupDialog::onOkButtonClicked);
 
+        const auto& environment = MWBase::Environment::get();
+        const bool native = environment.getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
         {
             const auto& store = MWBase::Environment::get().getESMStore()->get<ESM::Attribute>();
             mPerCol = static_cast<size_t>(std::ceil(store.getSize() / static_cast<float>(std::size(sColumnOffsets))));
@@ -67,8 +72,13 @@ namespace MWGui
                 widgets.mButton->setUserString("ToolTipType", "Layout");
                 widgets.mButton->setUserString("ToolTipLayout", "AttributeToolTip");
                 widgets.mButton->setUserString("Caption_AttributeName", attribute.mName);
-                widgets.mButton->setUserString("Caption_AttributeDescription", attribute.mDescription);
-                widgets.mButton->setUserString("ImageTexture_AttributeImage", attribute.mIcon);
+                const auto& id = attribute.mId.getValue();
+                widgets.mButton->setUserString("Caption_AttributeDescription", native
+                    ? std::string(environment.getWindowManager()->getGameSettingString("sAttributeDesc" + id, {}))
+                    : attribute.mDescription);
+                widgets.mButton->setUserString("ImageTexture_AttributeImage", native
+                    ? "textures/menus/level_up/attributes_icons/attributes_icon_large_" + id + ".dds"
+                    : attribute.mIcon);
                 widgets.mButton->setCaption(attribute.mName);
                 widgets.mValue = hbox->createWidget<Gui::AutoSizedTextBox>("SandText", {}, MyGUI::Align::Default);
                 mAttributeWidgets.emplace(attribute.mId, widgets);
@@ -87,7 +97,8 @@ namespace MWGui
         {
             MyGUI::ImageBox* image = mCoinBox->createWidget<MyGUI::ImageBox>(
                 "ImageBox", MyGUI::IntCoord(0, 0, 16, 16), MyGUI::Align::Default);
-            image->setImageTexture("icons\\tx_goldicon.dds");
+            image->setImageTexture(native
+                    ? "textures/menus/icons/clutter/icongold.dds" : "icons\\tx_goldicon.dds");
             mCoins.push_back(image);
         }
 
@@ -166,6 +177,8 @@ namespace MWGui
         }
 
         setAttributeValues();
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+            mOkButton->setEnabled(mSpentAttributes.size() == mCoinCount);
     }
 
     void LevelupDialog::onOpen()
@@ -175,22 +188,29 @@ namespace MWGui
         const MWMechanics::CreatureStats& creatureStats = player.getClass().getCreatureStats(player);
         const MWMechanics::NpcStats& pcStats = player.getClass().getNpcStats(player);
 
-        setClassImage(mClassImage,
-            ESM::RefId::stringRefId(
-                getLevelupClassImage(pcStats.getSkillIncreasesForSpecialization(ESM::Class::Specialization::Combat),
-                    pcStats.getSkillIncreasesForSpecialization(ESM::Class::Specialization::Magic),
-                    pcStats.getSkillIncreasesForSpecialization(ESM::Class::Specialization::Stealth))));
-
         int level = creatureStats.getLevel() + 1;
-        mLevelText->setCaptionWithReplacing("#{sLevelUpMenu1} " + MyGUI::utility::toString(level));
-
-        std::string_view levelupdescription;
-        levelupdescription = Fallback::Map::getString("Level_Up_Level" + MyGUI::utility::toString(level));
-
-        if (levelupdescription.empty())
-            levelupdescription = Fallback::Map::getString("Level_Up_Default");
-
-        mLevelDescription->setCaption(MyGUI::UString(levelupdescription));
+        const bool native = world->getGameProfile() == ESM::GameProfile::Oblivion;
+        if (native)
+        {
+            const auto* characterClass = world->getStore().get<ESM4::Class>().search(player.get<ESM::NPC>()->mBase->mClass);
+            mClassImage->getParent()->setVisible(characterClass && !characterClass->mIcon.empty());
+            if (characterClass && !characterClass->mIcon.empty())
+                mClassImage->setImageTexture("textures/" + characterClass->mIcon);
+            mLevelText->setCaptionWithReplacing("#{sLevel} " + MyGUI::utility::toString(level));
+            mLevelDescription->setCaptionWithReplacing("#{Interface:LevelUpAttributes}");
+        }
+        else
+        {
+            setClassImage(mClassImage, ESM::RefId::stringRefId(getLevelupClassImage(
+                pcStats.getSkillIncreasesForSpecialization(ESM::Class::Specialization::Combat),
+                pcStats.getSkillIncreasesForSpecialization(ESM::Class::Specialization::Magic),
+                pcStats.getSkillIncreasesForSpecialization(ESM::Class::Specialization::Stealth))));
+            mLevelText->setCaptionWithReplacing("#{sLevelUpMenu1} " + MyGUI::utility::toString(level));
+            auto description = Fallback::Map::getString("Level_Up_Level" + MyGUI::utility::toString(level));
+            if (description.empty())
+                description = Fallback::Map::getString("Level_Up_Default");
+            mLevelDescription->setCaption(MyGUI::UString(description));
+        }
 
         unsigned int availableAttributes = 0;
         for (const ESM::Attribute& attribute : MWBase::Environment::get().getESMStore()->get<ESM::Attribute>())
@@ -207,7 +227,7 @@ namespace MWGui
                 if (mult <= 1)
                     widgets.mMultiplier->setCaption({});
                 else
-                    widgets.mMultiplier->setCaption("x" + MyGUI::utility::toString(mult));
+                    widgets.mMultiplier->setCaption((native ? "+" : "x") + MyGUI::utility::toString(mult));
             }
             else
             {
@@ -221,6 +241,7 @@ namespace MWGui
         mCoinCount = std::min(sMaxCoins, availableAttributes);
 
         mSpentAttributes.clear();
+        mOkButton->setEnabled(!native || mCoinCount == 0);
         resetCoins();
 
         setAttributeValues();
@@ -248,7 +269,13 @@ namespace MWGui
         MWWorld::Ptr player = MWMechanics::getPlayer();
         MWMechanics::NpcStats& pcStats = player.getClass().getNpcStats(player);
 
-        if (mSpentAttributes.size() < mCoinCount)
+        MWBase::World* world = MWBase::Environment::get().getWorld();
+        if (world->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            if (MWWorld::advanceOblivionPlayerLevel(static_cast<MWWorld::World&>(*world), mSpentAttributes))
+                MWBase::Environment::get().getWindowManager()->removeGuiMode(GM_Levelup);
+        }
+        else if (mSpentAttributes.size() < mCoinCount)
             MWBase::Environment::get().getWindowManager()->messageBox("#{sNotifyMessage36}");
         else
         {
@@ -271,6 +298,8 @@ namespace MWGui
 
     void LevelupDialog::onAttributeClicked(MyGUI::Widget* sender)
     {
+        if (mCoinCount == 0 || !sender->getEnabled())
+            return;
         auto attribute = *sender->getUserData<ESM::Attribute::AttributeID>();
 
         auto found = std::find(mSpentAttributes.begin(), mSpentAttributes.end(), attribute);

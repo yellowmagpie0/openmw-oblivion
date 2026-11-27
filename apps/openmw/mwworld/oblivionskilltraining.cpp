@@ -3,6 +3,8 @@
 #include "class.hpp"
 #include "player.hpp"
 #include "oblivionactorstats.hpp"
+#include "../mwbase/environment.hpp"
+#include "../mwbase/windowmanager.hpp"
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwmechanics/oblivioncombat.hpp"
 #include <components/esm4/loadclas.hpp>
@@ -105,6 +107,59 @@ namespace MWWorld
         return ESM4::skillExperienceRequirement(stat.getBase(), context.mMajor, context.mSpecialized, context.mSettings);
     }
 
+    bool advanceOblivionPlayerLevel(World& world, std::span<const ESM::Attribute::AttributeID> choices)
+    {
+        const auto player = world.getPlayerPtr();
+        auto& stats = player.getClass().getNpcStats(player);
+        const auto& store = world.getStore();
+        const auto& settings = store.get<ESM::GameSetting>();
+        const int threshold = settings.find("iLevelUpTotal")->mValue.getInteger();
+        if (threshold <= 0 || stats.getLevelProgress() < threshold || stats.isDead())
+            return false;
+
+        std::size_t available = 0;
+        for (const auto& attribute : store.get<ESM::Attribute>())
+            available += stats.getAttribute(attribute.mId).getBase() < 100;
+        if (choices.size() != std::min<std::size_t>(3, available))
+            return false;
+
+        std::vector<ESM4::ActorBaseValueSet> changes;
+        int endurance = static_cast<int>(stats.getAttribute(ESM::Attribute::Endurance).getBase());
+        for (const auto& choice : choices)
+        {
+            const int index = ESM::Attribute::refIdToIndex(choice);
+            if (index < 0 || index >= 8 || std::count(choices.begin(), choices.end(), choice) != 1)
+                return false;
+            const int base = static_cast<int>(stats.getAttribute(choice).getBase());
+            if (base >= 100)
+                return false;
+            const int value = std::min(100, base + stats.getLevelupAttributeMultiplier(choice));
+            changes.push_back({ static_cast<std::uint8_t>(index), value });
+            if (choice == ESM::Attribute::Endurance)
+                endurance = value;
+        }
+        auto* combat = world.getOblivionCombatService();
+        const auto* values = combat->findActorValues(ESM::FormKey::dynamic("player", 1));
+        if (!values || !values->mPlayerFormValues)
+            return false;
+        const double health = (*values->mPlayerFormValues)[0]
+            + double(endurance) * settings.find("fStatsHealthLevelMult")->mValue.getFloat();
+        if (!std::isfinite(health) || health < std::numeric_limits<std::int32_t>::min()
+            || health > std::numeric_limits<std::int32_t>::max())
+            return false;
+        changes.push_back({ 8, static_cast<std::int32_t>(health) });
+        combat->setPlayerBaseValues(world.getPlayer(), changes, resolveOblivionPlayerDynamicBaseSettings(store));
+        stats.setLevelProgress(stats.getLevelProgress() - threshold);
+        for (const auto& attribute : store.get<ESM::Attribute>())
+            stats.setSkillIncreasesForAttribute(attribute.mId, 0);
+        for (int i = 0; i < 3; ++i)
+            stats.setSkillIncreasesForSpecialization(static_cast<ESM::Class::Specialization>(i), 0);
+        stats.setLevel(stats.getLevel() + 1);
+        Log(Debug::Info) << "Native player level advanced: level=" << stats.getLevel()
+                         << " remaining=" << stats.getLevelProgress();
+        return true;
+    }
+
     void World::useOblivionPlayerSkill(unsigned skill, unsigned usage, float scale)
     {
         const auto context = skillContext(mStore, getPlayerPtr(), skill);
@@ -198,7 +253,8 @@ namespace MWWorld
                 + static_cast<std::uint32_t>(count));
         };
         const int attributeCount = addCount(stats.getSkillIncreasesForAttribute(attribute));
-        const int majorCount = context.mMajor ? addCount(stats.getLevelProgress()) : stats.getLevelProgress();
+        const int previousProgress = stats.getLevelProgress();
+        const int majorCount = context.mMajor ? addCount(previousProgress) : previousProgress;
         const auto specializationCount = static_cast<std::uint8_t>(
             static_cast<std::uint32_t>(stats.getSkillIncreasesForSpecialization(specialization))
             + static_cast<std::uint32_t>(count));
@@ -248,6 +304,14 @@ namespace MWWorld
             Log(Debug::Info) << "M16 skill book read: book=" << skillBook.serialize()
                 << " skill=" << skill << " awarded=" << (count ? "true" : "false")
                 << " base=" << training.mBase << " experience=" << training.mExperience;
+        }
+        if (majorCount > previousProgress)
+        {
+            const auto* threshold = mStore.get<ESM::GameSetting>().search("iLevelUpTotal");
+            if (threshold && previousProgress < threshold->mValue.getInteger()
+                && majorCount >= threshold->mValue.getInteger())
+                if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
+                    windows->messageBox("#{sMeditate}");
         }
     }
 }
