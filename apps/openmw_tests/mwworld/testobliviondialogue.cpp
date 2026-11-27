@@ -3147,6 +3147,14 @@ TEST(OblivionQuestGuidance, TracesThroughACityWorldspaceToTheApproachGate)
     const ESM::FormKeyResolver ids(world.getContentFiles());
     const auto checkMarker = [&](unsigned cell, unsigned space, float x, unsigned mapSpace, float mapX) {
         world.getPlayer().setCell(&world.getWorldModel().getCell(ESM::RefId(*ids.toFormId(key(cell)))));
+        ObScript::RuntimeContext context;
+        context.mSelf = ESM::FormKey::dynamic("player", 1);
+        for (const unsigned candidate : {0xe20u, 0xe30u})
+        {
+            const ObScript::Value argument = ObScript::ReferenceValue{key(candidate), {}};
+            EXPECT_EQ(ObScript::asInteger(world.getOblivionScriptManager()->call(
+                          "GetInWorldspace", {}, {argument}, context, {})), candidate == space);
+        }
         const auto objective = MWWorld::getOblivionQuestObjective(world, key(0xe40));
         ASSERT_TRUE(objective);
         ASSERT_EQ(objective->mDestinations.size(), 1u);

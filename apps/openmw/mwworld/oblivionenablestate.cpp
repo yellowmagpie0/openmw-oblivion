@@ -128,6 +128,76 @@ namespace MWWorld
         for (const auto& [reference, value] : changes) reference->mEnabled = value;
     }
 
+    void World::propagateOblivionEnableChange(const ESM::FormKey& root, bool value)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || mSynchronizingOblivionEnableParents || root.isNull())
+            return;
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        if (const auto node = authoredEnableReference(mStore, resolver, root); node && !node->mParent.isNull())
+        {
+            // A direct edit to a linked child must still inherit its parent's state.
+            synchronizeOblivionEnableParents();
+            return;
+        }
+        if (!mOblivionEnableChildren)
+        {
+            EnableChildren children;
+            const auto index = [&](const auto& records) {
+                for (const auto& record : records)
+                    if (!record.mEsp.parent.isZeroOrUnset())
+                        children[resolver.toFormKey(record.mEsp.parent)].emplace_back(
+                            record.mFormKey, (record.mEsp.flags & 1u) != 0);
+            };
+            index(mStore.get<ESM4::Reference>());
+            index(mStore.get<ESM4::ActorCharacter>());
+            index(mStore.get<ESM4::ActorCreature>());
+            mOblivionEnableChildren.emplace(std::move(children));
+        }
+        if (!mOblivionEnableChildren->contains(root))
+        {
+            if (auto* saved = findOblivionSavedReference(root))
+                saved->mEnabled = value;
+            return;
+        }
+
+        // Every placed child has at most one parent. A tree reached from a root
+        // can therefore be evaluated in a single pass, including inverted links.
+        std::vector<std::pair<ESM::FormKey, bool>> pending{ { root, value } };
+        std::map<ESM::FormKey, bool> flags;
+        for (std::size_t i = 0; i < pending.size(); ++i)
+        {
+            const auto [key, parentEnabled] = pending[i];
+            if (!flags.emplace(key, parentEnabled).second)
+                continue;
+            const auto children = mOblivionEnableChildren->find(key);
+            if (children != mOblivionEnableChildren->end())
+                for (const auto& [child, inverted] : children->second)
+                    pending.emplace_back(child, parentEnabled != inverted);
+        }
+        mSynchronizingOblivionEnableParents = true;
+        struct Reset { bool& flag; ~Reset() { flag = false; } } reset{mSynchronizingOblivionEnableParents};
+        for (const auto& ptr : mWorldModel.getResidentPtrs())
+        {
+            const auto& key = ptr.getCellRef().getFormKey();
+            const auto it = flags.find(key);
+            if (it == flags.end() || key == root || ptr.getRefData().isEnabled() == it->second)
+                continue;
+            if (!mWorldScene)
+                it->second ? ptr.getRefData().enable() : ptr.getRefData().disable();
+            else if (it->second)
+                enable(ptr);
+            else
+                disable(ptr);
+            Log(Debug::Info) << "M15 enable-parent ref=" << key.serialize() << " enabled=" << (it->second ? "true" : "false");
+        }
+        // Some descendants have never been saved. A single pass also handles
+        // unsorted runtime additions without an exhaustive search per miss.
+        if (mOblivionRuntimeState)
+            for (auto& saved : mOblivionRuntimeState->mReferences)
+                if (const auto it = flags.find(saved.mKey); it != flags.end())
+                    saved.mEnabled = it->second;
+    }
+
     void World::synchronizeOblivionEnableParents(CellStore* loadingCell)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || mSynchronizingOblivionEnableParents) return;

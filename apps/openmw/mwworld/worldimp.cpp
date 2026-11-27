@@ -160,6 +160,7 @@
 #include "../mwmechanics/npcstats.hpp"
 #include "../mwmechanics/oblivionai.hpp"
 #include "../mwmechanics/oblivioncombat.hpp"
+#include "../mwmechanics/obliviondoorstate.hpp"
 #include <components/esm4/observation.hpp>
 #include "../mwmechanics/spellcasting.hpp"
 #include "../mwmechanics/spellutil.hpp"
@@ -1002,6 +1003,7 @@ namespace MWWorld
         const std::vector<std::string>& groundcoverFiles, ToUTF8::Utf8Encoder* encoder, Loading::Listener* listener)
     {
         mContentFiles = contentFiles;
+        mOblivionEnableChildren.reset();
         mESMVersions.resize(mContentFiles.size(), -1);
 
         loadContentFiles(fileCollections, contentFiles, encoder, listener);
@@ -8997,7 +8999,7 @@ namespace MWWorld
                     mWorldScene->reloadTerrain();
             }
         }
-        synchronizeOblivionEnableParents();
+        propagateOblivionEnableChange(reference.getCellRef().getFormKey(), true);
     }
 
     void World::removeContainerScripts(const Ptr& reference)
@@ -9037,7 +9039,7 @@ namespace MWWorld
             mWorldScene->removeObjectFromScene(reference);
             mWorldScene->addPostponedPhysicsObjects();
         }
-        synchronizeOblivionEnableParents();
+        propagateOblivionEnableChange(reference.getCellRef().getFormKey(), false);
     }
 
     void World::advanceTime(double hours, bool incremental)
@@ -9914,6 +9916,16 @@ namespace MWWorld
         if (mGameProfile != ESM::GameProfile::Oblivion || mPendingOblivionRuntimeState
             || !mPlayer || !mWorldScene || !mOblivionCombat || getPlayerPtr().isEmpty()) return;
         const int level = getPlayerPtr().getClass().getCreatureStats(getPlayerPtr()).getLevel();
+        std::optional<MWMechanics::OblivionSavedReferenceIndex> enableStates;
+        const auto placementEnabled = [&](const ESM4::Reference& placed) {
+            if (placed.mEsp.parent.isZeroOrUnset())
+                return (placed.mFlags & ESM4::Rec_Disabled) == 0;
+            // Unresolved leveled markers often have no save row. Share the
+            // lookup across their enable-parent chains for this update.
+            if (mOblivionRuntimeState && (!enableStates || !enableStates->matches(mOblivionRuntimeState->mReferences)))
+                enableStates.emplace(mOblivionRuntimeState->mReferences);
+            return getOblivionReferenceEnabled(placed.mFormKey, enableStates ? &*enableStates : nullptr).value_or(false);
+        };
         for (CellStore* cell : mWorldScene->getActiveCells())
         {
             const auto* cellId = cell->getCell()->getId().getIf<ESM::FormId>();
@@ -9947,8 +9959,7 @@ namespace MWWorld
                         continue;
                     }
                 }
-                if (original->mEsp.parent.isZeroOrUnset() ? (original->mFlags & ESM4::Rec_Disabled) != 0
-                    : !getOblivionReferenceEnabled(original->mFormKey).value_or(false))
+                if (!placementEnabled(*original))
                     continue;
                 if (!list->mTemplate.isZeroOrUnset() && !mStore.get<ESM4::Creature>().search(list->mTemplate))
                     continue;

@@ -222,6 +222,9 @@ namespace MWWorld
         ESM4::RuntimeReferenceState* findOblivionSavedReference(const ESM::FormKey& key);
         bool mUpdatingOblivionBoundEquipment = false;
         bool mSynchronizingOblivionEnableParents = false;
+        using EnableChildren = std::map<ESM::FormKey, std::vector<std::pair<ESM::FormKey, bool>>>;
+        std::optional<EnableChildren> mOblivionEnableChildren;
+        void propagateOblivionEnableChange(const ESM::FormKey& root, bool value);
         void normalizeOblivionEnableParents(ESM4::RuntimeState& state) const;
         using NativeAnimatedReferenceStates = std::map<ESM::FormKey, ESM4::RuntimeActorRagdoll>;
         std::shared_ptr<const NativeAnimatedReferenceStates> mOblivionAnimatedReferenceStates;

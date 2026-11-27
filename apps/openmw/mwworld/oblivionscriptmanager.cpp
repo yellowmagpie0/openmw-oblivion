@@ -2629,7 +2629,7 @@ namespace MWWorld
                     mWorld.disable(ptr);
             }
             else if (changed)
-                mWorld.synchronizeOblivionEnableParents();
+                mWorld.propagateOblivionEnableChange(key, enabled);
             if (changed)
                 trace(name + " ref=" + key.serialize());
             return std::int64_t(0);
@@ -3003,6 +3003,14 @@ namespace MWWorld
                 return double(std::numeric_limits<float>::max());
             return double((left.getRefData().getPosition().asVec3()
                 - right.getRefData().getPosition().asVec3()).length());
+        }
+        if (name == "getinworldspace")
+        {
+            const Ptr subject = objectPtr();
+            const auto key = keyFromValue(argument(0));
+            const auto worldspace = key ? mResolver.toFormId(*key) : std::nullopt;
+            return std::int64_t(worldspace && !subject.isEmpty() && subject.isInCell() && subject.getCell()->isExterior()
+                && subject.getCell()->getCell()->getWorldSpace() == ESM::RefId(*worldspace));
         }
         if (name == "getincell")
         {
