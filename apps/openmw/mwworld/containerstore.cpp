@@ -26,6 +26,7 @@
 #include "esmstore.hpp"
 #include "localscripts.hpp"
 #include "manualref.hpp"
+#include "oblivioninteraction.hpp"
 #include "oblivionprofileservices.hpp"
 #include "player.hpp"
 #include "preparedinitialinventory.hpp"
@@ -657,6 +658,7 @@ bool MWWorld::ContainerStore::PreparedItemAddition::notify()
 {
     if (!ownerIsCurrent() || !mImpl->mCommitted || mImpl->mNotified) return false;
     mImpl->mNotified = true;
+    notifyOblivionInventoryChange(*mImpl->mOwner, getItem(), mImpl->mCount);
     if (auto* listener = mImpl->mOwner->mListener)
         listener->itemAdded(getItem(), mImpl->mCount);
     // Do not access the owner after observers: they may have destroyed it.
@@ -723,6 +725,7 @@ MWWorld::ContainerStoreIterator MWWorld::ContainerStore::add(
             item.getRefData().getLocals().setVarByInt(script, "onpcadd", 1);
     }
 
+    notifyOblivionInventoryChange(*this, item, count);
     // we should not fire event for InventoryStore yet - it has some custom logic
     if (mListener && typeid(*this) == typeid(ContainerStore))
         mListener->itemAdded(item, count);
@@ -1014,6 +1017,7 @@ int MWWorld::ContainerStore::remove(const Ptr& item, int count, bool equipReplac
     }
 
     flagAsModified();
+    notifyOblivionInventoryChange(*this, item, -(count - toRemove));
 
     // we should not fire event for InventoryStore yet - it has some custom logic
     if (mListener && typeid(*this) == typeid(ContainerStore))

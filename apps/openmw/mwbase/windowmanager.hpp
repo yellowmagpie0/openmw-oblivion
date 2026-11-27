@@ -87,6 +87,8 @@ namespace MWGui
     class HUD;
     class WindowBase;
 
+    enum class HudEventKind { Gain, Loss, Quest, Discovery };
+
     enum ShowInDialogueMode
     {
         ShowInDialogueMode_IfPossible,
@@ -394,6 +396,7 @@ namespace MWBase
         /// Same as viewer->getCamera()->getCullMask(), provided for consistency.
         virtual uint32_t getCullMask() = 0;
 
+        virtual void showHudEvent(MWGui::HudEventKind kind, std::string text) {}
         virtual void inventoryUpdated(const MWWorld::Ptr& ptr) const = 0;
 
         /// Return the window that should receive controller events

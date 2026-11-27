@@ -5,6 +5,7 @@
 #include <utility>
 
 #include <MyGUI_Button.h>
+#include <MyGUI_TextIterator.h>
 #include <MyGUI_EditBox.h>
 #include <MyGUI_ImageBox.h>
 #include <MyGUI_InputManager.h>
@@ -323,8 +324,60 @@ namespace MWGui
         }
     }
 
+    void HUD::addEvent(HudEventKind kind, std::string text)
+    {
+        // Keep the newest at the top, recycling the oldest row during bursts.
+        std::rotate(mEventRows.rbegin(), mEventRows.rbegin() + 1, mEventRows.rend());
+        auto& row = mEventRows.front();
+        if (!row.mText)
+        {
+            row.mText = mMainWidget->createWidget<MyGUI::TextBox>("SandText", {}, MyGUI::Align::Default);
+            row.mText->setNeedMouseFocus(false);
+            row.mText->setTextAlign(MyGUI::Align::Left | MyGUI::Align::VCenter);
+            row.mText->setTextShadowColour(MyGUI::Colour::Black);
+            row.mText->setTextShadow(true);
+        }
+        for (char& c : text)
+            if (c == '\n' || c == '\r' || c == '\t')
+                c = ' ';
+        row.mText->setCaption(MyGUI::TextIterator::toTagsString(text));
+        switch (kind)
+        {
+            case HudEventKind::Gain: row.mText->setTextColour({ 0.75f, 0.95f, 0.72f }); break;
+            case HudEventKind::Loss: row.mText->setTextColour({ 1.f, 0.77f, 0.68f }); break;
+            case HudEventKind::Quest: row.mText->setTextColour({ 1.f, 0.88f, 0.59f }); break;
+            case HudEventKind::Discovery: row.mText->setTextColour({ 0.75f, 0.88f, 1.f }); break;
+        }
+        row.mTimeLeft = 6.f;
+        updateEvents(0.f);
+    }
+
+    void HUD::updateEvents(float dt)
+    {
+        if (mEventRows.front().mTimeLeft <= 0.f)
+            return;
+        const bool visible = mMainWidget->getInheritedVisible() && !MWBase::Environment::get().getWindowManager()->isGuiMode();
+        int top = mMainWidget->getHeight() / 3;
+        for (auto& row : mEventRows)
+        {
+            if (!row.mText)
+                continue;
+            if (visible)
+                row.mTimeLeft = std::max(0.f, row.mTimeLeft - dt);
+            row.mText->setVisible(visible && row.mTimeLeft > 0.f);
+            if (visible && row.mTimeLeft > 0.f)
+            {
+                const int height = row.mText->getFontHeight() + 6;
+                row.mText->setCoord(12, top, std::min(480, mMainWidget->getWidth() * 2 / 5), height);
+                row.mText->setAlpha(std::min(1.f, row.mTimeLeft));
+                top += height;
+            }
+        }
+    }
+
     void HUD::onFrame(float dt)
     {
+        updateEvents(dt);
         LocalMapBase::onFrame(dt);
 
         bool bearingVisible = false;
@@ -756,6 +809,12 @@ namespace MWGui
 
     void HUD::clear()
     {
+        for (auto& row : mEventRows)
+        {
+            row.mTimeLeft = 0.f;
+            if (row.mText)
+                row.mText->setVisible(false);
+        }
         setQuestObjective(std::nullopt);
         mEnemyActor = {};
         mEnemyHealthTimer = -1;

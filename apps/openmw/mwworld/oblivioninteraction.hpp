@@ -5,19 +5,10 @@
 
 #include <cstdint>
 
-namespace ESM
-{
-    class FormKeyResolver;
-    struct FormKey;
-}
-
 namespace MWWorld
 {
     class ContainerStore;
-    class ESMStore;
-
-    void notifyOblivionItemAdded(const ESMStore& store, const ESM::FormKeyResolver& resolver,
-        const ESM::FormKey& item, int count);
+    void notifyOblivionInventoryChange(const ContainerStore& store, const ConstPtr& item, int delta);
 
     // Native script count over physical stacks, including signed int32 wrap.
     std::int32_t oblivionInventoryItemCount(const ContainerStore& inventory, const ESM::RefId& item);

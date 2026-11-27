@@ -975,6 +975,12 @@ namespace MWGui
         }
     }
 
+    void WindowManager::showHudEvent(HudEventKind kind, std::string text)
+    {
+        if (mRuntime && mRuntime->mHud)
+            mRuntime->mHud->addEvent(kind, std::move(text));
+    }
+
     void WindowManager::messageBox(std::string_view message, enum MWGui::ShowInDialogueMode showInDialogueMode)
     {
         if (getMode() == GM_Dialogue && showInDialogueMode != MWGui::ShowInDialogueMode_Never)

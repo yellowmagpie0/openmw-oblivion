@@ -2579,6 +2579,18 @@ namespace MWWorld
 
     namespace
     {
+        void notifyReputationChange(std::string_view name, std::int32_t before, std::int32_t after)
+        {
+            if (before == after)
+                return;
+            if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
+            {
+                const auto delta = static_cast<std::int64_t>(after) - before;
+                windows->showHudEvent(delta > 0 ? MWGui::HudEventKind::Gain : MWGui::HudEventKind::Loss,
+                    std::string(name) + (delta > 0 ? " +" : " ") + std::to_string(delta) + "  (" + std::to_string(after) + ")");
+            }
+        }
+
         ESM4::PlayerReputationState legacyPlayerReputation(const Ptr& player, const ESM4::RuntimeState* state)
         {
             ESM4::PlayerReputationState result;
@@ -2619,10 +2631,12 @@ namespace MWWorld
             legacy.try_emplace("legacy.infamy", found->second);
             legacy.erase(found);
         }
-        mOblivionCombat->publishPlayerReputation(*mPlayer, ESM4::modifyPlayerInfamy(reputation, delta),
+        const auto updated = ESM4::modifyPlayerInfamy(reputation, delta);
+        mOblivionCombat->publishPlayerReputation(*mPlayer, updated,
             resolveOblivionPlayerDynamicBaseSettings(mStore));
         if (mOblivionRuntimeState)
             mOblivionRuntimeState->mPlayer.mActorValues.swap(legacy);
+        notifyReputationChange("Infamy", reputation.mInfamy, updated.mInfamy);
         return true;
     }
 
@@ -2639,10 +2653,12 @@ namespace MWWorld
             legacy.try_emplace("legacy.infamy", found->second);
             legacy.erase(found);
         }
-        mOblivionCombat->publishPlayerReputation(*mPlayer, ESM4::modifyPlayerFame(reputation, delta),
+        const auto updated = ESM4::modifyPlayerFame(reputation, delta);
+        mOblivionCombat->publishPlayerReputation(*mPlayer, updated,
             resolveOblivionPlayerDynamicBaseSettings(mStore));
         if (mOblivionRuntimeState)
             mOblivionRuntimeState->mPlayer.mActorValues.swap(legacy);
+        notifyReputationChange("Fame", reputation.mFame, updated.mFame);
         return true;
     }
 
@@ -2655,6 +2671,7 @@ namespace MWWorld
             throw std::invalid_argument("native nonplayer Fame has no writable reference counter");
         const auto owned = mOblivionCombat->playerReputation();
         auto reputation = owned ? *owned : legacyPlayerReputation(actor, mOblivionRuntimeState.get());
+        const auto oldFame = reputation.mFame;
         reputation.mFame = amount; // Explicit absolute Lua adapter, not ModPCFame.
         auto legacy = mOblivionRuntimeState ? mOblivionRuntimeState->mPlayer.mActorValues : decltype(ESM4::RuntimePlayerState::mActorValues){};
         if (const auto found = legacy.find("infamy"); found != legacy.end())
@@ -2666,6 +2683,7 @@ namespace MWWorld
             resolveOblivionPlayerDynamicBaseSettings(mStore));
         if (mOblivionRuntimeState)
             mOblivionRuntimeState->mPlayer.mActorValues.swap(legacy);
+        notifyReputationChange("Fame", oldFame, reputation.mFame);
         return true;
     }
 

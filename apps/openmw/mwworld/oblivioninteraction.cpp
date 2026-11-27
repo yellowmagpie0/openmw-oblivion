@@ -9,7 +9,6 @@
 #include <cmath>
 #include <exception>
 #include <limits>
-#include <sstream>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
@@ -178,37 +177,6 @@ namespace MWWorld
             }
         };
 
-        template <class T>
-        std::string findName(const ESMStore& store, const ESM::RefId& id)
-        {
-            if (const T* value = store.get<T>().search(id))
-                return value->mFullName;
-            return {};
-        }
-
-        std::string getOblivionItemName(const ESMStore& store, const ESM::RefId& id)
-        {
-            std::string result;
-#define OPENMW_FIND_TES4_NAME(Type) \
-    if (result.empty()) \
-        result = findName<ESM4::Type>(store, id)
-            OPENMW_FIND_TES4_NAME(Ammunition);
-            OPENMW_FIND_TES4_NAME(Apparatus);
-            OPENMW_FIND_TES4_NAME(Armor);
-            OPENMW_FIND_TES4_NAME(Book);
-            OPENMW_FIND_TES4_NAME(Clothing);
-            OPENMW_FIND_TES4_NAME(Ingredient);
-            OPENMW_FIND_TES4_NAME(Key);
-            OPENMW_FIND_TES4_NAME(Light);
-            OPENMW_FIND_TES4_NAME(MiscItem);
-            OPENMW_FIND_TES4_NAME(Potion);
-            OPENMW_FIND_TES4_NAME(SigilStone);
-            OPENMW_FIND_TES4_NAME(SoulGem);
-            OPENMW_FIND_TES4_NAME(Weapon);
-#undef OPENMW_FIND_TES4_NAME
-            return result.empty() ? id.toDebugString() : result;
-        }
-
         const char* kindName(OblivionInteractionKind kind)
         {
             switch (kind)
@@ -232,22 +200,20 @@ namespace MWWorld
         }
     }
 
-    void notifyOblivionItemAdded(const ESMStore& store, const ESM::FormKeyResolver& resolver,
-        const ESM::FormKey& item, int count)
+    void notifyOblivionInventoryChange(const ContainerStore& store, const ConstPtr& item, int delta)
     {
-        auto* windows = MWBase::Environment::get().getWindowManagerOrNull();
-        if (!windows || count <= 0)
+        if (!delta || store.getPtr().isEmpty())
             return;
-        const auto id = resolver.toFormId(item);
-        if (!id)
+        auto& env = MWBase::Environment::get();
+        auto* world = env.getWorldOrNull();
+        if (!world || world->getGameProfile() != ESM::GameProfile::Oblivion || store.getPtr() != world->getPlayerPtr())
             return;
-        const auto key = store.findEsm4FormKey("sAddItemtoInventory");
-        const auto* setting = key ? store.search<ESM4::GameSetting>(*key) : nullptr;
-        const auto* suffix = setting ? std::get_if<std::string>(&setting->mData) : nullptr;
-        std::string message = getOblivionItemName(store, ESM::RefId(*id));
-        if (count > 1)
-            message += " (" + std::to_string(count) + ")";
-        windows->messageBox(message + " " + (suffix ? *suffix : "added."));
+        if (auto* windows = env.getWindowManagerOrNull())
+        {
+            const std::string_view name = item.getClass().getName(item);
+            windows->showHudEvent(delta > 0 ? MWGui::HudEventKind::Gain : MWGui::HudEventKind::Loss,
+                (delta > 0 ? "+" : "") + std::to_string(delta) + "  " + std::string(name.empty() ? "Item" : name));
+        }
     }
 
     std::int32_t oblivionInventoryItemCount(const ContainerStore& inventory, const ESM::RefId& item)
@@ -1042,7 +1008,6 @@ namespace MWWorld
             || !std::isfinite(item.mCharge) || item.mCharge < -1
             || !std::isfinite(item.mRemainingUsageTime) || item.mRemainingUsageTime < -1)
             throw std::invalid_argument("invalid native pickup metadata");
-        const std::string name(ptr.getClass().getName(ptr));
         if (!mOblivionRuntimeState)
             mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
         const auto findSource = [&]() -> ESM4::RuntimeReferenceState* {
@@ -1218,8 +1183,6 @@ namespace MWWorld
         }
         if (failure) std::rethrow_exception(failure);
         if (worldIdentity.expired() || getPlayerPtr() != player) return;
-        if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
-            windows->messageBox("Taken: " + name + (item.mCount > 1 ? " (" + std::to_string(item.mCount) + ")" : ""));
         Log(Debug::Info) << "M5 interaction: kind=take result=taken ref=" << key.serialize()
                          << " base=" << item.mBase.serialize();
     }
@@ -1625,9 +1588,6 @@ namespace MWWorld
                     report("empty");
                     break;
                 }
-                std::ostringstream summary;
-                summary << "Looted:";
-                int lines = 0;
                 for (const ESM4::RuntimeInventoryItem& item : state.mInventory)
                 {
                     ESM4::RuntimeInventoryItem transferred = item;
@@ -1636,17 +1596,9 @@ namespace MWWorld
                     transferred.mEquippedSlots = 0;
                     transferred.mHotkey = -1;
                     oblivionAddPlayerInventoryItem(std::move(transferred));
-                    if (lines++ < 8)
-                    {
-                        const std::optional<ESM::FormId> itemId = resolver.toFormId(item.mBase);
-                        summary << "\n" << item.mCount << " x "
-                                << (itemId ? getOblivionItemName(mStore, ESM::RefId(*itemId))
-                                           : item.mBase.serialize());
-                    }
                 }
                 state.mInventory.clear();
                 state.mCustomState["opened"] = true;
-                message(summary.str());
                 report("looted");
                 break;
             }
@@ -1697,7 +1649,6 @@ namespace MWWorld
                 if (Misc::Rng::rollDice(100, mPrng) < chance)
                 {
                     oblivionChangePlayerInventory(ingredient, 1, {}, true);
-                    message("Harvested: " + getOblivionItemName(mStore, ESM::RefId(flora->mIngredient)));
                     report("harvested");
                 }
                 else

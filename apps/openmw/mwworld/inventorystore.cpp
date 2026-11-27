@@ -1,4 +1,5 @@
 #include "inventorystore.hpp"
+#include "oblivioninteraction.hpp"
 
 #include <algorithm>
 #include <array>
@@ -1007,6 +1008,8 @@ bool MWWorld::InventoryStore::PreparedItemRemoval::notify()
         try { callback(); }
         catch (...) { if (!failure) failure = std::current_exception(); }
     };
+    if (mImpl->mCount > 0)
+        observe([&] { notifyOblivionInventoryChange(*mImpl->mOwner, mImpl->mStacks.front().mItem, -mImpl->mCount); });
     for (const auto& stack : mImpl->mStacks)
     {
         if (!ownerIsCurrent()) break;
@@ -1111,6 +1114,7 @@ bool MWWorld::InventoryStore::notifyPreparedAmmunitionDebit(PreparedAmmunitionDe
     // An observer can replace or clear the inventory. Do not touch its former
     // item pointer after that replacement.
     if (value->mIdentity != mPreparedAmmunitionIdentity) return true;
+    notifyOblivionInventoryChange(*this, value->mItem, -1);
     if (mListener) mListener->itemRemoved(value->mItem, 1);
     return true;
 }
@@ -1312,6 +1316,7 @@ bool MWWorld::InventoryStore::notifyPreparedEquippedWeaponRemoval(PreparedEquipp
     if (value->mStorageIdentity.expired() || value->mIdentity != mPreparedAmmunitionIdentity) return true;
     fireEquipmentChangedEvent();
     if (value->mStorageIdentity.expired() || value->mIdentity != mPreparedAmmunitionIdentity) return true;
+    notifyOblivionInventoryChange(*this, value->mItem, -1);
     if (mListener) mListener->itemRemoved(value->mItem, 1);
     return true;
 }

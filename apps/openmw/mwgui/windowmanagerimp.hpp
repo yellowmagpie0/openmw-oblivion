@@ -638,6 +638,7 @@ namespace MWGui
         void setActiveMap(const MWWorld::Cell& cell);
         ///< set the indices of the map texture that should be used
 
+        void showHudEvent(HudEventKind kind, std::string text) override;
         void inventoryUpdated(const MWWorld::Ptr& ptr) const override;
 
         Files::ConfigurationManager& mCfgMgr;

@@ -1,6 +1,7 @@
 #ifndef OPENMW_GAME_MWGUI_HUD_H
 #define OPENMW_GAME_MWGUI_HUD_H
 
+#include <array>
 #include <memory>
 
 #include "mapwindow.hpp"
@@ -14,6 +15,7 @@ namespace MWWorld
 
 namespace MWGui
 {
+    enum class HudEventKind;
     class DragAndDrop;
     class ItemWidget;
     class SpellWidget;
@@ -52,6 +54,7 @@ namespace MWGui
         void setMouseEmulationCursorVisible(bool visible);
         void setMouseEmulationCursorPosition(int left, int top);
 
+        void addEvent(HudEventKind kind, std::string text);
         void onFrame(float dt) override;
         void setQuestObjective(const std::optional<MWWorld::QuestObjective>& objective);
         int getQuestObjectiveBottom() const;
@@ -69,6 +72,14 @@ namespace MWGui
         void dropDraggedItem(float mouseX, float mouseY);
 
     private:
+        struct EventRow
+        {
+            MyGUI::TextBox* mText = nullptr;
+            float mTimeLeft = 0.f;
+        };
+        std::array<EventRow, 4> mEventRows{};
+        void updateEvents(float dt);
+
         MyGUI::ProgressBar *mHealth = nullptr, *mMagicka = nullptr, *mStamina = nullptr, *mEnemyHealth = nullptr,
                            *mDrowning = nullptr;
         MyGUI::Widget* mHealthFrame = nullptr;

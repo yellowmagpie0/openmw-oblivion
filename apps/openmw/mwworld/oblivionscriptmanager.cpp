@@ -1812,9 +1812,7 @@ namespace MWWorld
             placesFound = ESM4::addPlayerMiscStat(ESM4::playerMiscStatValue(placesFound), 1);
             if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
             {
-                const auto* text = setting("sDiscoveredText");
-                const auto* prefix = text ? std::get_if<std::string>(&text->mData) : nullptr;
-                windows->messageBox((prefix ? *prefix : "You have discovered") + " " + marker->mFullName + ".");
+                windows->showHudEvent(MWGui::HudEventKind::Discovery, "Discovered  " + marker->mFullName);
             }
             trace("discovered ref=" + key.serialize() + " location=" + marker->mFullName);
         }
@@ -1850,7 +1848,18 @@ namespace MWWorld
         if (definition)
             if (auto update = evaluateOblivionStageEntries(mWorld, *this, *definition, stage, eligible);
                 update && std::ranges::find(state.mJournal, *update) == state.mJournal.end())
+            {
+                const bool visible = !update->mEntries.empty();
+                const bool first = std::ranges::none_of(state.mJournal, [](const auto& entry) { return !entry.mEntries.empty(); });
                 state.mJournal.push_back(std::move(*update));
+                if (visible)
+                    if (auto* windows = MWBase::Environment::get().getWindowManagerOrNull())
+                    {
+                        const bool finished = isOblivionQuestFinished(mWorld, *this, *definition, state);
+                        const char* label = finished ? "Quest complete" : first ? "Quest started" : "Quest updated";
+                        windows->showHudEvent(MWGui::HudEventKind::Quest, std::string(label) + "  " + definition->mQuestName);
+                    }
+            }
         if (const auto programs = mQuestResults.find(quest); programs != mQuestResults.end())
             for (const auto& program : programs->second)
                 if (program->mUnit.mStage == stage
@@ -2775,7 +2784,6 @@ namespace MWWorld
                         {
                             const auto base = mResolver.toFormKey(ESM::FormId::fromUint32(reward.item));
                             const int added = mWorld.oblivionChangePlayerInventory(base, reward.count, {}, true);
-                            notifyOblivionItemAdded(mStore, mResolver, base, added);
                             trace("additem owner=" + owner.serialize() + " list=" + item->serialize()
                                 + " item=" + base.serialize() + " count=" + std::to_string(added));
                         }
@@ -2787,7 +2795,6 @@ namespace MWWorld
                     + " count=" + std::to_string(changed));
                 if (name == "additem" && changed > 0)
                 {
-                    notifyOblivionItemAdded(mStore, mResolver, *item, changed);
                     dispatchBaseEvent(*item, "onadd", owner);
                 }
                 return std::int64_t(0);
