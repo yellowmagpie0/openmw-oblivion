@@ -167,6 +167,8 @@ namespace MWRender
         // Native479288 attaches the model with its authored local transform.
         // TES3 BoneOffset extraction and Left-bone mirroring do not apply.
         auto instance = sceneManager.getInstance(model);
+        // Equipment can be replaced while the actor's ragdoll still owns the skeleton.
+        instance->setUserValue("openmwNativeActorAttachment", true);
         if (!visitor.mFound->addChild(instance))
             throw std::runtime_error("native attachment parent rejected its model");
         return instance;

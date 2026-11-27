@@ -268,6 +268,9 @@ namespace
         auto node = attach();
         ASSERT_TRUE(node);
         EXPECT_NE(node, model);
+        bool attachment = false;
+        ASSERT_TRUE(node->getUserValue("openmwNativeActorAttachment", attachment));
+        EXPECT_TRUE(attachment);
         ASSERT_EQ(forearm->getNumChildren(), 1u);
         EXPECT_EQ(forearm->getChild(0), node);
         EXPECT_EQ(model->getNumParents(), 0u);

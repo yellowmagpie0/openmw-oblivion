@@ -11,6 +11,7 @@ namespace ESM
 
 namespace MWWorld
 {
+    class InventoryStore;
     class Ptr;
 
     template <class PtrType>
@@ -24,6 +25,7 @@ namespace MWMechanics
     MWWorld::ContainerStoreIterator getActiveWeapon(const MWWorld::Ptr& actor, int* weaptype);
 
     const ESM::WeaponType* getWeaponType(const int weaponType);
+    bool hasTwoHandedWeaponEquipped(const MWWorld::InventoryStore& inventory);
 
     std::vector<std::string_view> getAllWeaponTypeShortGroups();
 }

@@ -739,6 +739,8 @@ namespace MWRender
                 if (const ESM4::Armor* armor = store.get<ESM4::Armor>().search(*id))
                 {
                     const std::uint32_t slots = armor->mArmorFlags & 0xffffu;
+                    if ((slots & ESM4::Armor::TES4_Shield) && MWMechanics::hasTwoHandedWeaponEquipped(inventory))
+                        continue;
                     if (visibleInView(slots) && (slots == 0 || (slots & ~covered) != 0))
                     {
                         const auto bone = (slots & ESM4::Armor::TES4_Shield) ? std::string_view{}

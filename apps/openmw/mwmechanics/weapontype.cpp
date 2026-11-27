@@ -419,6 +419,14 @@ namespace MWMechanics
         return &Weapon<ESM::Weapon::ShortBladeOneHand>::getValue();
     }
 
+    bool hasTwoHandedWeaponEquipped(const MWWorld::InventoryStore& inventory)
+    {
+        const auto item = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        if (item == inventory.end() || item->getType() != ESM::REC_WEAP)
+            return false;
+        return (getWeaponType(item->get<ESM::Weapon>()->mBase->mData.mType)->mFlags & ESM::WeaponType::TwoHanded) != 0;
+    }
+
     std::vector<std::string_view> getAllWeaponTypeShortGroups()
     {
         // Go via a set to eliminate duplicates.

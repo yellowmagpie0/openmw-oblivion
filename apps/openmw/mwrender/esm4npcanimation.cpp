@@ -46,6 +46,7 @@
 #include "../mwbase/environment.hpp"
 #include "../mwbase/soundmanager.hpp"
 #include "../mwclass/esm4npc.hpp"
+#include "../mwmechanics/weapontype.hpp"
 #include "../mwworld/esmstore.hpp"
 #include "../mwworld/inventorystore.hpp"
 #include "../mwworld/worldimp.hpp"
@@ -1387,6 +1388,8 @@ namespace MWRender
                 continue;
             if (item.mSlots & ESM4::Armor::TES4_Shield)
             {
+                if (MWMechanics::hasTwoHandedWeaponEquipped(mPtr.getClass().getInventoryStore(mPtr)))
+                    continue;
                 const auto path = Misc::ResourceHelpers::correctMeshPath(normalized);
                 try
                 {

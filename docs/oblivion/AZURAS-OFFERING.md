@@ -1,6 +1,6 @@
 # Azura’s offering
 
-Run `build-windows/Continue-After-Azuras-Offering.cmd` to start at Azura’s Shrine after the audience. The Knight is level 2 with 113 health. Azura’s journal entry directs the player to Gutted Mine. The map marker is revealed and the entrance is unlocked. The next playable section begins with the trip to the mine.
+Run `build-windows/Continue-After-Azuras-Offering.cmd` to start at Azura’s Shrine after the audience. The Knight is level 2 with 113 health. Azura’s journal entry directs the player to Gutted Mine. The map marker is revealed and the entrance is unlocked. Continue with [the five Afflicted Brethren in Gutted Mine](GUTTED-MINE.md).
 
 ## Route from the Bruma save
 
