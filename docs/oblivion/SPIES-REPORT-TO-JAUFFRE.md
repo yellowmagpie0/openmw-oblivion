@@ -14,6 +14,8 @@ Run `build-windows/Continue-After-Reporting-to-Jauffre.cmd`. The checkpoint is `
 
 ## Verification
 
+The next playable chunk covers [Martin’s first ritual ingredient and the lead to Azura’s Shrine](BLOOD-OF-THE-DAEDRA-BRIEFING.md).
+
 The walk from the basement through Bruma’s north gate and up the switchbacks is recorded in `build-windows/sponsor-orders-full01`. The final replay starts at its `TempleGate.omwsave`, uses ordinary door activations and dialogue clicks, and ends after all three replies. Loading the Great Hall preserves Jauffre’s offscreen arrival in the East Wing, including when he stopped near the edge of the dining area.
 
 The report ran at 29.7 FPS during a 456-frame dialogue sample at the profile’s 30 FPS limit, with a 95th-percentile frame time of 34.4 ms. Captures before, during and after the conversation are in `build-windows/sponsor-orders-room02`. The continuation save SHA-256 is `e12bf942fc094af06423c657dbf1455b462bfe345d24c4a1c01a78974ebfeb7a`.

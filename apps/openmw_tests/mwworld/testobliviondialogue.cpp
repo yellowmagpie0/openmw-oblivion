@@ -3052,7 +3052,7 @@ TEST(OblivionQuestGuidance, SwitchesTargetsUsingAnAuthoredCellCondition)
         condition.fnIndex = ESM4::FUN_GetInCellParam;
         condition.compValue = inCell;
         condition.param1 = 0xb04;
-        condition.param2 = 0xa00;
+        // With no explicit reference, the condition tests the quest subject (player).
         return sub(ESM::fourCC("QSTA"), bytes(reference) + bytes(0u))
             + sub(ESM::fourCC("CTDA"), bytes(condition));
     };
@@ -3076,6 +3076,33 @@ TEST(OblivionQuestGuidance, SwitchesTargetsUsingAnAuthoredCellCondition)
     const ESM::FormKeyResolver ids(world.getContentFiles());
     world.getPlayer().setCell(&world.getWorldModel().getCell(ESM::RefId(*ids.toFormId(key(0xd06)))));
     expectMarker(1280.f);
+}
+
+TEST(OblivionQuestGuidance, CellParamTestsThePlacedReferenceAgainstTheCellNamePrefix)
+{
+    ESM4::AIPackage::CTDA condition{};
+    condition.fnIndex = ESM4::FUN_GetInCellParam;
+    condition.compValue = 1.f;
+    condition.param1 = 0xe01; // "Teleport" matches TeleportDestination.
+    condition.param2 = 0xd03; // Placed object in the other room.
+    const auto prefixCell = record(ESM4::REC_CELL, 0xe01,
+        sub(ESM::fourCC("EDID"), std::string("teleport\0", 9))
+        + sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior})));
+    const auto prefix = bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + prefixCell.size()))
+        + bytes(static_cast<unsigned>(ESM4::REC_CELL)) + bytes(0u) + bytes(0u) + prefixCell;
+    const auto quest = record(ESM4::REC_QUST, 0xe00,
+        sub(ESM::fourCC("FULL"), std::string("Find the book\0", 14))
+        + sub(ESM::fourCC("DATA"), std::string{0, 50})
+        + sub(ESM::fourCC("QSTA"), bytes(0xd03u) + bytes(0u)) + sub(ESM::fourCC("CTDA"), bytes(condition)));
+    MWClass::ESM4Door::registerSelf();
+    SwitchFixture fixture(true, false, sameCellTeleportRecords(true, true) + prefix + quest, 10, false);
+    auto& world = fixture.mFixture.mWorld;
+    world.getOblivionScriptManager()->setStage(key(0xe00), 15);
+    const auto objective = MWWorld::getOblivionQuestObjective(world, key(0xe00));
+    ASSERT_TRUE(objective);
+    ASSERT_EQ(objective->mDestinations.size(), 1u);
+    ASSERT_TRUE(objective->mDestinations.front().mNearby);
+    EXPECT_FLOAT_EQ(objective->mDestinations.front().mNearby->mPosition.x(), 128.f);
 }
 
 TEST(OblivionQuestGuidance, TracesThroughACityWorldspaceToTheApproachGate)

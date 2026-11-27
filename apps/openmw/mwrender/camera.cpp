@@ -167,9 +167,12 @@ namespace MWRender
         const float yaw = position.rot[2];
         const osg::Vec3f front(std::sin(yaw), std::cos(yaw), 0.f);
         osg::Vec3f toPlayer = mPosition - head;
+        const float eyeHeightDifference = std::abs(toPlayer.z());
         toPlayer.z() = 0.f;
-        toPlayer.normalize();
-        if (front * toPlayer > 0.65f)
+        const float horizontalDistance = toPlayer.normalize();
+        // A standing player can face a seated speaker from above the desk.
+        // Keep the player's viewpoint only if it also gives a clear angle on the face.
+        if (front * toPlayer > 0.65f && eyeHeightDifference < horizontalDistance * 0.55f)
             return;
 
         // A bench fixes the actor's heading. Find room for a view of the face

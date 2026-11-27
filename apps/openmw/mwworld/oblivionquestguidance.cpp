@@ -10,6 +10,7 @@
 #include <tuple>
 
 #include <components/esm4/aiconditions.hpp>
+#include <components/esm4/cellcondition.hpp>
 #include <components/esm4/crimerules.hpp>
 #include <components/esm4/loadacti.hpp>
 #include <components/esm4/loadglob.hpp>
@@ -39,6 +40,37 @@ namespace
 
 namespace MWMechanics
 {
+    bool OblivionAiService::referenceInCell(const ESM::FormKey& reference, const ESM::FormKey& cell) const
+    {
+        const auto key = ESM4::runtimeReferenceKey(reference);
+        ESM::FormKey actual;
+        // An offscreen trip can finish before the resident pointer changes cells.
+        if (const auto it = mActors.find(key); it != mActors.end() && it->second.mAbstractPositionDirty)
+            actual = it->second.mState.mLastValidCell;
+        if (actual.isNull())
+        {
+            const auto ptr = loadedPtrFor(key);
+            if (!ptr.isEmpty())
+            {
+                if (!ptr.isInCell() || ptr.getBase()->isDeleted())
+                    return false;
+                actual = cellKey(ptr);
+            }
+            else if (const auto* actor = state(key); actor && !actor->mLastValidCell.isNull())
+                actual = actor->mLastValidCell;
+            else if (const auto* saved = savedReferenceState(key))
+            {
+                if (saved->mDeleted)
+                    return false;
+                actual = saved->mCell;
+            }
+            else if (const auto it = mUnloadedLocationByReference.find(key); it != mUnloadedLocationByReference.end())
+                actual = mUnloadedLocations[it->second].mCell;
+        }
+        const auto& cells = mWorld.getStore().get<ESM4::Cell>();
+        return ESM4::cellConditionMatches(cells.search(actual), cells.search(cell));
+    }
+
     std::vector<ESM::FormKey> OblivionAiService::nearbyMapMarkers(const MWWorld::Ptr& player, float radius) const
     {
         std::vector<ESM::FormKey> result;
@@ -424,38 +456,15 @@ namespace MWWorld
                             return Value::value(*value);
                         return Value::missing();
                     case 67: // GetInCell
-                        if (subject == ESM4::ConditionSubject::Self && !player.isEmpty() && player.isInCell())
-                            if (const auto* cell = world.getStore().search<ESM4::Cell>(key))
-                                return Value::value(player.getCell()->getCell()->getId() == ESM::RefId(cell->mId));
-                        return Value::missing();
                     case ESM4::FUN_GetInCellParam:
                     {
                         if (subject != ESM4::ConditionSubject::Self || player.isEmpty() || !player.isInCell())
                             return Value::missing();
-                        const auto* cell = world.getStore().search<ESM4::Cell>(key);
-                        if (!cell)
-                            return Value::missing();
-                        if (player.getCell()->getCell()->getId() != cell->mId)
-                            return Value::value(false);
-
-                        const auto actor = ESM4::runtimeReferenceKey(condition.mParameter2.mReferenceKey);
-                        if (actor == ESM::FormKey::dynamic("player", 1))
-                            return Value::value(true);
-                        if (const auto actorId = ESM::FormKeyResolver(world.getContentFiles()).toFormId(actor))
-                        {
-                            const auto ptr = MWBase::Environment::get().getWorldModel()->getPtr(*actorId);
-                            if (!ptr.isEmpty() && ptr.isInCell())
-                                return Value::value(ptr.getCell()->getCell()->getId() == cell->mId);
-                        }
-                        if (const auto* native = getNativeWorld(world))
-                            if (const auto* ai = native->getOblivionAiService())
-                                if (const auto* state = ai->state(actor))
-                                {
-                                    const auto& actorCell
-                                        = state->mLastValidCell.isNull() ? state->mCell : state->mLastValidCell;
-                                    if (!actorCell.isNull())
-                                        return Value::value(actorCell == key);
-                                }
+                        const auto reference = condition.mFunction == ESM4::FUN_GetInCellParam
+                            && !condition.mParameter2.mReferenceKey.isNull() ? condition.mParameter2.mReferenceKey
+                            : ESM::FormKey::dynamic("player", 1);
+                        if (const auto* native = getNativeWorld(world); native && native->getOblivionAiService())
+                            return Value::value(native->getOblivionAiService()->referenceInCell(reference, key));
                         return Value::missing();
                     }
                     default:
@@ -763,7 +772,7 @@ namespace MWWorld
                     || ESM4::runtimeReferenceKey(condition.mParameter2.mReferenceKey) != ESM::FormKey::dynamic("player", 1)))
                 return false;
             const auto* cell = store.search<ESM4::Cell>(condition.mParameter1.mReferenceKey);
-            return cell && player.getCell()->getCell()->getId() == cell->mId;
+            return ESM4::cellConditionMatches(store.get<ESM4::Cell>().search(player.getCell()->getCell()->getId()), cell);
         };
         auto outside = context;
         outside.mResolve = [&](const auto& condition, auto subject, bool opposite) {

@@ -120,6 +120,7 @@ namespace MWMechanics
         const ESM4::RuntimeActorAiState* state(const MWWorld::ConstPtr& actor) const;
         const ESM4::RuntimeActorAiState* state(const ESM::FormKey& actor) const;
         MWWorld::QuestDestination questDestination(const ESM::FormKey& reference, const MWWorld::Ptr& player) const;
+        bool referenceInCell(const ESM::FormKey& reference, const ESM::FormKey& cell) const;
         std::vector<ESM::FormKey> nearbyMapMarkers(const MWWorld::Ptr& player, float radius) const;
         std::optional<ESM::FormKey> currentPackage(const MWWorld::ConstPtr& actor) const;
         ESM4::PackageProcedure currentProcedure(const MWWorld::ConstPtr& actor) const;
@@ -414,6 +415,7 @@ namespace MWMechanics
         bool canUseUnloadedDoor(const LiveActor& live, const UnloadedLocation& door, bool& locked,
             const MWWorld::Ptr* actor = nullptr, DoorStateCache* cache = nullptr) const;
         bool reserveAction(const MWWorld::Ptr& actor, LiveActor& live, const ESM4::AIPackage& package);
+        bool canReadPlacedBook(const LiveActor& live, const ESM4::AIPackage& package) const;
         bool completeAction(const MWWorld::Ptr& actor, LiveActor& live);
         void releasePhysicalDoorCollision(const MWWorld::Ptr& actor, LiveActor& live) const;
         void stopMovement(const MWWorld::Ptr& actor) const;

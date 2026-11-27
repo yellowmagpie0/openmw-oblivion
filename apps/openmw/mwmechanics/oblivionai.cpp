@@ -2132,13 +2132,8 @@ namespace MWMechanics
                 return value(0.0);
             }
             if (function == "GetInCellParam")
-            {
-                const std::optional<StableLocation> parameterActor = locationFor(condition.mParameter2.mReferenceKey);
-                return value(!parameterKey.isNull() && parameterActor
-                        && subjectLocation->mCell == parameterKey && parameterActor->mCell == parameterKey
-                    ? 1.0
-                    : 0.0);
-            }
+                return value(referenceInCell(condition.mParameter2.mReferenceKey.isNull() ? subjectKey
+                    : condition.mParameter2.mReferenceKey, parameterKey));
             if (function == "GetPCFame")
             {
                 const MWWorld::Ptr player = mWorld.getPlayerPtr();
@@ -3080,14 +3075,8 @@ namespace MWMechanics
                         : 0.0);
             }
             if (function == "GetInCellParam")
-            {
-                const ESM::FormKey parameterActorKey = condition.mParameter2.mReferenceKey;
-                const MWWorld::Ptr parameterActor = ptrFor(parameterActorKey);
-                return value(!parameterKey.isNull() && !parameterActor.isEmpty()
-                        && cellKey(subjectPtr) == parameterKey && cellKey(parameterActor) == parameterKey
-                    ? 1.0
-                    : 0.0);
-            }
+                return value(referenceInCell(condition.mParameter2.mReferenceKey.isNull() ? subjectKey
+                    : condition.mParameter2.mReferenceKey, parameterKey));
             if (function == "GetPCFame")
                 return value(playerNpcStats() == nullptr ? 0.0 : playerNpcStats()->getReputation());
             if (function == "IsPleasant")
@@ -5388,6 +5377,8 @@ namespace MWMechanics
                         return ESM::FormKey{};
                     };
                     live.mState.mActionItem = chooseItem(mWorld.mStore.search<ESM4::Npc>(live.mState.mBase));
+                    if (live.mState.mActionItem.isNull() && canReadPlacedBook(live, *current))
+                        live.mState.mActionItem = requested;
                     if (live.mState.mActionItem.isNull())
                         live.mState.mActionItem = chooseItem(mWorld.mStore.search<ESM4::Creature>(live.mState.mBase));
                     if (live.mState.mActionItem.isNull())
@@ -6081,6 +6072,24 @@ namespace MWMechanics
         return false;
     }
 
+    bool OblivionAiService::canReadPlacedBook(const LiveActor& live, const ESM4::AIPackage& record) const
+    {
+        if (record.mPackageType != ESM4::AIPackageType::UseItemAt
+            || record.mTargetData.mKind != ESM4::PackageTargetKind::SpecificReference)
+            return false;
+        const auto& key = record.mTargetData.mReferenceKey;
+        const auto found = mUnloadedLocationByReference.find(key);
+        if (found == mUnloadedLocationByReference.end() || mUnloadedLocations[found->second].mType != ESM::REC_BOOK4)
+            return false;
+        if (const auto book = loadedPtrFor(key); !book.isEmpty())
+            return book.isInCell() && cellKey(book) == live.mState.mCell && !book.mRef->isDeleted()
+                && book.getRefData().isEnabled();
+        const auto* saved = savedReferenceState(key);
+        return (!saved || !saved->mDeleted)
+            && (saved ? saved->mCell : mUnloadedLocations[found->second].mCell) == live.mState.mCell
+            && mWorld.getOblivionReferenceEnabled(key, mLowProcessReferenceIndex).value_or(false);
+    }
+
     bool OblivionAiService::reserveAction(
         const MWWorld::Ptr& actor, LiveActor& live, const ESM4::AIPackage& record)
     {
@@ -6098,6 +6107,11 @@ namespace MWMechanics
                                                                            : ESM::FormKey{};
         // UseItemAt may name a placed activator rather than a consumable.
         // Its script runs after actor iteration, at the action commit boundary.
+        if (canReadPlacedBook(live, record))
+        {
+            live.mState.mActionItem = requested;
+            return true;
+        }
         const auto target = use ? loadedActivatorFor(requested) : MWWorld::Ptr{};
         if (!target.isEmpty())
         {
@@ -6146,6 +6160,13 @@ namespace MWMechanics
         if (live.mState.mActionItem.isNull())
             return true; // Sleep has no inventory side effect.
         const ESM::FormKey itemKey = live.mState.mActionItem;
+        if (const auto* current = package(live.mState.mPackage);
+            current && current->mTargetData.mReferenceKey == itemKey && canReadPlacedBook(live, *current))
+        {
+            // The NPC studies the world copy in place, without opening the player's reader.
+            live.mState.mActionItem = {};
+            return true;
+        }
         const ESM::FormKeyResolver resolver(mWorld.mContentFiles);
         const std::optional<ESM::FormId> nativeId = resolver.toFormId(itemKey);
         if (!nativeId)
@@ -7555,6 +7576,7 @@ namespace MWMechanics
             && interruptedPackage && interruptedPackage->mPackageType == ESM4::AIPackageType::UseItemAt
             && ((interruptedPackage->mTargetData.hasReference()
                     && canActivatePlacedObject(mWorld, actor, loadedPtrFor(interruptedPackage->mTargetData.mReferenceKey)))
+                || canReadPlacedBook(live, *interruptedPackage)
                 || (interruptedPackage->mTargetData.isObjectType() && reserveAction(actor, live, *interruptedPackage)));
         if (followContextChanged || (live.mSelectionCheckTimer <= 0.f
             && (live.mState.mPhase == ESM4::PackagePhase::Interrupted || live.mState.mPhase == ESM4::PackagePhase::Complete
