@@ -643,6 +643,10 @@ namespace MWWorld
         constexpr std::array<std::string_view, 4> sFireFields{
             "native.fire.spell", "native.fire.magnitude", "native.fire.duration", "native.fire.elapsed"};
 
+        ESM4::MagicProjectileState makeSpellProjectile(const ESMStore& store, const Ptr& source,
+            const ESM::FormKey& caster, const ESM::FormKey& spell, const OblivionTargetDamage& damage,
+            float power, const osg::Vec3f& position, const osg::Vec3f& direction);
+
         void validateFire(const OblivionEnvironmentalFire& fire)
         {
             if (!fire.mSpell.isContent() || ESM::FormKey::deserialize(fire.mSpell.serialize()) != fire.mSpell
@@ -735,10 +739,32 @@ namespace MWWorld
             || !mOblivionCombat) return false;
         const auto* definition = mStore.get<ESM4::Spell>().search(spell);
         const auto effect = definition ? resolveOblivionEnvironmentalFire(mStore, *definition) : std::nullopt;
-        if (!effect) return false;
-        if (getPlayerPtr().getClass().getCreatureStats(getPlayerPtr()).isDead()) return true;
         const auto key = source.getCellRef().getFormKey();
         if (!key.isContent()) return false;
+        if (!effect)
+        {
+            const auto damage = definition ? resolveOblivionTargetSpellDamage(mStore, *definition) : std::nullopt;
+            if (!damage || damage->mEffectCode != ESM::fourCC("FIDG") || !mPhysics || !source.isInCell())
+                return false;
+            const auto player = getPlayerPtr();
+            if (player.getClass().getCreatureStats(player).isDead()) return true;
+            const auto origin = source.getRefData().getPosition().asVec3();
+            auto direction = player.getRefData().getPosition().asVec3() - origin;
+            direction.z() += mPhysics->getRenderingHalfExtents(player).z();
+            if (direction.normalize() == 0) return false;
+            auto projectile = makeSpellProjectile(mStore, source, key, spell, *damage, 1.f, origin, direction);
+            if (!mOblivionRuntimeState)
+                mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
+            const auto serial = mOblivionRuntimeState->mNextMagicProjectile;
+            if (!serial || serial == std::numeric_limits<std::uint64_t>::max())
+                throw std::overflow_error("native magic projectile serial exhausted");
+            if (!mOblivionRuntimeState->mNativeMagicProjectiles.emplace(serial, std::move(projectile)).second)
+                throw std::logic_error("native magic projectile serial reused");
+            mOblivionRuntimeState->mNextMagicProjectile = serial + 1;
+            Log(Debug::Info) << "TES4 environmental projectile: source=" << key.serialize() << " id=" << serial;
+            return true;
+        }
+        if (getPlayerPtr().getClass().getCreatureStats(getPlayerPtr()).isDead()) return true;
         if (!mOblivionRuntimeState)
             mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
         auto& references = mOblivionRuntimeState->mReferences;
@@ -1345,6 +1371,33 @@ namespace MWWorld
         return true;
     }
 
+    namespace
+    {
+        ESM4::MagicProjectileState makeSpellProjectile(const ESMStore& store, const Ptr& source,
+            const ESM::FormKey& caster, const ESM::FormKey& spell, const OblivionTargetDamage& damage,
+            float power, const osg::Vec3f& position, const osg::Vec3f& direction)
+        {
+            const auto settings = magicSettings(store);
+            const float speed = projectileSetting(settings, "fMagicProjectileBaseSpeed", 1000.f)
+                * damage.mProjectileSpeedFactor;
+            ESM4::MagicProjectileState projectile;
+            projectile.mCaster = caster;
+            projectile.mSource = spell;
+            projectile.mCell = source.getCell()->getCell()->getEsm4().mFormKey;
+            projectile.mEffectCode = damage.mEffectCode;
+            projectile.mMagnitude = damage.mMagnitude * power;
+            for (std::size_t i = 0; i < 3; ++i)
+            {
+                projectile.mPosition[i] = position[i];
+                projectile.mVelocity[i] = direction[i] * speed;
+            }
+            projectile.mMaximumDistance = projectileSetting(settings, "fMagicProjectileMaxDistance", 10000.f);
+            projectile.mModel = damage.mModel;
+            projectile.validate();
+            return projectile;
+        }
+    }
+
     bool World::releaseOblivionPlayerSpellProjectile(const ESM::FormKey& spellKey, float power)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || !mPhysics) return false;
@@ -1386,22 +1439,8 @@ namespace MWWorld
         osg::Vec3f direction = (osg::Quat(rotation[0], osg::Vec3f(-1, 0, 0))
             * osg::Quat(rotation[2], osg::Vec3f(0, 0, -1))) * osg::Vec3f(0, 1, 0);
         if (direction.normalize() == 0) return false;
-        const auto settings = magicSettings(mStore);
-        const float speed = projectileSetting(settings, "fMagicProjectileBaseSpeed", 1000.f)
-            * damage->mProjectileSpeedFactor;
-        ESM4::MagicProjectileState projectile;
-        projectile.mCaster = caster; projectile.mSource = spellKey;
-        projectile.mCell = actor.getCell()->getCell()->getEsm4().mFormKey;
-        projectile.mEffectCode = damage->mEffectCode;
-        projectile.mMagnitude = damage->mMagnitude * (scroll ? 1.f : power);
-        for (std::size_t i = 0; i < 3; ++i)
-        {
-            projectile.mPosition[i] = position[i];
-            projectile.mVelocity[i] = direction[i] * speed;
-        }
-        projectile.mMaximumDistance = projectileSetting(settings, "fMagicProjectileMaxDistance", 10000.f);
-        projectile.mModel = damage->mModel;
-        projectile.validate();
+        auto projectile = makeSpellProjectile(mStore, actor, caster, spellKey, *damage,
+            scroll ? 1.f : power, position, direction);
         if (!mOblivionRuntimeState) mOblivionRuntimeState = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
         const auto serial = mOblivionRuntimeState->mNextMagicProjectile;
         if (!serial || serial == std::numeric_limits<std::uint64_t>::max())
@@ -1616,6 +1655,17 @@ namespace MWWorld
         for (const auto& [id, projectile] : state.mNativeMagicProjectiles)
         {
             std::optional<OblivionTargetDamage> damage;
+            if (std::none_of(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+                    [&](const auto& actor) { return actor.mActor == projectile.mCaster; }))
+            {
+                const auto* placement = mStore.get<ESM4::Reference>().search(projectile.mCaster);
+                const auto* activator = placement ? mStore.get<ESM4::Activator>().search(placement->mBaseObj) : nullptr;
+                const auto* spell = mStore.get<ESM4::Spell>().search(projectile.mSource);
+                const auto fire = spell ? resolveOblivionTargetSpellDamage(mStore, *spell) : std::nullopt;
+                if (!activator || (activator->mFlags & ESM4::Rec_Deleted) || !fire
+                    || fire->mEffectCode != ESM::fourCC("FIDG") || projectile.mMagnitude != fire->mMagnitude)
+                    throw std::invalid_argument("saved environmental projectile source no longer resolves");
+            }
             if (const auto* spell = mStore.get<ESM4::Spell>().search(projectile.mSource))
                 {
                 damage = resolveOblivionVoiceOfEmperor(mStore, *spell);

@@ -1,5 +1,7 @@
 # Entering the Bruma Gate
 
+Continue from this checkpoint along [the road to the Fury Spike](BRUMA-GATE-TOWER.md).
+
 Start at the [meeting checkpoint](BRUMA-GATE-MEETING.md) and tell Burd “Let's go.” He moves in front of the guards, gives six lines of orders, and receives three replies. Bor and Soren accompany him. The other three guards take positions outside. Stay with the advancing detail while it fights the Daedra on the approach.
 
 The first playthrough stalled on the first line. Scripted NPC conversations now play the speaker's original voice and lip animation and follow the next eligible dialogue link when the line finishes. Immediate result scripts advance the speech counter at the start of the line. Saving during a line preserves the conversation's progress. A fresh process continues at the next link. The same playthrough exposed the gate's rejected creature list. Scripted spawns now keep both the selected actor and the root leveled list's script.

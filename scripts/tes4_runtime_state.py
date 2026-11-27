@@ -1950,7 +1950,9 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         previous_projectile = serial
         for key in ("caster", "source", "cell"):
             native_key(projectile[key])
-        if (projectile["caster"] not in native_keys or not projectile["source"].startswith("content:")
+        placed_fire_source = (projectile["effect_code"] == int.from_bytes(b'FIDG', 'little')
+                              and projectile["caster"].startswith("content:") and projectile["caster"] in reference_keys)
+        if ((projectile["caster"] not in native_keys and not placed_fire_source) or not projectile["source"].startswith("content:")
                 or not projectile["cell"].startswith("content:")):
             raise RuntimeStateError("Dangling native magic projectile identity")
         if type(projectile["effect_code"]) is not int or projectile["effect_code"] not in {

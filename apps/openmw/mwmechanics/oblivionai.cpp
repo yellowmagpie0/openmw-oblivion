@@ -3506,7 +3506,8 @@ namespace MWMechanics
             if (!target)
                 return std::nullopt;
             live.mDestinationCell = target->mCell;
-            if (record.mPackageType == ESM4::AIPackageType::Follow)
+            if (record.mPackageType == ESM4::AIPackageType::Follow
+                || record.mPackageType == ESM4::AIPackageType::Accompany)
             {
                 const float range = record.mTargetData.mDistance > 0
                     ? static_cast<float>(record.mTargetData.mDistance) : 128.f;
@@ -4008,7 +4009,8 @@ namespace MWMechanics
                 live.mDestinationCell = logical->second.mState.mCell;
             const float requestedDistance = static_cast<float>(record.mTargetData.mDistance);
             const float followDistance = requestedDistance > 0.f ? requestedDistance : 128.f;
-            if (record.mPackageType == ESM4::AIPackageType::Follow)
+            if (record.mPackageType == ESM4::AIPackageType::Follow
+                || record.mPackageType == ESM4::AIPackageType::Accompany)
                 return live.mState.mCell == live.mDestinationCell
                         && distanceSquared(actorPosition, *targetPosition) <= followDistance * followDistance
                     ? actorPosition : *targetPosition;
@@ -4482,7 +4484,8 @@ namespace MWMechanics
             hasContinuousRoute = prepareContinuousRoute(destination, {});
         }
 
-        else if (live.mState.mPackageType == ESM4::AIPackageType::Follow
+        else if ((live.mState.mPackageType == ESM4::AIPackageType::Follow
+                || live.mState.mPackageType == ESM4::AIPackageType::Accompany)
             && !loadedPtrFor(live.mState.mTarget).isEmpty())
         {
             // A moving leader can cross an exterior grid line while still in
@@ -6851,7 +6854,8 @@ namespace MWMechanics
             && live.mState.mPhase == ESM4::PackagePhase::ReadyForM15Combat
             && !mWorld.hasOblivionCombatController(live.mState.mActor).value_or(false);
         auto& navigation = greeting ? live.mGreetingRoute : (escort ? live.mEscortRoute : live.mCombatRoute);
-        if (cellKey(actor) != cellKey(target) && (!greeting || !actor.getCell()->isExterior()
+        const bool sameCell = actor.getCell() == target.getCell();
+        if (!sameCell && (!actor.getCell()->isExterior()
                 || !target.getCell()->isExterior()
                 || actor.getCell()->getCell()->getWorldSpace() != target.getCell()->getCell()->getWorldSpace()))
         {
@@ -6899,7 +6903,7 @@ namespace MWMechanics
                 if (status != DetourNavigator::Status::Success && status != DetourNavigator::Status::PartialPath)
                     route.clear();
             }
-            if (!escort && (!greeting || route.empty()))
+            if (sameCell && !escort && (!greeting || route.empty()))
                 if (auto authored = shorterOblivionPathgridApproach(
                         mWorld.mStore.getOblivionPathgridService(), cellKey(actor),
                         position, destination, route))

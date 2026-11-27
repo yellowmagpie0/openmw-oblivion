@@ -2772,7 +2772,9 @@ namespace ESM4
         for (const auto& [id, projectile] : mNativeMagicProjectiles)
         {
             projectile.validate();
-            if (!id || id >= mNextMagicProjectile || !nativeActors.contains(projectile.mCaster))
+            const bool placedFireSource = projectile.mEffectCode == ESM::fourCC("FIDG")
+                && projectile.mCaster.isContent() && actorBases.contains(projectile.mCaster);
+            if (!id || id >= mNextMagicProjectile || (!nativeActors.contains(projectile.mCaster) && !placedFireSource))
                 throw std::runtime_error("Dangling native magic projectile caster or serial");
         }
         checkSize(mNativeSpellCasts.size(), "native spell cast list");
