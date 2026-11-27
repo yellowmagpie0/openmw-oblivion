@@ -4058,11 +4058,14 @@ namespace
         const unsigned other = nextSpeaker == 1 ? 0x800 : 0xd11;
         const unsigned target = nextSpeaker == 1 ? 0xd11 : 0x800;
         const unsigned once = cycle ? 0 : ESM4::INFO_SayOnce;
+        // Same-speaker speeches advance their quest variable immediately to
+        // unlock the next line, as in Burd's briefing at the Bruma Gate.
+        const unsigned openingFlags = nextSpeaker == 1 ? once | ESM4::INFO_RunImmediately : once;
         return record(ESM4::REC_QUST, 0xd10,
                    sub(ESM::fourCC("EDID"), std::string("ConversationFlow\0",17))
                    + sub(ESM::fourCC("DATA"), std::string{char(1),char(50)}))
             + topic(0xd20,"HELLO","Hello")
-            + group(0xd20, info(0xd21,0x800,0xd11,nextSpeaker,once,cycle ? -1 : 0,{0xd30,0xd40},10))
+            + group(0xd20, info(0xd21,0x800,0xd11,nextSpeaker,openingFlags,cycle ? -1 : 0,{0xd30,0xd40},10))
             + topic(0xd30,"IneligibleConversation","Ineligible")
             + group(0xd30, info(0xd31,other,target,0,once,99,{},99))
             + topic(0xd40,"ConversationReply","Reply")

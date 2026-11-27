@@ -708,6 +708,95 @@ namespace MWWorld
         return duration;
     }
 
+    std::string OblivionScriptManager::Conversation::encode() const
+    {
+        std::ostringstream out;
+        out << std::quoted(mPartner.serialize());
+        for (const auto& [info, partner] : mTurns)
+            out << ' ' << std::quoted(info.serialize()) << ' ' << partner;
+        return out.str();
+    }
+
+    OblivionScriptManager::Conversation OblivionScriptManager::Conversation::decode(const std::string& data)
+    {
+        std::istringstream in(data);
+        Conversation result;
+        std::string key;
+        in >> std::quoted(key);
+        result.mPartner = ESM::FormKey::deserialize(key);
+        while (in >> std::ws && !in.eof())
+        {
+            bool partner;
+            if (!(in >> std::quoted(key) >> partner) || result.mTurns.size() >= 64)
+                throw std::runtime_error("Invalid saved NPC conversation");
+            result.mTurns.emplace_back(ESM::FormKey::deserialize(key), partner);
+        }
+        if (result.mTurns.empty() || result.mPartner.isNull())
+            throw std::runtime_error("Missing participants or turns in saved NPC conversation");
+        return result;
+    }
+
+    std::int64_t OblivionScriptManager::advanceConversation(const ESM::FormKey& owner, Conversation conversation,
+        std::optional<ESM::FormKey> next)
+    {
+        Ptr speaker = ptrFor(owner), listener = ptrFor(conversation.mPartner);
+        const auto available = [](const Ptr& actor) {
+            return !actor.isEmpty() && actor.getType() == ESM::REC_NPC_4 && actor.getRefData().isEnabled()
+                && actor.getCellRef().getCount() > 0 && !actor.getClass().getCreatureStats(actor).isDead();
+        };
+        if (!available(speaker) || !available(listener)) return 0;
+        if (!conversation.mTurns.empty())
+        {
+            const auto& [previous, partner] = conversation.mTurns.back();
+            if (partner) std::swap(speaker, listener);
+            dispatchDialogueResponseResult(previous, speaker);
+            next = nextConversationInfo(previous, speaker, listener);
+        }
+        while (next && conversation.mTurns.size() < 64 && available(speaker) && available(listener))
+        {
+            const auto* info = mStore.search<ESM4::DialogInfo>(*next);
+            const std::pair turn{*next, keyFor(speaker) == conversation.mPartner};
+            if (!info || info->mDialType != 1 || std::ranges::find(conversation.mTurns, turn) != conversation.mTurns.end())
+                break;
+            conversation.mTurns.push_back(turn);
+            trace("conversation-response info=" + next->serialize() + " ref=" + keyFor(speaker).serialize()
+                + " target=" + keyFor(listener).serialize());
+            if (info->mInfoFlags & ESM4::INFO_RunImmediately)
+            {
+                if (mWorld.getScriptsEnabled()) dispatchDialogueResult(*next, 0, speaker);
+                if (ESM4::dialogueResultMarksSpoken(info->mInfoFlags)) markSpokenDialogueInfo(*next);
+            }
+            if (playNativeVoiceFiles(speaker, menuVoiceFiles(*next, speaker), listener) > 0)
+            {
+                // Audio is transient. Persist the current turn so reloading can
+                // finish its result and select the next link without repeating it.
+                if (auto* row = referenceState(owner))
+                    row->mCustomState["obscript.conversation"] = conversation.encode();
+                mConversations.insert_or_assign(owner, conversation);
+                break;
+            }
+            dispatchDialogueResponseResult(*next, speaker);
+            next = nextConversationInfo(*next, speaker, listener);
+        }
+        return static_cast<std::int64_t>(conversation.mTurns.size());
+    }
+
+    void OblivionScriptManager::updateConversations()
+    {
+        std::vector<ESM::FormKey> ready;
+        for (const auto& [owner, conversation] : mConversations)
+            if (!mNativeSpeech.contains(conversation.mTurns.back().second ? conversation.mPartner : owner))
+                ready.push_back(owner);
+        for (const auto& owner : ready)
+        {
+            auto entry = mConversations.extract(owner);
+            if (entry.empty()) continue;
+            if (auto* row = referenceState(owner))
+                row->mCustomState.erase("obscript.conversation");
+            advanceConversation(owner, std::move(entry.mapped()), std::nullopt);
+        }
+    }
+
     double OblivionScriptManager::playPackageDialogue(const ESM::FormKey& info, const Ptr& speaker, const Ptr& listener)
     {
         const auto files = menuVoiceFiles(info, speaker);
@@ -788,6 +877,7 @@ namespace MWWorld
     {
         OblivionScriptManager* mOwner;
         decltype(OblivionScriptManager::mNativeSpeech) mNativeSpeech{};
+        decltype(OblivionScriptManager::mConversations) mConversations{};
         ESM::FormKey mMessageBoxOwner;
         decltype(OblivionScriptManager::mDiagnosedVoiceTopics) mDiagnosedVoiceTopics{};
         decltype(OblivionScriptManager::mInstances) mInstances{};
@@ -827,6 +917,7 @@ namespace MWWorld
             owner.mItemTransferIdentity.reset();
             using std::swap;
             swap(mNativeSpeech, owner.mNativeSpeech);
+            swap(mConversations, owner.mConversations);
             swap(mMessageBoxOwner, owner.mMessageBoxOwner);
             swap(mDiagnosedVoiceTopics, owner.mDiagnosedVoiceTopics);
             swap(mInstances, owner.mInstances);
@@ -938,6 +1029,7 @@ namespace MWWorld
         requireMutableRuntime();
         mItemTransferIdentity.reset();
         mNativeSpeech.clear();
+        mConversations.clear();
         mShaderOwners.clear();
         mShaderSceneReset = true;
         mMessageBoxOwner = {};
@@ -1290,6 +1382,25 @@ namespace MWWorld
         return handled;
     }
 
+    std::shared_ptr<const ObScript::Program> OblivionScriptManager::levelledPlacementScript(const ESM::FormKey& key) const
+    {
+        const ESM4::LevelledCreature* list = nullptr;
+        if (key.isContent())
+        {
+            if (const auto* placed = mStore.get<ESM4::Reference>().search(key))
+                list = mStore.get<ESM4::LevelledCreature>().search(placed->mBaseObj);
+        }
+        else if (key.isDynamic() && key.mNamespace == "native-reference")
+        {
+            if (const auto* saved = referenceState(key))
+                if (const auto it = saved->mCustomState.find("native.spawn.requested_base"); it != saved->mCustomState.end())
+                    list = mStore.get<ESM4::LevelledCreature>().search(ESM::FormKey::deserialize(std::get<std::string>(it->second)));
+        }
+        if (!list || list->mScriptId.isZeroOrUnset()) return {};
+        const auto it = mScripts.find(mResolver.toFormKey(list->mScriptId));
+        return it != mScripts.end() ? it->second : nullptr;
+    }
+
     bool OblivionScriptManager::dispatchObjectEvent(
         const Ptr& self, std::string_view event, const Ptr& actionReference)
     {
@@ -1316,18 +1427,7 @@ namespace MWWorld
             }
             return execute(program, self, self, event, actionReference);
         };
-        bool listHandled = false;
-        if (self.isContent())
-        {
-            const auto* placement = mStore.get<ESM4::Reference>().search(self);
-            const auto* list = placement ? mStore.get<ESM4::LevelledCreature>().search(placement->mBaseObj) : nullptr;
-            if (list && !list->mScriptId.isZeroOrUnset())
-            {
-                const auto it = mScripts.find(mResolver.toFormKey(list->mScriptId));
-                if (it != mScripts.end())
-                    listHandled = dispatch(it->second);
-            }
-        }
+        const bool listHandled = dispatch(levelledPlacementScript(self));
         return dispatch(scriptFor(self)) || listHandled;
     }
 
@@ -1574,6 +1674,7 @@ namespace MWWorld
             MWBase::Environment::get().getSoundManager()->say(speaker, VFS::Path::Normalized(file));
             ++speech;
         }
+        updateConversations();
         runScheduledEvents();
 
         for (const auto& [questKey, scriptKey] : mQuestScripts)
@@ -1587,7 +1688,8 @@ namespace MWWorld
         std::vector<Ptr> objects;
         for (CellStore* cell : mWorld.mWorldScene->getActiveCells())
             cell->forEach([&](const Ptr& ptr) {
-                if (!ptr.isEmpty() && ptr.getRefData().isEnabled() && scriptFor(ptr))
+                if (!ptr.isEmpty() && ptr.getRefData().isEnabled()
+                    && (scriptFor(ptr) || (ptr.getClass().isActor() && levelledPlacementScript(keyFor(ptr)))))
                     objects.push_back(ptr);
                 return true;
             });
@@ -4245,22 +4347,9 @@ namespace MWWorld
                 return std::int64_t(0);
             const auto root = arguments.size() > 1 ? keyFromValue(argument(1)) : mStore.findEsm4FormKey("HELLO");
             if (!root) return std::int64_t(0);
-            auto selected = selectNativeDialogueInfo(*root, speaker, listener);
-            std::set<std::pair<ESM::FormKey, ESM::FormKey>> visited;
-            std::int64_t responses = 0;
-            while (selected && responses < 64 && available(speaker) && available(listener))
-            {
-                const auto* info = mStore.search<ESM4::DialogInfo>(*selected);
-                if (!info || info->mDialType != 1
-                    || !visited.emplace(*selected, keyFor(speaker)).second) break;
-                trace("conversation-response info=" + selected->serialize()
-                    + " ref=" + keyFor(speaker).serialize() + " target=" + keyFor(listener).serialize());
-                dispatchDialogueResponseResult(*selected, speaker);
-                ++responses;
-                if (!available(speaker) || !available(listener)) break;
-                selected = nextConversationInfo(*selected, speaker, listener);
-            }
-            return responses;
+            const auto owner = keyFor(speaker);
+            if (mConversations.contains(owner)) return std::int64_t(0);
+            return advanceConversation(owner, {keyFor(listener), {}}, selectNativeDialogueInfo(*root, speaker, listener));
         }
 
         if (name == "say" || name == "sayto")
@@ -4543,6 +4632,7 @@ namespace MWWorld
     struct OblivionScriptManager::PreparedRestore::Impl
     {
         OblivionScriptManager* mTarget;
+        decltype(OblivionScriptManager::mConversations) mConversations;
         std::map<InstanceKey, Instance> mInstances;
         std::map<ESM::FormKey, ESM4::RuntimeQuestState> mQuests;
         std::set<ESM::FormKey> mSpokenDialogueInfos;
@@ -4575,6 +4665,7 @@ namespace MWWorld
         target.mTrace.swap(mImpl->mTrace);
         target.mSequence = mImpl->mSequence;
         target.mNativeSpeech.clear();
+        target.mConversations.swap(mImpl->mConversations);
         target.mMessageBoxOwner = {};
         target.mDiagnosedVoiceTopics.clear();
         mImpl->mTarget = nullptr;
@@ -4592,6 +4683,8 @@ namespace MWWorld
         for (const auto& reference : state.mReferences)
         {
             validateShaderState(reference, mStore);
+            if (auto it = reference.mCustomState.find("obscript.conversation"); it != reference.mCustomState.end())
+                plan->mConversations.emplace(reference.mKey, Conversation::decode(std::get<std::string>(it->second)));
             if (std::any_of(reference.mCustomState.begin(), reference.mCustomState.end(),
                     [](const auto& entry) { return entry.first.starts_with(ShaderAge); }))
                 plan->mShaderOwners.insert(reference.mKey);

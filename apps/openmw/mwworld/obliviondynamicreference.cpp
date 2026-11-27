@@ -39,6 +39,11 @@ namespace MWWorld
         if (const auto* actorTemplate = placedActorTemplate(mStore, actor))
             return ESM::FormKeyResolver(mContentFiles).toFormKey(actorTemplate->mScriptId);
         if (!actor.isDynamic() || actor.mNamespace != "native-reference") return {};
+        if (!mPendingOblivionRuntimeState)
+        {
+            const auto* reference = findOblivionSavedReference(actor);
+            return reference ? oblivionSpawnScript(*reference) : std::nullopt;
+        }
         const auto* state = mPendingOblivionRuntimeState ? mPendingOblivionRuntimeState.get() : mOblivionRuntimeState.get();
         if (state)
             for (const auto& reference : state->mReferences)
@@ -111,7 +116,7 @@ namespace MWWorld
                 || !mStore.get<ESM4::Creature>().search(reference.mBase)
                 || key("native.spawn.template") != actorTemplate->mFormKey
                 || !script || *script != resolver.toFormKey(actorTemplate->mScriptId) || !factions
-                || !supportsOblivionLevelledActor(mStore, requested, int(*level), true))
+                || !supportsOblivionLevelledActor(mStore, requested, int(*level), true, true))
                 throw std::invalid_argument("Invalid saved native actor template");
             if (!script->isNull() && !mStore.get<ESM4::Script>().search(*script))
                 throw std::invalid_argument("Missing spawned actor script");
@@ -149,7 +154,7 @@ namespace MWWorld
                 if (!actorTemplate || (actorTemplate->mFlags & ESM4::Rec_Deleted))
                     throw std::invalid_argument("Unsupported native PlaceAtMe actor template");
             }
-            if (!supportsOblivionLevelledActor(mStore, base, level, actorTemplate != nullptr))
+            if (!supportsOblivionLevelledActor(mStore, base, level, actorTemplate != nullptr, true))
                 throw std::invalid_argument("Unsupported native PlaceAtMe leveled actor list");
             selected = selectOblivionLevelledActor(mStore, base, level, random);
         }

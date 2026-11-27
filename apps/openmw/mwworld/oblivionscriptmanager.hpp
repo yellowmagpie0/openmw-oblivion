@@ -233,6 +233,17 @@ namespace MWWorld
         // Playback only: result scripts execute when Say starts, never from
         // this queue. Loading cancels audio without repeating quest effects.
         std::map<ESM::FormKey, NativeSpeech> mNativeSpeech;
+        struct Conversation
+        {
+            ESM::FormKey mPartner;
+            std::vector<std::pair<ESM::FormKey, bool>> mTurns; // INFO and whether the partner spoke
+            std::string encode() const;
+            static Conversation decode(const std::string& data);
+        };
+        std::map<ESM::FormKey, Conversation> mConversations;
+        std::int64_t advanceConversation(const ESM::FormKey& owner, Conversation conversation,
+            std::optional<ESM::FormKey> first);
+        void updateConversations();
         mutable std::set<std::pair<ESM::FormKey, ESM::FormKey>> mDiagnosedVoiceTopics;
         std::map<ESM::FormKey, std::vector<std::shared_ptr<const ObScript::Program>>> mQuestResults;
         std::map<ESM::FormKey, ESM::FormKey> mQuestScripts;
@@ -279,6 +290,7 @@ namespace MWWorld
             const ESM::FormKey& self, std::string_view event, const ESM::FormKey& actionReference = {});
         Instance& instanceFor(const ObScript::Program& program, const ESM::FormKey& context);
         std::shared_ptr<const ObScript::Program> scriptFor(const Ptr& ptr) const;
+        std::shared_ptr<const ObScript::Program> levelledPlacementScript(const ESM::FormKey& key) const;
         std::shared_ptr<const ObScript::Program> scriptFor(const ESM::FormKey& key);
         bool dispatchBaseEvent(const ESM::FormKey& base, std::string_view event,
             const ESM::FormKey& actionReference);
