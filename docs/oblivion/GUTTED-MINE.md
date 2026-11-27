@@ -2,6 +2,8 @@
 
 Run `build-windows/Continue-After-Gutted-Mine.cmd` to resume at the mine exit with 113 health. All five Afflicted Brethren are dead. The tracked objective points through the wooden door toward Azura’s Shrine. Return to the statue to collect the reward.
 
+The walk back and reward are recorded in [Azura’s Star](AZURAS-STAR.md).
+
 From the [shrine offering checkpoint](AZURAS-OFFERING.md), follow the mountain road to the unlocked mine entrance. A tripwire and swinging mace guard the approach to the first Afflicted Brethren. Two more occupy the front workings. The pull rope beside the rock wall opens the passage to the remaining pair.
 
 ## Corpse equipment

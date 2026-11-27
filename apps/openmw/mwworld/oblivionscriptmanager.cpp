@@ -2775,6 +2775,7 @@ namespace MWWorld
                         {
                             const auto base = mResolver.toFormKey(ESM::FormId::fromUint32(reward.item));
                             const int added = mWorld.oblivionChangePlayerInventory(base, reward.count, {}, true);
+                            notifyOblivionItemAdded(mStore, mResolver, base, added);
                             trace("additem owner=" + owner.serialize() + " list=" + item->serialize()
                                 + " item=" + base.serialize() + " count=" + std::to_string(added));
                         }
@@ -2785,7 +2786,10 @@ namespace MWWorld
                 trace(name + " owner=" + owner.serialize() + " item=" + item->serialize()
                     + " count=" + std::to_string(changed));
                 if (name == "additem" && changed > 0)
+                {
+                    notifyOblivionItemAdded(mStore, mResolver, *item, changed);
                     dispatchBaseEvent(*item, "onadd", owner);
+                }
                 return std::int64_t(0);
             }
             if (name == "getitemcount" && mWorld.getGameProfile() == ESM::GameProfile::Oblivion)

@@ -1,5 +1,6 @@
 #include "characterpreview.hpp"
 
+#include <array>
 #include <cmath>
 
 #include <osg/BlendFunc>
@@ -13,6 +14,7 @@
 #include <osgUtil/LineSegmentIntersector>
 
 #include <components/debug/debuglog.hpp>
+#include <components/esm4/loadweap.hpp>
 #include <components/fallback/fallback.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/scenemanager.hpp>
@@ -24,7 +26,10 @@
 #include <components/settings/values.hpp>
 #include <components/stereo/multiview.hpp>
 
+#include "../mwbase/environment.hpp"
+#include "../mwbase/world.hpp"
 #include "../mwworld/class.hpp"
+#include "../mwworld/esmstore.hpp"
 #include "../mwworld/inventorystore.hpp"
 
 #include "../mwmechanics/actorutil.hpp"
@@ -391,7 +396,22 @@ namespace MWRender
         MWWorld::ContainerStoreIterator iter = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
         std::string groupname = "inventoryhandtohand";
         bool showCarriedLeft = true;
-        if (iter != inv.end())
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            groupname = "idle";
+            if (iter != inv.end())
+            {
+                const auto& store = *MWBase::Environment::get().getESMStore();
+                const auto* weapon = store.get<ESM4::Weapon>().search(iter->getCellRef().getRefId());
+                // TES4 WEAP types distinguish staves from two-handed blunt weapons.
+                constexpr std::array poses{ "onehandidle", "twohandidle", "onehandidle", "twohandidle",
+                    "staffidle", "bowidle" };
+                if (weapon && weapon->mData.type < poses.size() && mAnimation->hasAnimation(poses[weapon->mData.type]))
+                    groupname = poses[weapon->mData.type];
+                showCarriedLeft = !MWMechanics::hasTwoHandedWeaponEquipped(inv);
+            }
+        }
+        else if (iter != inv.end())
         {
             groupname = "inventoryweapononehand";
             if (iter->getType() == ESM::Weapon::sRecordId)

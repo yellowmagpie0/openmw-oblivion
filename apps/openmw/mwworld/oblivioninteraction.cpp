@@ -27,6 +27,7 @@
 #include <components/esm4/loaddoor.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadflor.hpp>
+#include <components/esm4/loadgmst.hpp>
 #include <components/esm4/loadingr.hpp>
 #include <components/esm4/inventorymechanics.hpp>
 #include <components/esm4/loadkeym.hpp>
@@ -229,6 +230,24 @@ namespace MWWorld
             }
             return "unknown";
         }
+    }
+
+    void notifyOblivionItemAdded(const ESMStore& store, const ESM::FormKeyResolver& resolver,
+        const ESM::FormKey& item, int count)
+    {
+        auto* windows = MWBase::Environment::get().getWindowManagerOrNull();
+        if (!windows || count <= 0)
+            return;
+        const auto id = resolver.toFormId(item);
+        if (!id)
+            return;
+        const auto key = store.findEsm4FormKey("sAddItemtoInventory");
+        const auto* setting = key ? store.search<ESM4::GameSetting>(*key) : nullptr;
+        const auto* suffix = setting ? std::get_if<std::string>(&setting->mData) : nullptr;
+        std::string message = getOblivionItemName(store, ESM::RefId(*id));
+        if (count > 1)
+            message += " (" + std::to_string(count) + ")";
+        windows->messageBox(message + " " + (suffix ? *suffix : "added."));
     }
 
     std::int32_t oblivionInventoryItemCount(const ContainerStore& inventory, const ESM::RefId& item)
