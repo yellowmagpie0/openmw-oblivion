@@ -4,6 +4,7 @@
 #include "tes4hair.hpp"
 #include "oblivionattachment.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <memory>
@@ -548,10 +549,11 @@ namespace MWRender
                     osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
         }
 
-        struct FaceSkinMaterialVisitor : osg::NodeVisitor
+        struct FaceMaterialVisitor : osg::NodeVisitor
         {
-            FaceSkinMaterialVisitor()
+            explicit FaceMaterialVisitor(bool eye)
                 : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN)
+                , mEye(eye)
             {
                 setNodeMaskOverride(~0u);
             }
@@ -562,17 +564,30 @@ namespace MWRender
                 const auto* attribute = state ? state->getAttributePair(osg::StateAttribute::MATERIAL) : nullptr;
                 if (attribute)
                 {
-                    // TES4's skin shader lights the complexion with the cell ambient.
-                    // Exported head materials range from black (Orc) to grey (human).
                     const auto& source = static_cast<const osg::Material&>(*attribute->first);
                     osg::ref_ptr<osg::Material> material = new osg::Material(source);
-                    material->setAmbient(osg::Material::FRONT_AND_BACK, osg::Vec4f(1, 1, 1, 1));
+                    if (mEye)
+                    {
+                        // The exported white, low-gloss material washes out the iris near point lights.
+                        const auto& specular = source.getSpecular(osg::Material::FRONT);
+                        material->setSpecular(osg::Material::FRONT_AND_BACK,
+                            osg::Vec4f(specular.r() * 0.12f, specular.g() * 0.12f, specular.b() * 0.12f, specular.a()));
+                        material->setShininess(osg::Material::FRONT_AND_BACK,
+                            std::max(48.f, source.getShininess(osg::Material::FRONT)));
+                    }
+                    else
+                    {
+                        // TES4's skin shader lights the complexion with the cell ambient.
+                        material->setAmbient(osg::Material::FRONT_AND_BACK, osg::Vec4f(1, 1, 1, 1));
+                    }
                     osg::ref_ptr<osg::StateSet> changed = new osg::StateSet(*state, osg::CopyOp::SHALLOW_COPY);
                     changed->setAttribute(material, attribute->second);
                     node.setStateSet(std::move(changed));
                 }
                 traverse(node);
             }
+
+            const bool mEye;
         };
 
         template <class T, T (*Loader)(std::istream&)>
@@ -722,21 +737,20 @@ namespace MWRender
     {
         const bool eye = partIndex == ESM4::Race::EyeLeft || partIndex == ESM4::Race::EyeRight;
         const bool ear = partIndex == ESM4::Race::EarMale || partIndex == ESM4::Race::EarFemale;
-        if (ear || partIndex == ESM4::Race::Head)
+        if (eye || ear || partIndex == ESM4::Race::Head)
         {
-            FaceSkinMaterialVisitor visitor;
+            FaceMaterialVisitor visitor(eye);
             node.accept(visitor);
         }
         if (!eye && !ear)
             return;
-        // The legacy ear mesh includes an export light of its own. Assembled
-        // facial parts share the actor's scene lighting. Keep a small corneal
-        // highlight without the opaque white sheen of the legacy materials.
+        // Assembled facial parts share the actor's scene lighting.
         osg::ref_ptr<osg::StateSet> state = node.getStateSet()
             ? new osg::StateSet(*node.getStateSet(), osg::CopyOp::SHALLOW_COPY) : new osg::StateSet;
         const auto mode = osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE;
         suppressFacePartExportLights(*state);
-        state->addUniform(new osg::Uniform("specStrength", eye ? 0.2f : 0.05f), mode);
+        if (ear)
+            state->addUniform(new osg::Uniform("specStrength", 0.05f), mode);
         node.setStateSet(state);
     }
 

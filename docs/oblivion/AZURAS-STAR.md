@@ -2,6 +2,8 @@
 
 Run `build-windows/Continue-After-Azuras-Star.cmd` to resume outside Azura’s Shrine. The Knight carries Azura’s Star and faces the statue and the five candles. The next objective in *Blood of the Daedra* points to Martin at Cloud Ruler Temple.
 
+Continue with [giving Azura’s Star to Martin](MARTINS-ARTIFACT-HANDOFF.md).
+
 From the [cleared mine](GUTTED-MINE.md), the Knight opened the wooden exit and followed the mountain road back on foot. Activating the statue in the afternoon played both of Azura’s recorded responses. The last response returned player control and granted one Star. Azura’s quest reached stage 100, *Blood of the Daedra* advanced to stage 20, and Fame rose from 7 to 8.
 
 The first run exposed two presentation issues. Successful scripted item grants now show the item name and the localized acquisition message. The inventory portrait selects Oblivion’s idle for the equipped weapon, which lets the Knight hold the battle axe with both hands.

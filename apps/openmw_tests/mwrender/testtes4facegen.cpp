@@ -120,6 +120,26 @@ namespace MWRender
         EXPECT_EQ(exported->getAmbient(osg::Material::FRONT), osg::Vec4f(0, 0, 0, 1));
     }
 
+    TEST(Tes4FaceGen, EyeMaterialLimitsCornealHighlightWithoutChangingTheTemplate)
+    {
+        osg::ref_ptr<osg::Group> part = new osg::Group;
+        osg::ref_ptr<osg::Geometry> eye = new osg::Geometry;
+        part->addChild(eye);
+        osg::ref_ptr<osg::Material> original = new osg::Material;
+        original->setSpecular(osg::Material::FRONT_AND_BACK, osg::Vec4f(1, 1, 1, 1));
+        original->setShininess(osg::Material::FRONT_AND_BACK, 10.f);
+        eye->getOrCreateStateSet()->setAttribute(original);
+        configureTes4HeadPartLighting(*part, ESM4::Race::EyeRight);
+        const auto* material = dynamic_cast<const osg::Material*>(
+            eye->getStateSet()->getAttribute(osg::StateAttribute::MATERIAL));
+        ASSERT_NE(material, nullptr);
+        EXPECT_GT(material->getSpecular(osg::Material::FRONT).r(), 0.f);
+        EXPECT_LT(material->getSpecular(osg::Material::FRONT).r(), 0.25f);
+        EXPECT_GT(material->getShininess(osg::Material::FRONT), original->getShininess(osg::Material::FRONT));
+        EXPECT_EQ(material->getDiffuse(osg::Material::FRONT), original->getDiffuse(osg::Material::FRONT));
+        EXPECT_EQ(original->getSpecular(osg::Material::FRONT), osg::Vec4f(1, 1, 1, 1));
+    }
+
     TEST(Tes4FaceGen, ColorsOnlyEmbeddedBodySkinAndPreservesAuthoredStateAndOtherActors)
     {
         ESM4::Race race;
