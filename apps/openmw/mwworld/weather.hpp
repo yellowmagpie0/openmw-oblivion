@@ -466,6 +466,7 @@ namespace MWWorld
         osg::Vec3f mStormDirection;
 
         ESM::RefId mCurrentRegion;
+        ESM::RefId mConfiguredClimate;
         float mTimePassed;
         bool mFastForward;
         float mWeatherUpdateTime;

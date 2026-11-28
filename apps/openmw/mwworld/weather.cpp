@@ -1030,14 +1030,8 @@ namespace MWWorld
         {
             const ESM::RefId environment = mNativeWeather && isExterior ? getPlayerEnvironment() : playerRegion;
             auto it = mRegions.find(environment);
-            if (it != mRegions.end() && environment != mCurrentRegion)
-            {
-                mCurrentRegion = environment;
-                if (mNativeWeather)
-                    configureClimate(environment);
-                if (!mWeatherOverride)
-                    forceWeather(it->second.getWeather());
-            }
+            if (it != mRegions.end() && updateWeatherRegion(environment) && !mWeatherOverride)
+                forceWeather(it->second.getWeather());
         }
     }
 
@@ -1378,6 +1372,7 @@ namespace MWWorld
         stopSounds();
 
         mCurrentRegion = ESM::RefId();
+        mConfiguredClimate = ESM::RefId();
         mTimePassed = 0.0f;
         mWeatherUpdateTime = 0.0f;
         mWeatherOverride = false;
@@ -1679,17 +1674,19 @@ namespace MWWorld
 
     inline bool WeatherManager::updateWeatherRegion(const ESM::RefId& playerRegion)
     {
-        if (!playerRegion.empty() && playerRegion != mCurrentRegion)
+        if (playerRegion.empty())
+            return false;
+        // A save restores the current region and its weather transition. Sky assets and
+        // daylight timings still need to be configured when the player enters that region.
+        if (mNativeWeather && playerRegion != mConfiguredClimate)
         {
-            mCurrentRegion = playerRegion;
-
-            if (mNativeWeather)
-                configureClimate(playerRegion);
-
-            return true;
+            configureClimate(playerRegion);
+            mConfiguredClimate = playerRegion;
         }
-
-        return false;
+        if (playerRegion == mCurrentRegion)
+            return false;
+        mCurrentRegion = playerRegion;
+        return true;
     }
 
     inline void WeatherManager::updateWeatherTransitions(const float elapsedRealSeconds)

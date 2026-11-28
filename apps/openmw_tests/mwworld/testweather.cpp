@@ -137,6 +137,29 @@ namespace MWWorld
             EXPECT_EQ(fixture.capture(manager), installed);
         }
 
+        TEST(MWWorldWeatherTest, enteringRestoredRegionAppliesClimateWithoutRestartingWeather)
+        {
+            WeatherManagerFixture fixture;
+            ESM4::Climate climate{};
+            climate.mId = {0x301, 0};
+            climate.mTiming.mSunriseBegin = 54; // 09:00
+            climate.mTiming.mSunriseEnd = 60;
+            fixture.mStore.getWritable<ESM4::Climate>().insertStatic(
+                climate, ESM::FormKey::content("weather.esm", 0x301));
+            const ESM::RefId region(climate.mId);
+            WeatherManager manager(fixture.mStore);
+            auto incoming = fixture.incoming(manager);
+            incoming.mCurrentRegion = region;
+            incoming.mWeatherOverride = false;
+            auto restore = manager.prepareRead(incoming);
+            manager.clear();
+            ASSERT_TRUE(restore());
+            const auto saved = fixture.capture(manager);
+            manager.playerTeleported(region, false);
+            EXPECT_FLOAT_EQ(manager.getSunPercentage(9.5f), 0.5f);
+            EXPECT_EQ(fixture.capture(manager), saved);
+        }
+
         TEST(MWWorldWeatherTest, managerDiscardedAndRejectedPreparationLeaveOutgoingStateUntouched)
         {
             WeatherManagerFixture fixture;

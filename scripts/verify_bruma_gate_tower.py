@@ -14,11 +14,11 @@ TOWER = form(0x5619B)
 GATE_ENEMIES = tuple(map(form, (0x6D707, 0x6D708, 0x6D70A, 0x6D70B)))
 
 
-def check_party(path, cell):
+def check_party(path, cell, stage=35):
     state = load_save(path)
     quest = next(q for q in state["quests"] if q["quest"] == BRUMA_GATE)
     player = state["player"]
-    require(quest["running"] and quest["stage"] == 35 and player["cell"] == cell,
+    require(quest["running"] and quest["stage"] == stage and player["cell"] == cell,
             f"{path}: incorrect quest or player location")
     refs = {r["key"]: r for r in state["references"]}
     lives = {a["actor"]: a["phase"] for a in state["native_actor_life"]}
