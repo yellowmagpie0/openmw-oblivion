@@ -8,7 +8,7 @@
 #include "oblivioninteraction.hpp"
 #include "oblivionlevelled.hpp"
 #include "obliviongate.hpp"
-#include "actionteleport.hpp"
+#include "oblivionmaptravel.hpp"
 #include <components/esm4/loadlvli.hpp>
 #include "oblivioncharactergen.hpp"
 #include "obliviondooranimation.hpp"
@@ -3958,7 +3958,7 @@ namespace MWWorld
             const Ptr door = ptrFor(exit->mFormKey);
             if (door.isEmpty() || !door.getCellRef().getTeleport()) return std::int64_t(0);
 
-            ActionTeleport(door.getCellRef().getDestCell(), door.getCellRef().getDoorDest(), true).execute(player);
+            teleportOblivionParty(mWorld, door.getCellRef().getDestCell(), door.getCellRef().getDoorDest());
             if (auto* state = referenceState(gate))
                 state->mCustomState["obscript.destroyed"] = true;
             trace("closed-oblivion-gate ref=" + gate.serialize() + " exit=" + exit->mFormKey.serialize());

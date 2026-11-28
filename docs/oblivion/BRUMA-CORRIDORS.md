@@ -32,3 +32,18 @@ python scripts/verify_bruma_sigil_keeper.py "$saves/Bruma-Gate-Fury-Spike-High-B
 ```
 
 Both normal-controls reloads with the rebuilt executable (SHA-256 `8889a091c9147c4d0e1de2709946127ad3933efd5609eddcfadd960c0fe622b1`) applied the chamber climate. The lightning and the darker intervals are visible in `sponsor-keeper-stock01/Chamber00.png` through `Chamber07.png`. After the build and tests finished, the second reload averaged 25.0 FPS over 20 seconds at 1280 × 720 and a 30 FPS cap, with a 95th-percentile frame time of 58.7 ms. All 2,368 engine tests passed, including the climate restore regression. The test inventory and results are in `build-windows/checks-0c57eadda85240509a2c7e6482bca5a8`.
+
+## Closing the Bruma Gate
+
+Resume with `build-windows/Continue-After-Closing-the-Bruma-Gate.cmd`. Captain Burd is facing the player on the road outside the ruined gate. Speak to him about the closure. The player has 113 health, a Descendent Sigil Stone and 10 Fame. Bruma Gate is at stage 50.
+
+From the chamber entrance the player climbed both ramps with Burd, Bor and Soren. Burd took down two defenders and Bor killed the upper Dremora Churl. The landing saves and the save facing the stone are in `build-windows/sponsor-bruma-stone01`. The first activation exposed a per-frame trap error and left the expedition inside the tower. The corrected replay in `sponsor-bruma-stone02` starts immediately before the same activation. The player took the stone, returned with all three guards and finished the scamp outside. Bor and Soren then headed back toward Bruma under their new travel packages.
+
+The ring sets continuous contact, zero damage and positive pushback. In the original executable identified in [the trap audit](SEWER-TRAP-DAMAGE-NATIVE-AUDIT.json), the branch at `005ED17A` skips both Health damage and controller pushback when computed damage is nonpositive. The ring replay exercises that case. Positive continuous contacts use approximate damage per second sampled at each physics step. Gate closure now uses the map travel party traversal, including Accompany packages. It collects the party in the source scene and checks arrival positions before package evaluation.
+
+```powershell
+$b = 'build-windows'
+python scripts/verify_bruma_gate_closure.py "$b/sponsor-bruma-stone01/BeforeStone.omwsave" "$b/sponsor-bruma-stone02/openmw.log" "$b/temple-player-ready/checkpoints/Bruma-Gate-Closed.omwsave" "$b/sponsor-bruma-stone-stock01/Reloaded.omwsave"
+```
+
+The cold resave retained the collapsed gate, the single stone award, the journal entry and all six living guards. Burd's stage-50 package takes him toward his wait marker on the road to Bruma. The objective tracks him as he walks. At 1280 × 720 with a 30 FPS cap, the climb averaged 24.9 FPS over 67 seconds (viewer seconds 32–62 and 99–136). The 20-second exterior reload averaged 21.5 FPS with a 95th-percentile frame time of 69.6 ms. The replay and reload used executable SHA-256 `14212189fe74d6dd32c49787ec2c92d3f1f6a304512bdfff48a69d51d689fdf8`. All 2,368 engine tests passed in `build-windows/checks-a306fcb22922475997270f6fd99890c0`.

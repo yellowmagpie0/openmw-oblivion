@@ -6,6 +6,12 @@
 #include <map>
 #include <string_view>
 
+namespace ESM
+{
+    class RefId;
+    struct Position;
+}
+
 namespace ESM4
 {
     struct Reference;
@@ -17,6 +23,7 @@ namespace MWWorld
     constexpr char mapMarkerRevealKey[] = "native.map_marker.reveal";
     using MapMarkerReveals = std::map<ESM::FormKey, std::uint8_t>;
     std::uint8_t oblivionMapMarkerFlags(const ESM4::Reference& marker, const MapMarkerReveals& reveals);
+    void teleportOblivionParty(World& world, const ESM::RefId& cellId, const ESM::Position& position);
     // Returns a player-facing reason when travel is unavailable.
     std::string_view travelToOblivionMapMarker(World& world, const ESM4::Reference& marker);
 }

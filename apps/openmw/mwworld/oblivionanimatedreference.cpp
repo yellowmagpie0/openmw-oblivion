@@ -192,12 +192,11 @@ namespace MWWorld
                     return mOblivionScriptManager->scriptVariable(trap, name).value_or(0.0);
                 };
                 if (!mOblivionScriptManager->scriptVariable(trap, "fTrapDamage")) continue;
-                if (variable("bTrapContinuous") != 0)
-                    throw std::runtime_error("continuous animated trap damage is not implemented");
+                const bool continuous = variable("bTrapContinuous") != 0;
                 const bool player = actor == getPlayerPtr();
                 const auto actorKey = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
                 const ESM4::RuntimeTrapContact key{trap.getCellRef().getFormKey(), contact.mBodyRecord, actorKey};
-                if (previous.contains(key))
+                if (previous.contains(key) && (!continuous || !contact.mTouching))
                 {
                     overlaps.insert(key);
                     continue;
@@ -207,6 +206,9 @@ namespace MWWorld
                 const ESM4::TrapImpactSettings settings{static_cast<float>(variable("fTrapDamage")),
                     static_cast<float>(variable("fLevelledDamage")),
                     contact.mPhantom ? 0.f : static_cast<float>(variable("fTrapMinVelocity"))};
+                // The sigil ring arms continuous contact with zero damage. The native
+                // nonpositive-damage exit also skips the controller pushback.
+                if (settings.mDamage == 0.f && settings.mLevelledDamage == 0.f) continue;
                 const auto resistanceValue = contact.mLayer == 16 ? 67 : 65;
                 const float resistance = player ? mOblivionCombat->getPlayerValue(resistanceValue)
                     : mOblivionCombat->getNonPlayerValue(actor, resistanceValue);
@@ -214,7 +216,8 @@ namespace MWWorld
                 // The original non-rigid branch uses contact geometry for its
                 // push direction and does not apply the rigid-body speed gate.
                 const float speed = contact.mPhantom ? 0.f : contact.mIncomingVelocity.length();
-                const float damage = ESM4::trapImpactDamage(settings, level, speed, resistance);
+                const float damage = ESM4::trapImpactDamage(settings, level, speed, resistance)
+                    * (continuous ? step.mDuration : 1.f);
                 const float pushback = static_cast<float>(variable("fTrapPushBack"));
                 // Allocate the latch before Health publication, and roll it
                 // back if the native transaction rejects the impact. Earlier
