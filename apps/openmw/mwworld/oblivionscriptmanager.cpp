@@ -1721,22 +1721,28 @@ namespace MWWorld
             if (!ptr.getRefData().isEnabled() || ptr.mRef->isDeleted())
                 continue;
             const auto program = scriptFor(ptr);
-            if (!program || std::none_of(program->mEntryPoints.begin(), program->mEntryPoints.end(),
-                    [](const auto& entry) { return Misc::StringUtils::ciEqual(entry.mEvent, "ontrigger"); }))
+            if (!program)
                 continue;
-            // Snapshot and order actual narrow-phase overlaps before invoking
-            // scripts: a callback may disable/delete a volume or move actors.
-            auto overlapping = mWorld.mPhysics->getTriggerActors(ptr);
-            std::sort(overlapping.begin(), overlapping.end(), [&](const Ptr& left, const Ptr& right) {
-                return keyFor(left) < keyFor(right);
-            });
-            for (const Ptr& actor : overlapping)
+            for (std::string_view event : { "ontrigger", "ontriggeractor" })
             {
                 if (!ptr.getRefData().isEnabled() || ptr.mRef->isDeleted())
                     break;
-                if (actor.isEmpty() || !actor.isInCell() || !actor.getRefData().isEnabled() || actor.mRef->isDeleted())
+                if (std::none_of(program->mEntryPoints.begin(), program->mEntryPoints.end(),
+                        [&](const auto& entry) { return Misc::StringUtils::ciEqual(entry.mEvent, event); }))
                     continue;
-                dispatchObjectEvent(ptr, "ontrigger", actor);
+                // Snapshot actor contacts per event. A handler can move the actor
+                // or disable the volume before a second handler runs.
+                auto overlapping = mWorld.mPhysics->getTriggerActors(ptr);
+                std::sort(overlapping.begin(), overlapping.end(), [&](const Ptr& left, const Ptr& right) {
+                    return keyFor(left) < keyFor(right);
+                });
+                for (const Ptr& actor : overlapping)
+                {
+                    if (!ptr.getRefData().isEnabled() || ptr.mRef->isDeleted())
+                        break;
+                    if (!actor.isEmpty() && actor.isInCell() && actor.getRefData().isEnabled() && !actor.mRef->isDeleted())
+                        dispatchObjectEvent(ptr, event, actor);
+                }
             }
         }
         writeRuntimeReport();

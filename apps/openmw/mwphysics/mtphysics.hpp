@@ -417,7 +417,7 @@ namespace MWPhysics
         std::vector<Simulation>* mSimulations = nullptr;
         std::unordered_set<const btCollisionObject*> mCollisionObjects;
         // Registered once; avoid scanning all scenery for each physics substep.
-        std::unordered_set<const Object*> mFloraPhantoms;
+        std::unordered_set<const Object*> mTrapPhantoms;
         class NativeSceneBinding;
         std::unique_ptr<NativeSceneBinding> mNativeSceneBinding;
         using ActorRagdollMap = std::map<const MWWorld::LiveCellRefBase*, std::unique_ptr<ActorRagdoll>>;

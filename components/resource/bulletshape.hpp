@@ -49,6 +49,8 @@ namespace Resource
         {
             std::uint32_t mRecord = 0;
             std::uint8_t mLayer = 0;
+
+            bool isTrapVolume() const { return mLayer == 14 || mLayer == 16; }
             friend bool operator==(const TriggerBody&, const TriggerBody&) = default;
         };
         CollisionShapePtr mCollisionShape;

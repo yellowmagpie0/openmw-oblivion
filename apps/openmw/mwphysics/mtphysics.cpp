@@ -667,8 +667,7 @@ namespace MWPhysics
                 }
             }
         }
-        // Native flora uses non-solid phantom geometry, rather than a released
-        // rigid-body graph. Query its actual child shapes under this same
+        // Query non-solid trap volumes under this same
         // substep barrier so contacts share the existing ownership/latch path.
         struct PhantomContacts final : btCollisionWorld::ContactResultCallback
         {
@@ -714,18 +713,18 @@ namespace MWPhysics
                 return 0;
             }
         };
-        for (const auto* owner : mFloraPhantoms)
+        for (const auto* owner : mTrapPhantoms)
         {
             const auto* instance = owner->getShapeInstance();
             const auto* shape = instance->mCollisionShape.get();
             if (!shape || !shape->isCompound())
-                throw std::logic_error("native flora phantom has no compound shape");
+                throw std::logic_error("native trap phantom has no compound shape");
             const auto& compound = static_cast<const btCompoundShape&>(*shape);
             for (const auto& [child, body] : instance->mTriggerBodies)
             {
-                if (body.mLayer != 14 && body.mLayer != 16) continue;
+                if (!body.isTrapVolume()) continue;
                 if (child < 0 || child >= compound.getNumChildShapes())
-                    throw std::logic_error("native flora phantom child disappeared");
+                    throw std::logic_error("native trap phantom child disappeared");
                 btCollisionObject volume;
                 volume.setCollisionShape(const_cast<btCollisionShape*>(compound.getChildShape(child)));
                 volume.setWorldTransform(owner->getCollisionObject()->getWorldTransform() * compound.getChildTransform(child));
@@ -2595,9 +2594,11 @@ namespace MWPhysics
         bool insertedPhantom = false;
         try
         {
-            if (object && object->getPtr().getType() == ESM::REC_FLOR4
-                && !object->getShapeInstance()->mTriggerBodies.empty())
-                insertedPhantom = mFloraPhantoms.insert(object).second;
+            if (object && (object->getPtr().getType() == ESM::REC_FLOR4
+                    || object->getPtr().getType() == ESM::REC_ACTI4)
+                && std::ranges::any_of(object->getShapeInstance()->mTriggerBodies,
+                    [](const auto& body) { return body.second.isTrapVolume(); }))
+                insertedPhantom = mTrapPhantoms.insert(object).second;
             mCollisionWorld->addCollisionObject(collisionObject, collisionFilterGroup, collisionFilterMask);
         }
         catch (...)
@@ -2605,7 +2606,7 @@ namespace MWPhysics
             // Bullet may have published its array/proxy before a C++ exception.
             // Roll back under the same world lock before exposing failure.
             mCollisionWorld->removeCollisionObject(collisionObject);
-            if (insertedPhantom) mFloraPhantoms.erase(object);
+            if (insertedPhantom) mTrapPhantoms.erase(object);
             if (inserted)
                 mCollisionObjects.erase(entry);
             throw;
@@ -2618,7 +2619,7 @@ namespace MWPhysics
         if (const auto* holder = static_cast<const PtrHolder*>(collisionObject->getUserPointer()))
         {
             discardAnimatedReferenceContacts(holder->getPtr());
-            if (const auto* object = dynamic_cast<const Object*>(holder)) mFloraPhantoms.erase(object);
+            if (const auto* object = dynamic_cast<const Object*>(holder)) mTrapPhantoms.erase(object);
         }
         mCollisionObjects.erase(collisionObject);
         mCollisionWorld->removeCollisionObject(collisionObject);

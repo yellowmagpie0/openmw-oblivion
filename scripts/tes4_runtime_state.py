@@ -1921,11 +1921,15 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             raise RuntimeStateError("Invalid trap contact body identity")
         body = trap_bodies.get(contact["reference"], {}).get(record)
         owner = legacy_refs.get(contact["reference"])
-        flora = (contact["reference"] not in trap_bodies and owner is not None
-                 and contact["reference"] != player["reference"] and contact["reference"] not in native_keys
-                 and owner["enabled"] and not owner["deleted"]
-                 and owner["custom_state"].get("record_type") == (int.from_bytes(b"FLOR", "little") | 0x00800000))
-        if ((body is None and not flora) or body is not None and body.get("native_motion") == 7
+        metadata = owner["custom_state"] if owner else {}
+        kind = metadata.get("record_type")
+        phantom = (contact["reference"] not in trap_bodies and owner is not None
+                   and contact["reference"] != player["reference"] and contact["reference"] not in native_keys
+                   and owner["enabled"] and not owner["deleted"]
+                   and (kind == (int.from_bytes(b"FLOR", "little") | 0x00800000)
+                        or kind == (int.from_bytes(b"ACTI", "little") | 0x00800000)
+                        and metadata.get("native.trap.phantom") is True))
+        if ((body is None and not phantom) or body is not None and body.get("native_motion") == 7
                 or contact["actor"] != player["reference"] and contact["actor"] not in native_keys):
             raise RuntimeStateError("Dangling trap contact owner, actor or movable body")
         order = _trap_contact_order(contact)

@@ -16,6 +16,7 @@
 #include "exception.hpp"
 #include "extra.hpp"
 #include "node.hpp"
+#include "suspendedtrap.hpp"
 #include "particle.hpp"
 #include "physics.hpp"
 #include "property.hpp"
@@ -726,6 +727,8 @@ namespace Nif
         // Once parsing is done, do post-processing.
         for (const auto& record : mRecords)
             record->post(*this);
+        if (mVersion >= NIFFile::VER_OB_OLD && mVersion <= NIFFile::VER_OB)
+            animateSuspendedTrap(mRecords);
     }
 
     void Reader::setUseSkinning(bool skinning)

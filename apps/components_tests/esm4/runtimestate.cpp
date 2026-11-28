@@ -6632,6 +6632,10 @@ TEST(ESM4RuntimeState, FloraPhantomContactsRetainTypedOwnersWithoutInventedMovab
         }
         EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
     }
+    reference.mCustomState["record_type"] = std::int64_t(ESM::REC_ACTI4);
+    reference.mCustomState["native.trap.phantom"] = true;
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeTrapContacts,
+        state.mNativeTrapContacts);
     // Body identity against the winning model is a world-admission check.
 }
 

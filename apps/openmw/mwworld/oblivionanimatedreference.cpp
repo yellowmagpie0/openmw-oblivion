@@ -262,7 +262,11 @@ namespace MWWorld
             const auto type = reference->mCustomState.find("record_type");
             const auto* value = type == reference->mCustomState.end()
                 ? nullptr : std::get_if<std::int64_t>(&type->second);
-            return value && *value == ESM::REC_FLOR4 && (reference->mDeleted || !reference->mEnabled);
+            if (!value || (*value != ESM::REC_FLOR4 && *value != ESM::REC_ACTI4)) return false;
+            if (reference->mDeleted || !reference->mEnabled) return true;
+            if (*value == ESM::REC_ACTI4)
+                reference->mCustomState["native.trap.phantom"] = true;
+            return false;
         });
         for (const auto& ptr : mPhysics->animatedReferenceOwners())
         {
@@ -287,16 +291,21 @@ namespace MWWorld
             if (state.mNativeAnimatedReferences.contains(contact.mReference)) continue;
             const auto reference = std::find_if(state.mReferences.begin(), state.mReferences.end(),
                 [&](const auto& ref) { return ref.mKey == contact.mReference; });
-            const auto* flora = reference == state.mReferences.end() ? nullptr
-                : mStore.get<ESM4::Flora>().search(reference->mBase);
-            if (!flora || (flora->mFlags & ESM4::Rec_Deleted) || flora->mModel.empty() || !mPhysics)
-                throw std::runtime_error("phantom trap contact has no winning FLOR model");
+            if (reference == state.mReferences.end() || !mPhysics)
+                throw std::runtime_error("phantom trap contact has no reference");
+            const auto* flora = mStore.get<ESM4::Flora>().search(reference->mBase);
+            const auto* activator = mStore.get<ESM4::Activator>().search(reference->mBase);
+            if ((!flora || (flora->mFlags & ESM4::Rec_Deleted) || flora->mModel.empty())
+                && (!activator || (activator->mFlags & ESM4::Rec_Deleted) || activator->mModel.empty()))
+                throw std::runtime_error("phantom trap contact has no winning model");
             const auto model = Misc::ResourceHelpers::correctActorModelPath(
-                Misc::ResourceHelpers::correctMeshPath(flora->mModel.getNormalized()), mResourceSystem->getVFS());
+                Misc::ResourceHelpers::correctMeshPath((flora ? flora->mModel : activator->mModel).getNormalized()),
+                mResourceSystem->getVFS());
             const auto shape = mPhysics->getShapeManager()->getShape(model);
-            if (!shape || std::none_of(shape->mTriggerBodies.begin(), shape->mTriggerBodies.end(), [&](const auto& body) {
+            if (!shape
+                || std::none_of(shape->mTriggerBodies.begin(), shape->mTriggerBodies.end(), [&](const auto& body) {
                     return body.second.mRecord == contact.mBodyRecord
-                        && (body.second.mLayer == 14 || body.second.mLayer == 16);
+                        && body.second.isTrapVolume();
                 }))
                 throw std::runtime_error("phantom trap contact has no matching bound body");
         }

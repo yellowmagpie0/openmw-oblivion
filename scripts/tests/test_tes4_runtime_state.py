@@ -5200,6 +5200,9 @@ class TrapContact86Tests(unittest.TestCase):
         owner["custom_state"]["record_type"] = int.from_bytes(b"ACTI", "little") | 0x00800000
         with self.assertRaises(state_io.RuntimeStateError):
             state_io.encode_payload(state)
+        owner["custom_state"]["native.trap.phantom"] = True
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["native_trap_contacts"],
+                         state["native_trap_contacts"])
 
     def test_flora_metadata_does_not_relax_existing_movable_body_checks(self):
         state = self.make_state()

@@ -1,7 +1,77 @@
+#include <components/nif/controller.hpp>
 #include <components/nif/physics.hpp>
+#include <components/nif/suspendedtrap.hpp>
 #include "node.hpp"
 
 #include <gtest/gtest.h>
+
+TEST(ESM4SuspendedTrap, UsesConnectedBodiesAndPreservesAuthoredMotion)
+{
+    using namespace Nif;
+    NIFFile file(VFS::Path::NormalizedView("custom.nif"));
+    auto sequence = std::make_unique<NiControllerSequence>();
+    auto& release = *sequence;
+    file.mRecords.push_back(std::move(sequence));
+    release.mName = "Unequip";
+    release.mStopTime = 2.f;
+    release.mControlledBlocks.emplace_back().mNodeName = "Catch";
+
+    NiNode anchor, pivot, head;
+    auto volume = std::make_unique<NiNode>();
+    std::array<bhkCollisionObject, 4> collisions;
+    bhkRigidBody fixed{}, link{}, weight{};
+    bhkSimpleShapePhantom damage{};
+    bhkConvexVerticesShape hull;
+    damage.mShape = &hull;
+    hull.mVertices.emplace_back(2, 0, 0, 0);
+    damage.mTransform(3, 3) = 0; // Padding in the serialized Havok transform.
+    damage.mHavokFilter.mLayer = 14;
+    fixed.mInfo.mMotionType = HkMotionType::Motion_Fixed;
+    link.mInfo.mMass = weight.mInfo.mMass = 10;
+    link.mInfo.mMotionType = weight.mInfo.mMotionType = HkMotionType::Motion_Dynamic;
+    std::array<NiNode*, 4> nodes{ &anchor, &pivot, &head, volume.get() };
+    std::array<bhkWorldObject*, 4> bodies{ &fixed, &link, &weight, &damage };
+    for (std::size_t i = 0; i < nodes.size(); ++i)
+    {
+        Nif::Testing::init(*nodes[i]);
+        nodes[i]->mCollision = &collisions[i];
+        collisions[i].mBody = bodies[i];
+        if (i > 0)
+            nodes[i]->mParents.push_back(nodes[i - 1]);
+    }
+    file.mRecords.push_back(std::move(volume));
+    pivot.mName = "Fulcrum";
+    head.mName = "Weight";
+    head.mTransform.mTranslation.set(40, 0, 20);
+    bhkRagdollConstraint upper, lower;
+    link.mConstraints.emplace_back(&upper);
+    weight.mConstraints.emplace_back(&lower);
+    upper.mInfo.mEntityA = &link;
+    upper.mInfo.mEntityB = &fixed;
+    lower.mInfo.mEntityA = &weight;
+    lower.mInfo.mEntityB = &fixed;
+    animateSuspendedTrap(file.mRecords);
+    EXPECT_EQ(release.mControlledBlocks.size(), 1); // Disconnected from the render parent.
+
+    lower.mInfo.mEntityB = &link;
+    release.mControlledBlocks.front().mNodeName = head.mName;
+    animateSuspendedTrap(file.mRecords);
+    EXPECT_EQ(release.mControlledBlocks.size(), 1);
+
+    release.mControlledBlocks.front().mNodeName = "Catch";
+    animateSuspendedTrap(file.mRecords);
+    ASSERT_EQ(release.mControlledBlocks.size(), 3);
+    EXPECT_EQ(release.mControlledBlocks[1].mNodeName, pivot.mName);
+    EXPECT_EQ(release.mControlledBlocks[2].mNodeName, head.mName);
+    const auto* interp
+        = dynamic_cast<const NiTransformInterpolator*>(release.mControlledBlocks[1].mInterpolator.getPtr());
+    ASSERT_NE(interp, nullptr);
+    const auto& keys = interp->mData->mRotations->mKeys;
+    ASSERT_GT(keys.size(), 1);
+    EXPECT_EQ(keys.front().first, 2.f);
+    EXPECT_EQ(keys.back().first, release.mStopTime);
+    EXPECT_NE(keys.front().second.mValue, keys.back().second.mValue);
+}
 
 TEST(ESM4CreatureModelEligibility, UsesOnlyRootAndThreeFirstChildren)
 {
