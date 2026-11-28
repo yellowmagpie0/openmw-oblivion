@@ -58,6 +58,23 @@ namespace MWMechanics
 {
     namespace
     {
+        bool followsPlayer(const OblivionAiService& ai, ESM::FormKey actor, const ESM::FormKey& player)
+        {
+            std::set<ESM::FormKey> visited;
+            while (const auto* state = ai.state(actor))
+            {
+                if (state->mPackageType != ESM4::AIPackageType::Follow
+                    && state->mPackageType != ESM4::AIPackageType::Accompany)
+                    return false;
+                if (state->mTarget == player)
+                    return true;
+                if (!visited.insert(actor).second)
+                    break;
+                actor = state->mTarget;
+            }
+            return false;
+        }
+
         // A bounded physical damage-rate policy shared with the existing
         // disarm fallback. Combat melee excludes staves, bows and ammunition.
         MWWorld::Ptr selectUsablePhysicalWeapon(MWBase::World& world, const MWWorld::Ptr& actor,
@@ -527,9 +544,12 @@ namespace MWMechanics
                     && !(targetKey < candidateKey(selected))))
                 continue;
             std::optional<std::int32_t> defendingFriend;
-            if (canDefendPlayer && target.getType() == ESM::REC_CREA4
+            if (canDefendPlayer && target != player
                 && target.getCell()->getCell()->getWorldSpace() == player.getCell()->getCell()->getWorldSpace()
-                && nativeWorld->getOblivionCombatTarget(targetKey) == playerKey)
+                && nativeWorld->getOblivionCombatTarget(targetKey) == playerKey
+                && (target.getType() == ESM::REC_CREA4
+                    || (followsPlayer(*ai, key, playerKey)
+                        && oblivionPlayerFightScore(*nativeWorld, target).value_or(0) > 0)))
             {
                 // Observe current directed controller intent, never the broad
                 // engagement graph or a cached incident. StopCombat, retargeting

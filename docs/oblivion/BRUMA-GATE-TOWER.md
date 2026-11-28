@@ -2,7 +2,7 @@
 
 Start [inside the Bruma Gate](BRUMA-GATE-ENTRY.md), head east across the broken bridge and follow the ridge north. The road turns west above the lava. The outer path skirts the claw trap on the northern rise and rejoins the climb to the Fury Spike. Enter through the main door and let Burd, Bor and Soren catch up in the entrance hall.
 
-Resume with `build-windows/Continue-At-The-Fury-Spike.cmd`. All three companions are inside. The Knight has 113/113 health and Bruma Gate remains at stage 35. The next leg leads up the tower toward the sigil stone.
+Resume with `build-windows/Continue-At-The-Fury-Spike.cmd`. All three companions are inside. The Knight has 113/113 health and Bruma Gate remains at stage 35. Continue through [the lower tower to the Rending Halls](BRUMA-RENDING-HALLS.md).
 
 ## Gameplay fixes
 

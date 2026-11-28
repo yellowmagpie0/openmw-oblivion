@@ -42,6 +42,7 @@ def check_party(path, cell):
         health = player["actor_values"]
         require(health["health.current"] == health["health.base"] + health["health.modifier"],
                 f"{path}: player did not recover")
+    return state
 
 
 def check_flight(path, cold_log):
